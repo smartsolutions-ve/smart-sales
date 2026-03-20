@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.db import transaction
+from django.core.paginator import Paginator
 
 from apps.accounts.decorators import role_required
 from .models import Pedido, PedidoItem, Cliente
@@ -37,8 +38,12 @@ def lista(request):
     if estado:
         pedidos = pedidos.filter(estado=estado)
 
+    paginator = Paginator(pedidos, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
     context = {
-        'pedidos': pedidos,
+        'pedidos': page_obj,
+        'page_obj': page_obj,
         'q': q,
         'estado_filtro': estado,
         'estados': Pedido.ESTADOS,

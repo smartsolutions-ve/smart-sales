@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{% if producto %}Editar{% else %}Nuevo{% endif %} Producto — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'productos:lista' %}" class="hover:text-brand-blue">Productos</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i>
+  {% if producto %}Editar{% else %}Nuevo{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'productos:lista' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-title">{% if producto %}Editar Producto{% else %}Nuevo Producto{% endif %}</h1>
+  </div>
+
+  <div class="card-glass space-y-5">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="label-base">Nombre <span class="text-red-500">*</span></label>
+          <input type="text" name="nombre" value="{{ producto.nombre|default:'' }}"
+                 required class="input-base" placeholder="Ej: Tornillo hexagonal 3/8">
+        </div>
+
+        <div>
+          <label class="label-base">SKU / Código</label>
+          <input type="text" name="sku" value="{{ producto.sku|default:'' }}"
+                 class="input-base font-mono" placeholder="Ej: TH-375-Z">
+          <p class="text-xs text-subtitle mt-1">Identificador único del producto en tu organización.</p>
+        </div>
+
+        <div>
+          <label class="label-base">Unidad de medida</label>
+          <input type="text" name="unidad" value="{{ producto.unidad|default:'' }}"
+                 class="input-base" placeholder="Ej: unidad, kg, litro, caja">
+        </div>
+
+        <div>
+          <label class="label-base">Precio base</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+            <input type="number" name="precio_base" value="{{ producto.precio_base|default:'' }}"
+                   step="0.01" min="0" class="input-base pl-8" placeholder="0.00">
+          </div>
+          <p class="text-xs text-subtitle mt-1">Precio sugerido, modificable en cada pedido.</p>
+        </div>
+
+        <div>
+          <label class="label-base">Categoría</label>
+          <select name="categoria_id" class="input-base">
+            <option value="">Sin categoría</option>
+            {% for cat in categorias %}
+            <option value="{{ cat.pk }}"
+                    {% if producto and producto.categoria_id == cat.pk %}selected{% endif %}>
+              {{ cat.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="label-base">Descripción</label>
+          <textarea name="descripcion" rows="3" class="input-base resize-none"
+                    placeholder="Descripción o especificaciones del producto...">{{ producto.descripcion|default:'' }}</textarea>
+        </div>
+
+        {% if producto %}
+        <div class="sm:col-span-2">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" name="is_active" value="on"
+                   {% if producto.is_active %}checked{% endif %}
+                   class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-blue">
+            <span class="text-sm font-medium">Producto activo</span>
+          </label>
+          <p class="text-xs text-subtitle mt-1 ml-7">Los productos inactivos no aparecen al crear pedidos.</p>
+        </div>
+        {% else %}
+        <input type="hidden" name="is_active" value="on">
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-white/5 mt-5">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar Producto
+        </button>
+        <a href="{% url 'productos:lista' %}" class="btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

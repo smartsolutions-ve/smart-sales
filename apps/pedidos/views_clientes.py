@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
+from django.core.paginator import Paginator
 
 from apps.accounts.decorators import role_required
 from .models import Cliente
@@ -20,7 +21,10 @@ def lista(request):
     if q:
         clientes = clientes.filter(nombre__icontains=q)
 
-    context = {'clientes': clientes, 'q': q}
+    paginator = Paginator(clientes, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {'clientes': page_obj, 'page_obj': page_obj, 'q': q}
     return render(request, 'clientes/lista.html', context)
 
 

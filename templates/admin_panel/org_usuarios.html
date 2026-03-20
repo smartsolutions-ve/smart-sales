@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios de {{ org.name }} — Admin Panel{% endblock %}
+{% block breadcrumb %}Usuarios de {{ org.name }}{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="{% url 'admin_panel:org_detalle' pk=org.pk %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-title">Usuarios</h1>
+        <p class="text-subtitle">{{ org.name }} — {{ usuarios.count }} usuario{{ usuarios.count|pluralize:"s" }}</p>
+      </div>
+    </div>
+    <a href="{% url 'admin_panel:usuario_crear' pk=org.pk %}" class="btn-primary">
+      <i class="fas fa-user-plus"></i> Agregar usuario
+    </a>
+  </div>
+
+  <div class="card-glass !p-0 overflow-hidden">
+    {% if usuarios %}
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Usuario</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Rol</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for u in usuarios %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+          <td class="px-5 py-3">
+            <p class="text-sm font-semibold">{{ u.get_full_name|default:u.username }}</p>
+            <p class="text-xs text-slate-400 font-mono">@{{ u.username }}</p>
+          </td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ u.email|default:"—" }}</td>
+          <td class="px-5 py-3">
+            <span class="{% if u.role == 'gerente' %}badge-info{% else %}badge-neutral{% endif %}">
+              {{ u.get_role_display }}
+            </span>
+          </td>
+          <td class="px-5 py-3">
+            <span class="{% if u.is_active %}badge-success{% else %}badge-danger{% endif %}">
+              {% if u.is_active %}Activo{% else %}Inactivo{% endif %}
+            </span>
+          </td>
+          <td class="px-5 py-3">
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+              <a href="{% url 'admin_panel:usuario_editar' org_pk=org.pk user_pk=u.pk %}"
+                 class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300
+                        hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-colors"
+                 title="Editar usuario">
+                <i class="fas fa-pen"></i>
+              </a>
+              <a href="{% url 'admin_panel:usuario_password' org_pk=org.pk user_pk=u.pk %}"
+                 class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300
+                        hover:bg-amber-500 hover:text-white flex items-center justify-center text-xs transition-colors"
+                 title="Cambiar contraseña">
+                <i class="fas fa-key"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="px-6 py-12 text-center text-subtitle">
+      <i class="fas fa-users text-3xl opacity-30 mb-2"></i>
+      <p>No hay usuarios todavía.</p>
+      <a href="{% url 'admin_panel:usuario_crear' pk=org.pk %}"
+         class="mt-2 inline-block text-brand-blue hover:underline text-sm font-semibold">
+        Agregar el primero →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

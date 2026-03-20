@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}{% if usuario %}Editar{% else %}Nuevo{% endif %} Usuario — {{ org.name }}{% endblock %}
+{% block breadcrumb %}{% if usuario %}Editar Usuario{% else %}Nuevo Usuario{% endif %}{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-xl">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'admin_panel:org_usuarios' pk=org.pk %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="text-title">{% if usuario %}Editar Usuario{% else %}Nuevo Usuario{% endif %}</h1>
+      <p class="text-subtitle">{{ org.name }}</p>
+    </div>
+  </div>
+
+  <form method="post" action="{% if usuario %}{% url 'admin_panel:usuario_editar' org_pk=org.pk user_pk=usuario.pk %}{% else %}{% url 'admin_panel:usuario_crear' pk=org.pk %}{% endif %}">
+    {% csrf_token %}
+
+    <div class="card-glass space-y-4">
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label-base">Nombre</label>
+          <input type="text" name="first_name" value="{{ usuario.first_name|default:'' }}"
+                 class="input-base" placeholder="Juan">
+        </div>
+        <div>
+          <label class="label-base">Apellido</label>
+          <input type="text" name="last_name" value="{{ usuario.last_name|default:'' }}"
+                 class="input-base" placeholder="Pérez">
+        </div>
+      </div>
+
+      {% if not usuario %}
+      <div>
+        <label class="label-base">Usuario <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <i class="fas fa-at absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="text" name="username" required class="input-base pl-10" placeholder="juan.perez">
+        </div>
+      </div>
+      {% else %}
+      <div>
+        <label class="label-base">Usuario</label>
+        <div class="input-base !bg-slate-50 dark:!bg-slate-800/30 text-slate-500 font-mono flex items-center gap-2">
+          <i class="fas fa-at text-slate-400 text-sm"></i>
+          {{ usuario.username }}
+        </div>
+      </div>
+      {% endif %}
+
+      <div>
+        <label class="label-base">Email</label>
+        <div class="relative">
+          <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="email" name="email" value="{{ usuario.email|default:'' }}"
+                 class="input-base pl-10" placeholder="juan@empresa.com">
+        </div>
+      </div>
+
+      <div>
+        <label class="label-base">Rol</label>
+        <select name="role" class="input-base">
+          {% for valor, label in roles %}
+          <option value="{{ valor }}" {% if usuario.role == valor %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if usuario %}
+      <div>
+        <label class="label-base">Estado</label>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" name="is_active" {% if usuario.is_active %}checked{% endif %}
+                 class="w-4 h-4 rounded text-brand-blue">
+          <span class="text-sm text-slate-700 dark:text-slate-300">Usuario activo</span>
+        </label>
+      </div>
+      {% else %}
+      <div>
+        <label class="label-base">Contraseña <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="password" name="password" required class="input-base pl-10" placeholder="Mínimo 8 caracteres">
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <div class="flex gap-3 mt-5">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-{% if usuario %}save{% else %}user-plus{% endif %}"></i>
+        {% if usuario %}Guardar Cambios{% else %}Crear Usuario{% endif %}
+      </button>
+      <a href="{% url 'admin_panel:org_usuarios' pk=org.pk %}" class="btn-secondary">Cancelar</a>
+    </div>
+  </form>
+
+  {% if usuario %}
+  <div class="mt-6 card-glass border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-amber-700 dark:text-amber-400 text-sm">Cambiar contraseña</p>
+        <p class="text-xs text-amber-600/70 dark:text-amber-500/70 mt-0.5">Establece una nueva contraseña para este usuario.</p>
+      </div>
+      <a href="{% url 'admin_panel:usuario_password' org_pk=org.pk user_pk=usuario.pk %}"
+         class="px-4 py-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400
+                hover:bg-amber-200 text-sm font-semibold transition-colors">
+        <i class="fas fa-key mr-1"></i> Cambiar
+      </a>
+    </div>
+  </div>
+
+  <div class="mt-4 card-glass border-red-200 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-red-700 dark:text-red-400 text-sm">Zona peligrosa</p>
+        <p class="text-xs text-red-600/70 dark:text-red-500/70 mt-0.5">Eliminar este usuario es irreversible.</p>
+      </div>
+      <form method="post" action="{% url 'admin_panel:usuario_eliminar' org_pk=org.pk user_pk=usuario.pk %}"
+            onsubmit="return confirm('¿Eliminar a {{ usuario.username }}? Esta acción no se puede deshacer.')">
+        {% csrf_token %}
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400
+                       hover:bg-red-500 hover:text-white text-sm font-semibold transition-colors">
+          <i class="fas fa-trash mr-1"></i> Eliminar
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Reporte de Vendedores — SmartSales{% endblock %}
+{% block breadcrumb %}Reportes{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-title">Reporte por Vendedor</h1>
+      <p class="text-subtitle mt-0.5">Rendimiento acumulado de cada vendedor (pedidos no cancelados)</p>
+    </div>
+    <a href="{% url 'reportes:clientes' %}" class="btn-secondary">
+      Ver por Cliente <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+  {% if vendedores %}
+  <div class="card-glass !p-0 overflow-hidden">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">#</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vendedor</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Rol</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Pedidos</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Entregados</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Total Vendido</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for v in vendedores %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <td class="px-5 py-3 text-sm text-slate-400 dark:text-slate-500">{{ forloop.counter }}</td>
+          <td class="px-5 py-3">
+            <p class="text-sm font-semibold">{{ v.get_full_name|default:v.username }}</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500">{{ v.email }}</p>
+          </td>
+          <td class="px-5 py-3">
+            <span class="{% if v.role == 'gerente' %}badge-info{% else %}badge-neutral{% endif %}">
+              {{ v.get_role_display }}
+            </span>
+          </td>
+          <td class="px-5 py-3 text-sm text-right">{{ v.cantidad_pedidos|default:0 }}</td>
+          <td class="px-5 py-3 text-sm text-right text-green-500 font-semibold">{{ v.pedidos_entregados|default:0 }}</td>
+          <td class="px-5 py-3 text-sm text-right font-bold">
+            ${{ v.total_vendido|default:0|intcomma }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Gráfico de barras -->
+  {% with max_total=vendedores.0.total_vendido %}
+  {% if max_total %}
+  <div class="card-glass">
+    <h2 class="font-bold mb-5">Total vendido por vendedor</h2>
+    <div class="space-y-4">
+      {% for v in vendedores %}
+      {% if v.total_vendido %}
+      <div class="flex items-center gap-4">
+        <span class="text-sm w-36 truncate text-slate-600 dark:text-slate-300">{{ v.get_full_name|default:v.username }}</span>
+        <div class="flex-1 bg-slate-100 dark:bg-white/10 rounded-full h-3">
+          <div class="bg-gradient-to-r from-brand-blue to-brand-green h-3 rounded-full transition-all"
+               style="width: {% widthratio v.total_vendido max_total 100 %}%"></div>
+        </div>
+        <span class="text-sm font-bold w-24 text-right">${{ v.total_vendido|intcomma }}</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  {% else %}
+  <div class="card-glass text-center py-12">
+    <i class="fas fa-chart-line text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+    <p class="text-subtitle text-lg font-medium">No hay datos de vendedores todavía.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

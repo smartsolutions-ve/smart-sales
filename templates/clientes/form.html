@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{% if cliente %}Editar {{ cliente.nombre }}{% else %}Nuevo Cliente{% endif %} — SmartSales{% endblock %}
+{% block breadcrumb %}{% if cliente %}Editar Cliente{% else %}Nuevo Cliente{% endif %}{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'clientes:lista' %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="text-title">{% if cliente %}Editar {{ cliente.nombre }}{% else %}Nuevo Cliente{% endif %}</h1>
+  </div>
+
+  <form method="post"
+        action="{% if cliente %}{% url 'clientes:editar' cliente.pk %}{% else %}{% url 'clientes:crear' %}{% endif %}">
+    {% csrf_token %}
+
+    <div class="card-glass space-y-4">
+
+      <div>
+        <label class="label-base">Nombre <span class="text-red-500">*</span></label>
+        <input type="text" name="nombre" required
+               value="{{ cliente.nombre|default:'' }}"
+               class="input-base"
+               placeholder="Nombre del cliente">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label-base">Persona de Contacto</label>
+          <input type="text" name="contacto"
+                 value="{{ cliente.contacto|default:'' }}"
+                 class="input-base"
+                 placeholder="Nombre del contacto">
+        </div>
+        <div>
+          <label class="label-base">Teléfono</label>
+          <input type="text" name="telefono"
+                 value="{{ cliente.telefono|default:'' }}"
+                 class="input-base"
+                 placeholder="0412-1234567">
+        </div>
+      </div>
+
+      <div>
+        <label class="label-base">Email</label>
+        <input type="email" name="email"
+               value="{{ cliente.email|default:'' }}"
+               class="input-base"
+               placeholder="correo@ejemplo.com">
+      </div>
+
+      <div>
+        <label class="label-base">Dirección</label>
+        <textarea name="direccion" rows="2"
+                  class="input-base"
+                  placeholder="Dirección del cliente">{{ cliente.direccion|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-5">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-save"></i> Guardar Cliente
+      </button>
+      <a href="{% if cliente %}{% url 'clientes:detalle' cliente.pk %}{% else %}{% url 'clientes:lista' %}{% endif %}"
+         class="btn-secondary">
+        Cancelar
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

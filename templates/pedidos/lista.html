@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Pedidos — SmartSales{% endblock %}
+{% block breadcrumb %}Pedidos{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-title">Pedidos</h1>
+    <a href="{% url 'pedidos:crear' %}" class="btn-primary">
+      <i class="fas fa-plus"></i> Nuevo Pedido
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex gap-3 flex-wrap">
+    <div class="relative">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="Buscar por N°, cliente, vendedor..."
+             hx-get="{% url 'pedidos:lista' %}"
+             hx-trigger="keyup changed delay:300ms"
+             hx-target="#tabla-pedidos"
+             hx-swap="innerHTML"
+             class="input-base !w-72 pl-9 !py-2">
+    </div>
+    <select name="estado"
+            hx-get="{% url 'pedidos:lista' %}"
+            hx-trigger="change"
+            hx-target="#tabla-pedidos"
+            hx-swap="innerHTML"
+            class="input-base !w-auto">
+      <option value="">Todos los estados</option>
+      {% for valor, label in estados %}
+      <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div id="tabla-pedidos" class="card-glass !p-0 overflow-hidden">
+    {% include 'partials/tabla_pedidos.html' %}
+  </div>
+
+</div>
+{% endblock %}

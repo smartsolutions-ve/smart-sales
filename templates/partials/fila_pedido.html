@@ -1,0 +1,33 @@
+<tr id="fila-pedido-{{ pedido.pk }}" class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+  <td class="px-5 py-3">
+    <a href="{% url 'pedidos:detalle' pedido.pk %}"
+       class="text-sm font-semibold text-brand-blue hover:underline font-mono">{{ pedido.numero }}</a>
+  </td>
+  <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ pedido.fecha_pedido }}</td>
+  <td class="px-5 py-3 text-sm font-medium">{{ pedido.cliente }}</td>
+  <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+    {{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}
+  </td>
+  <td class="px-5 py-3">
+    <form method="post" action="{% url 'pedidos:cambiar_estado' pedido.pk %}"
+          hx-post="{% url 'pedidos:cambiar_estado' pedido.pk %}"
+          hx-target="#fila-pedido-{{ pedido.pk }}"
+          hx-swap="outerHTML">
+      {% csrf_token %}
+      <select name="estado" onchange="this.form.submit()"
+              {% if not pedido.puede_cambiar_estado %}disabled{% endif %}
+              class="text-xs border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 dark:text-slate-300 cursor-pointer disabled:opacity-50">
+        {% for valor, label in pedido.ESTADOS %}
+        <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </td>
+  <td class="px-5 py-3 text-sm font-bold text-right">${{ pedido.total }}</td>
+  <td class="px-5 py-3 text-right">
+    <a href="{% url 'pedidos:detalle' pedido.pk %}"
+       class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-blue hover:underline font-medium">
+      Ver →
+    </a>
+  </td>
+</tr>

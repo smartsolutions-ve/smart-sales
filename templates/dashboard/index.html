@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard — SmartSales{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+
+  <!-- Encabezado + filtro -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-title">Dashboard</h1>
+      {% if request.org %}
+      <p class="text-subtitle mt-0.5">{{ request.org.name }}</p>
+      {% endif %}
+    </div>
+    <form method="get">
+      <select name="periodo" onchange="this.form.submit()"
+              class="input-base !w-auto">
+        <option value="mes"          {% if periodo == 'mes' %}selected{% endif %}>Este mes</option>
+        <option value="mes_anterior" {% if periodo == 'mes_anterior' %}selected{% endif %}>Mes anterior</option>
+        <option value="tres_meses"   {% if periodo == 'tres_meses' %}selected{% endif %}>Últimos 3 meses</option>
+        <option value="anio"         {% if periodo == 'anio' %}selected{% endif %}>Este año</option>
+        <option value="todo"         {% if periodo == 'todo' %}selected{% endif %}>Todo el tiempo</option>
+      </select>
+    </form>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <div class="card-glass">
+      <div class="w-11 h-11 rounded-xl bg-blue-100 text-brand-blue dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center text-lg mb-3">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Ventas Totales</p>
+      <p class="text-3xl font-bold mt-1">${{ ventas_totales|intcomma }}</p>
+      <p class="text-xs text-slate-400 mt-1">Pedidos no cancelados</p>
+    </div>
+
+    <div class="card-glass">
+      <div class="w-11 h-11 rounded-xl bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center text-lg mb-3">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Pedidos Activos</p>
+      <p class="text-3xl font-bold text-brand-blue mt-1">{{ pedidos_activos }}</p>
+      <p class="text-xs text-slate-400 mt-1">Confirmados + En Proceso</p>
+    </div>
+
+    <div class="card-glass">
+      <div class="w-11 h-11 rounded-xl {% if pendientes_despacho > 0 %}bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400{% else %}bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400{% endif %} flex items-center justify-center text-lg mb-3">
+        <i class="fas fa-truck"></i>
+      </div>
+      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Pend. Despacho</p>
+      <p class="text-3xl font-bold {% if pendientes_despacho > 0 %}text-red-500{% endif %} mt-1">{{ pendientes_despacho }}</p>
+      <p class="text-xs text-slate-400 mt-1">Esperando ser despachados</p>
+    </div>
+
+    <div class="card-glass">
+      <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center text-lg mb-3">
+        <i class="fas fa-circle-check"></i>
+      </div>
+      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Cumplimiento</p>
+      <div class="flex items-end gap-1 mt-1">
+        <p class="text-3xl font-bold">{{ tasa_cumplimiento }}</p>
+        <p class="text-lg text-slate-400 mb-0.5">%</p>
+      </div>
+      <div class="mt-2 bg-slate-200 dark:bg-white/10 rounded-full h-1.5">
+        <div class="bg-gradient-to-r from-brand-blue to-brand-green h-1.5 rounded-full transition-all"
+             style="width: {{ tasa_cumplimiento }}%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Pedidos urgentes -->
+  {% if pedidos_urgentes %}
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+      <h2 class="font-bold">Pedidos urgentes (próximos a vencer)</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-slate-50 dark:bg-white/5">
+          <tr>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Pedido</th>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Cliente</th>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vendedor</th>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Entrega</th>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+          {% for pedido in pedidos_urgentes %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+            <td class="px-5 py-3">
+              <a href="{% url 'pedidos:detalle' pedido.pk %}"
+                 class="text-sm font-semibold text-brand-blue hover:underline">{{ pedido.numero }}</a>
+            </td>
+            <td class="px-5 py-3 text-sm">{{ pedido.cliente }}</td>
+            <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+              {{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}
+            </td>
+            <td class="px-5 py-3 text-sm font-semibold text-red-500">{{ pedido.fecha_entrega }}</td>
+            <td class="px-5 py-3"><span class="badge-warning">{{ pedido.estado }}</span></td>
+            <td class="px-5 py-3 text-sm font-bold text-right">${{ pedido.total|intcomma }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-glass text-center py-8">
+    <i class="fas fa-circle-check text-3xl text-green-400 mb-2"></i>
+    <p class="text-subtitle">No hay pedidos urgentes para los próximos 3 días.</p>
+  </div>
+  {% endif %}
+
+  <!-- Accesos rápidos -->
+  <div class="grid grid-cols-3 gap-4">
+    <a href="{% url 'pedidos:crear' %}" class="btn-primary">
+      <i class="fas fa-plus"></i> Nuevo Pedido
+    </a>
+    <a href="{% url 'pedidos:lista' %}" class="btn-secondary">
+      <i class="fas fa-clipboard-list"></i> Ver Pedidos
+    </a>
+    <a href="{% url 'despacho:index' %}" class="btn-secondary">
+      <i class="fas fa-truck"></i> Despacho
+    </a>
+  </div>
+
+</div>
+{% endblock %}

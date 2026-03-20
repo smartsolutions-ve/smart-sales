@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Clientes — SmartSales{% endblock %}
+{% block breadcrumb %}Clientes{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-title">Clientes</h1>
+    <a href="{% url 'clientes:crear' %}" class="btn-primary">
+      <i class="fas fa-plus"></i> Nuevo Cliente
+    </a>
+  </div>
+
+  <form method="get">
+    <div class="relative w-full max-w-sm">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="Buscar cliente..."
+             class="input-base pl-9 !py-2">
+    </div>
+  </form>
+
+  {% if clientes %}
+  <div class="card-glass !p-0 overflow-hidden">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Nombre</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Contacto</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Teléfono</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for cliente in clientes %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+          <td class="px-5 py-3">
+            <a href="{% url 'clientes:detalle' cliente.pk %}"
+               class="text-sm font-semibold text-brand-blue hover:underline">{{ cliente.nombre }}</a>
+          </td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ cliente.contacto|default:"—" }}</td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ cliente.telefono|default:"—" }}</td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ cliente.email|default:"—" }}</td>
+          <td class="px-5 py-3 text-right">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
+              <a href="{% url 'clientes:editar' cliente.pk %}"
+                 class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-colors">
+                <i class="fas fa-edit"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-glass text-center py-12">
+    <i class="fas fa-building text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+    <p class="text-subtitle text-lg font-medium">No hay clientes registrados.</p>
+    <a href="{% url 'clientes:crear' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-medium">
+      Crear el primero →
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

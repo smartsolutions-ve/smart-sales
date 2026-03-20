@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ pedido.numero }} — SmartSales{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6 max-w-4xl">
+
+  <div class="flex items-center gap-4">
+    <a href="{% url 'pedidos:lista' %}" class="text-slate-400 hover:text-slate-600">← Volver</a>
+    <h1 class="text-2xl font-bold text-slate-900">{{ pedido.numero }}</h1>
+    <span class="px-2 py-1 rounded-full text-xs font-semibold
+                 {% if pedido.estado == 'Entregado' %}bg-green-100 text-green-700
+                 {% elif pedido.estado == 'Cancelado' %}bg-red-100 text-red-700
+                 {% elif pedido.estado == 'En Proceso' %}bg-blue-100 text-blue-700
+                 {% elif pedido.estado == 'Confirmado' %}bg-amber-100 text-amber-700
+                 {% else %}bg-slate-100 text-slate-700{% endif %}">
+      {{ pedido.estado }}
+    </span>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-6">
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Cliente</p>
+      <p class="text-sm font-medium text-slate-900">{{ pedido.cliente }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Vendedor</p>
+      <p class="text-sm font-medium text-slate-900">{{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Fecha del Pedido</p>
+      <p class="text-sm text-slate-900">{{ pedido.fecha_pedido }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Fecha de Entrega</p>
+      <p class="text-sm text-slate-900">{{ pedido.fecha_entrega|default:"—" }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Estado Despacho</p>
+      <p class="text-sm text-slate-900">{{ pedido.estado_despacho }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Total</p>
+      <p class="text-lg font-bold text-slate-900">${{ pedido.total|intcomma }}</p>
+    </div>
+    {% if pedido.observaciones %}
+    <div class="col-span-2">
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Observaciones</p>
+      <p class="text-sm text-slate-700">{{ pedido.observaciones }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Items -->
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100">
+      <h2 class="font-semibold text-slate-900">Ítems del pedido</h2>
+    </div>
+    <table class="w-full">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Producto</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">SKU</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Cantidad</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Precio</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for item in pedido.items.all %}
+        <tr>
+          <td class="px-4 py-3 text-sm text-slate-900">{{ item.producto }}</td>
+          <td class="px-4 py-3 text-sm text-slate-500">{{ item.sku|default:"—" }}</td>
+          <td class="px-4 py-3 text-sm text-right text-slate-700">{{ item.cantidad }}</td>
+          <td class="px-4 py-3 text-sm text-right text-slate-700">${{ item.precio }}</td>
+          <td class="px-4 py-3 text-sm text-right font-medium text-slate-900">${{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="border-t-2 border-slate-200">
+        <tr>
+          <td colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-slate-700">Total</td>
+          <td class="px-4 py-3 text-right text-base font-bold text-slate-900">${{ pedido.total }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Acciones -->
+  <div class="flex gap-3">
+    <a href="{% url 'pedidos:editar' pedido.pk %}"
+       class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+      Editar
+    </a>
+    {% if pedido.puede_eliminarse %}
+    <button
+      @click="if(confirm('¿Eliminar este pedido?')) $refs.formEliminar.submit()"
+      type="button"
+      x-data
+      class="text-red-500 hover:text-red-700 text-sm font-medium">
+      Eliminar
+    </button>
+    <form x-ref="formEliminar" method="post" action="{% url 'pedidos:eliminar' pedido.pk %}">
+      {% csrf_token %}
+    </form>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

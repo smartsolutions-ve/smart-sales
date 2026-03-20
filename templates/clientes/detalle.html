@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ cliente.nombre }} — SmartSales{% endblock %}
+{% block breadcrumb %}Clientes{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="{% url 'clientes:lista' %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1 class="text-title">{{ cliente.nombre }}</h1>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'clientes:editar' cliente.pk %}" class="btn-secondary">
+        <i class="fas fa-edit"></i> Editar
+      </a>
+      {% if cliente.puede_eliminarse %}
+      <form method="post" action="{% url 'clientes:eliminar' cliente.pk %}"
+            x-data @submit.prevent="if(confirm('¿Eliminar este cliente?')) $el.submit()">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">
+          <i class="fas fa-trash-alt"></i> Eliminar
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Info del cliente -->
+  <div class="card-glass">
+    <div class="grid grid-cols-2 gap-5">
+      {% if cliente.contacto %}
+      <div>
+        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Contacto</p>
+        <p class="text-sm font-medium">{{ cliente.contacto }}</p>
+      </div>
+      {% endif %}
+      {% if cliente.telefono %}
+      <div>
+        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Teléfono</p>
+        <p class="text-sm font-medium">{{ cliente.telefono }}</p>
+      </div>
+      {% endif %}
+      {% if cliente.email %}
+      <div>
+        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Email</p>
+        <p class="text-sm font-medium">{{ cliente.email }}</p>
+      </div>
+      {% endif %}
+      {% if cliente.direccion %}
+      <div class="col-span-2">
+        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Dirección</p>
+        <p class="text-sm font-medium">{{ cliente.direccion }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pedidos -->
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
+      <h2 class="font-bold">Historial de Pedidos</h2>
+      <a href="{% url 'pedidos:crear' %}" class="text-xs text-brand-blue hover:underline font-semibold">
+        + Nuevo Pedido
+      </a>
+    </div>
+
+    {% if pedidos %}
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">N°</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Fecha</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vendedor</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for pedido in pedidos %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <td class="px-5 py-3">
+            <a href="{% url 'pedidos:detalle' pedido.pk %}"
+               class="text-sm font-semibold text-brand-blue hover:underline font-mono">{{ pedido.numero }}</a>
+          </td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ pedido.fecha_pedido }}</td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+            {{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}
+          </td>
+          <td class="px-5 py-3">
+            <span class="{% if pedido.estado == 'Entregado' %}badge-success
+                         {% elif pedido.estado == 'Cancelado' %}badge-danger
+                         {% elif pedido.estado == 'En Proceso' or pedido.estado == 'Confirmado' %}badge-info
+                         {% else %}badge-neutral{% endif %}">
+              {{ pedido.estado }}
+            </span>
+          </td>
+          <td class="px-5 py-3 text-sm font-bold text-right">${{ pedido.total|intcomma }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="px-6 py-10 text-center text-subtitle">
+      <i class="fas fa-clipboard text-3xl opacity-30 mb-2"></i>
+      <p>Este cliente no tiene pedidos todavía.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ org.name }} — Admin Panel{% endblock %}
+{% block breadcrumb %}Org: {{ org.name }}{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center gap-4">
+    <a href="{% url 'admin_panel:index' %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+    <div class="flex-1">
+      <h1 class="text-title">{{ org.name }}</h1>
+      <p class="text-subtitle font-mono">{{ org.slug }}</p>
+    </div>
+    <div class="flex gap-2 items-center">
+      <span class="{% if org.is_active %}badge-success{% else %}badge-danger{% endif %} text-sm px-3 py-1">
+        {% if org.is_active %}Activa{% else %}Suspendida{% endif %}
+      </span>
+      <a href="{% url 'admin_panel:org_editar' pk=org.pk %}" class="btn-secondary">
+        <i class="fas fa-pen"></i> Editar
+      </a>
+      <form method="post" action="{% url 'admin_panel:org_toggle' pk=org.pk %}"
+            onsubmit="return confirm('¿{% if org.is_active %}Suspender{% else %}Activar{% endif %} esta organización?')">
+        {% csrf_token %}
+        <button type="submit"
+                class="{% if org.is_active %}btn-danger{% else %}btn-primary{% endif %}">
+          <i class="fas {% if org.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+          {% if org.is_active %}Suspender{% else %}Activar{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info de la organización -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="card-glass">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Plan</p>
+      <p class="text-xl font-bold capitalize">{{ org.get_plan_display|default:org.plan }}</p>
+    </div>
+    <div class="card-glass">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Usuarios activos</p>
+      <p class="text-xl font-bold">{{ usuarios.count }}</p>
+    </div>
+    <div class="card-glass">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Creada</p>
+      <p class="text-xl font-bold">{{ org.created_at|date:"d/m/Y" }}</p>
+    </div>
+  </div>
+
+  <!-- Usuarios -->
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
+      <h2 class="font-bold">Usuarios</h2>
+      <a href="{% url 'admin_panel:usuario_crear' pk=org.pk %}" class="btn-primary text-xs !py-2">
+        <i class="fas fa-user-plus"></i> Agregar usuario
+      </a>
+    </div>
+
+    {% if usuarios %}
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Usuario</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Rol</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for u in usuarios %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <td class="px-5 py-3">
+            <p class="text-sm font-semibold">{{ u.get_full_name|default:u.username }}</p>
+            <p class="text-xs text-slate-400 font-mono">@{{ u.username }}</p>
+          </td>
+          <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ u.email }}</td>
+          <td class="px-5 py-3">
+            <span class="{% if u.role == 'gerente' %}badge-info{% else %}badge-neutral{% endif %}">
+              {{ u.get_role_display }}
+            </span>
+          </td>
+          <td class="px-5 py-3">
+            <span class="{% if u.is_active %}badge-success{% else %}badge-danger{% endif %}">
+              {% if u.is_active %}Activo{% else %}Inactivo{% endif %}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="px-6 py-10 text-center text-subtitle">
+      <i class="fas fa-users text-3xl opacity-30 mb-2"></i>
+      <p>No hay usuarios en esta organización.</p>
+      <a href="{% url 'admin_panel:usuario_crear' pk=org.pk %}" class="mt-2 inline-block text-brand-blue hover:underline text-sm font-medium">
+        Agregar el primero →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

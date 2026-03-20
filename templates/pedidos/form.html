@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{% if pedido %}Editar {{ pedido.numero }}{% else %}Nuevo Pedido{% endif %} — SmartSales{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-4xl">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'pedidos:lista' %}" class="text-slate-400 hover:text-slate-600">← Volver</a>
+    <h1 class="text-2xl font-bold text-slate-900">
+      {% if pedido %}Editar {{ pedido.numero }}{% else %}Nuevo Pedido{% endif %}
+    </h1>
+  </div>
+
+  <form method="post"
+        action="{% if pedido %}{% url 'pedidos:editar' pedido.pk %}{% else %}{% url 'pedidos:crear' %}{% endif %}"
+        x-data="pedidoForm({{ pedido.items.all|length|default:0 }})">
+    {% csrf_token %}
+
+    <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+      <h2 class="font-semibold text-slate-900">Datos del pedido</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Cliente -->
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Cliente</label>
+          <select name="cliente_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+            <option value="">-- Seleccionar cliente existente --</option>
+            {% for c in clientes %}
+            <option value="{{ c.pk }}" {% if pedido and pedido.cliente_id == c.pk %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-slate-500 mt-1">O escribe el nombre de un cliente nuevo:</p>
+          <input type="text" name="cliente_nuevo_nombre" placeholder="Nombre del cliente nuevo"
+                 class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+
+        <!-- Vendedor -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Vendedor</label>
+          <select name="vendedor_id" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+            <option value="">-- Seleccionar --</option>
+            {% for v in vendedores %}
+            <option value="{{ v.pk }}" {% if pedido and pedido.vendedor_id == v.pk %}selected{% endif %}>
+              {{ v.get_full_name|default:v.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Estado (solo en edición) -->
+        {% if pedido %}
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+          <select name="estado" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+            {% for valor, label in estados %}
+            <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Fecha pedido -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Fecha del Pedido</label>
+          <input type="date" name="fecha_pedido" required
+                 value="{{ pedido.fecha_pedido|default:'' }}"
+                 class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+
+        <!-- Fecha entrega -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Fecha de Entrega</label>
+          <input type="date" name="fecha_entrega"
+                 value="{{ pedido.fecha_entrega|default:'' }}"
+                 class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+
+        <!-- Observaciones -->
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Observaciones</label>
+          <textarea name="observaciones" rows="2"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand">{{ pedido.observaciones|default:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ítems -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mt-4 space-y-4">
+      <h2 class="font-semibold text-slate-900">Ítems</h2>
+
+      <div class="space-y-3">
+        <template x-for="(item, index) in items" :key="index">
+          <div class="grid grid-cols-12 gap-2 items-end">
+            <div class="col-span-5">
+              <label class="text-xs text-slate-500">Producto</label>
+              <input type="text" x-model="item.producto" :name="'items[][producto]'"
+                     class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                     placeholder="Nombre del producto">
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs text-slate-500">SKU</label>
+              <input type="text" x-model="item.sku" :name="'items[][sku]'"
+                     class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                     placeholder="Opcional">
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs text-slate-500">Cantidad</label>
+              <input type="number" x-model.number="item.cantidad" :name="'items[][cantidad]'"
+                     min="0.01" step="0.01"
+                     class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs text-slate-500">Precio</label>
+              <input type="number" x-model.number="item.precio" :name="'items[][precio]'"
+                     min="0" step="0.01"
+                     class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+            </div>
+            <div class="col-span-1 flex justify-center">
+              <button @click="quitarItem(index)" x-show="items.length > 1"
+                      type="button" class="text-red-400 hover:text-red-600 p-1">✕</button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button @click="agregarItem()" type="button"
+                class="text-sm text-brand hover:text-blue-700 font-medium">
+          + Agregar ítem
+        </button>
+        <div class="text-right">
+          <span class="text-slate-500 text-sm">Total estimado:</span>
+          <span class="text-xl font-bold text-slate-900 ml-2"
+                x-text="'$' + total().toFixed(2)">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-4">
+      <button type="submit"
+              class="bg-brand text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+        Guardar Pedido
+      </button>
+      <a href="{% url 'pedidos:lista' %}" class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">
+        Cancelar
+      </a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+function pedidoForm(itemCount) {
+  const itemsIniciales = []
+  // Pre-cargar ítems existentes si es edición
+  {% if pedido %}
+  {% for item in pedido.items.all %}
+  itemsIniciales.push({ producto: '{{ item.producto|escapejs }}', sku: '{{ item.sku|escapejs }}', cantidad: {{ item.cantidad }}, precio: {{ item.precio }} })
+  {% endfor %}
+  {% endif %}
+
+  return {
+    items: itemsIniciales.length > 0 ? itemsIniciales : [{ producto: '', sku: '', cantidad: 1, precio: 0 }],
+
+    agregarItem() {
+      this.items.push({ producto: '', sku: '', cantidad: 1, precio: 0 })
+    },
+
+    quitarItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1)
+      }
+    },
+
+    total() {
+      return this.items.reduce((sum, item) => {
+        return sum + (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio) || 0)
+      }, 0)
+    },
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+# ── Django core ──────────────────────────────────────────────────
+Django==5.2
+gunicorn==23.0.0
+
+# ── Base de datos ────────────────────────────────────────────────
+psycopg[binary]==3.2.4          # Adaptador PostgreSQL moderno (psycopg3)
+dj-database-url==2.3.0          # DATABASE_URL → settings dict
+
+# ── Variables de entorno ─────────────────────────────────────────
+django-environ==0.11.2
+
+# ── Archivos estáticos en producción ─────────────────────────────
+whitenoise==6.9.0               # Sirve estáticos desde Django (sin Nginx extra)
+
+# ── HTMX integration ─────────────────────────────────────────────
+django-htmx==1.21.0             # request.htmx + middleware
+
+# ── Email ────────────────────────────────────────────────────────
+django-anymail[resend]==12.0    # Backend de email para Resend.com
+
+# ── Formularios y validación ──────────────────────────────────────
+django-crispy-forms==2.3
+crispy-tailwind==1.0.3          # Template pack de Tailwind para crispy-forms
+
+# ── Tests ────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-django==4.9.0
+factory-boy==3.3.1              # Factories para crear objetos de prueba
+faker==33.3.0                   # Datos falsos realistas
+
+# ── Desarrollo ───────────────────────────────────────────────────
+django-debug-toolbar==4.4.6     # Profiling queries en dev

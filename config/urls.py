@@ -20,6 +20,7 @@ urlpatterns = [
     # Módulos
     path('pedidos/', include('apps.pedidos.urls.pedidos', namespace='pedidos')),
     path('clientes/', include('apps.pedidos.urls.clientes', namespace='clientes')),
+    path('productos/', include('apps.productos.urls', namespace='productos')),
     path('despacho/', include('apps.despacho.urls', namespace='despacho')),
     path('competencia/', include('apps.competencia.urls', namespace='competencia')),
     path('reportes/', include('apps.reportes.urls', namespace='reportes')),

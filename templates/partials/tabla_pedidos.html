@@ -17,6 +17,9 @@
     {% endfor %}
   </tbody>
 </table>
+{% if page_obj %}
+{% include 'partials/paginacion.html' %}
+{% endif %}
 {% else %}
 <div class="text-center py-16 text-slate-400">
   <i class="fas fa-clipboard-list text-4xl mb-3 opacity-30"></i>

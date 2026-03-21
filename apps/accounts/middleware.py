@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 from django.contrib import messages
 
-RUTAS_PUBLICAS = ['/login/', '/logout/', '/static/', '/media/', '/__debug__/']
+RUTAS_PUBLICAS = ['/login/', '/logout/', '/password-reset/', '/static/', '/media/', '/__debug__/']
 
 
 class TenantMiddleware:

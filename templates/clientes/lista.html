@@ -57,6 +57,9 @@
         {% endfor %}
       </tbody>
     </table>
+    <div class="px-5 py-3 border-t border-slate-100 dark:border-white/5">
+      {% include 'partials/paginacion.html' %}
+    </div>
   </div>
   {% else %}
   <div class="card-glass text-center py-12">

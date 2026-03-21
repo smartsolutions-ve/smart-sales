@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
+from django.core.paginator import Paginator
 
 from apps.accounts.decorators import role_required
 from apps.pedidos.models import Cliente
@@ -18,7 +19,10 @@ def lista(request):
         .select_related('vendedor', 'cliente')
         .order_by('-fecha', '-created_at')
     )
-    context = {'registros': registros}
+    paginator = Paginator(registros, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {'registros': page_obj, 'page_obj': page_obj}
     return render(request, 'competencia/lista.html', context)
 
 

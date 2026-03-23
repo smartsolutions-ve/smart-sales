@@ -9,35 +9,49 @@
 
   <div class="flex items-center justify-between">
     <h1 class="text-title">Pedidos</h1>
-    <a href="{% url 'pedidos:crear' %}" class="btn-primary">
-      <i class="fas fa-plus"></i> Nuevo Pedido
-    </a>
+    <div class="flex gap-2">
+      <a href="{% url 'pedidos:exportar_csv' %}?q={{ q }}&estado={{ estado_filtro }}&desde={{ desde }}&hasta={{ hasta }}"
+         class="btn-secondary" title="Exportar CSV">
+        <i class="fas fa-file-csv"></i> Exportar
+      </a>
+      <a href="{% url 'pedidos:crear' %}" class="btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Pedido
+      </a>
+    </div>
   </div>
 
   <!-- Filtros -->
-  <div class="flex gap-3 flex-wrap">
-    <div class="relative">
-      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+  <form method="get" class="flex gap-3 flex-wrap items-end">
+    <div class="relative flex-1 min-w-48">
       <input type="text" name="q" value="{{ q }}"
              placeholder="Buscar por N°, cliente, vendedor..."
-             hx-get="{% url 'pedidos:lista' %}"
-             hx-trigger="keyup changed delay:300ms"
-             hx-target="#tabla-pedidos"
-             hx-swap="innerHTML"
-             class="input-base !w-72 pl-9 !py-2">
+             aria-label="Buscar"
+             class="input-base pr-9 !py-2">
+      <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
     </div>
-    <select name="estado"
-            hx-get="{% url 'pedidos:lista' %}"
-            hx-trigger="change"
-            hx-target="#tabla-pedidos"
-            hx-swap="innerHTML"
-            class="input-base !w-auto">
+    <select name="estado" class="input-base !w-auto !py-2">
       <option value="">Todos los estados</option>
       {% for valor, label in estados %}
       <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-  </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Desde</label>
+      <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
+    </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Hasta</label>
+      <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
+    </div>
+    <button type="submit" class="btn-secondary !py-2">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
+    {% if q or estado_filtro or desde or hasta %}
+    <a href="{% url 'pedidos:lista' %}" class="text-xs text-slate-400 hover:text-red-500 self-center">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
 
   <!-- Tabla -->
   <div id="tabla-pedidos" class="card-glass !p-0 overflow-hidden">

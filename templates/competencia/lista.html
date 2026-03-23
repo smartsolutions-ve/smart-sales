@@ -7,12 +7,45 @@
 {% block content %}
 <div class="p-6 space-y-5">
 
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between flex-wrap gap-3">
     <h1 class="text-title">Inteligencia de Competencia</h1>
-    <a href="{% url 'competencia:crear' %}" class="btn-primary">
-      <i class="fas fa-plus"></i> Nuevo Registro
-    </a>
+    <div class="flex gap-2">
+      <a href="{% url 'competencia:exportar_csv' %}?q={{ q }}&desde={{ desde }}&hasta={{ hasta }}"
+         class="btn-secondary" title="Exportar CSV">
+        <i class="fas fa-file-csv"></i> Exportar
+      </a>
+      <a href="{% url 'competencia:crear' %}" class="btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Registro
+      </a>
+    </div>
   </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex gap-3 flex-wrap items-end">
+    <div class="relative flex-1 min-w-48">
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="Buscar por producto, competidor, vendedor..."
+             aria-label="Buscar"
+             class="input-base pr-9 !py-2">
+      <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+    </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Desde</label>
+      <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
+    </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Hasta</label>
+      <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
+    </div>
+    <button type="submit" class="btn-secondary !py-2">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
+    {% if q or desde or hasta %}
+    <a href="{% url 'competencia:lista' %}" class="text-xs text-slate-400 hover:text-red-500 self-center">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
 
   {% if registros %}
   <div class="card-glass !p-0 overflow-hidden">
@@ -54,15 +87,22 @@
               {{ r.vendedor.get_full_name|default:r.vendedor.username }}
             </td>
             <td class="px-5 py-3 text-right">
-              <form method="post" action="{% url 'competencia:eliminar' r.pk %}"
-                    x-data
-                    @submit.prevent="if(confirm('¿Eliminar este registro?')) $el.submit()">
-                {% csrf_token %}
-                <button type="submit"
-                        class="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs ml-auto">
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
+                <a href="{% url 'competencia:editar' r.pk %}"
+                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-colors"
+                   title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form x-ref="formElimComp{{ r.pk }}" method="post" action="{% url 'competencia:eliminar' r.pk %}">
+                  {% csrf_token %}
+                </form>
+                <button type="button"
+                        @click="confirmar('Eliminar registro', '¿Eliminar este registro de competencia?', $refs.formElimComp{{ r.pk }})"
+                        class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors"
+                        title="Eliminar">
                   <i class="fas fa-trash-alt"></i>
                 </button>
-              </form>
+              </div>
             </td>
           </tr>
           {% endfor %}

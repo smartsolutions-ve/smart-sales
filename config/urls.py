@@ -24,6 +24,9 @@ urlpatterns = [
     path('despacho/', include('apps.despacho.urls', namespace='despacho')),
     path('competencia/', include('apps.competencia.urls', namespace='competencia')),
     path('reportes/', include('apps.reportes.urls', namespace='reportes')),
+    path('flotas/', include('apps.flotas.urls', namespace='flotas')),
+    path('cuotas/', include('apps.cuotas.urls', namespace='cuotas')),
+    path('chat-ia/', include('apps.chat_ia.urls', namespace='chat_ia')),
 
     # Formulario móvil de campo
     path('campo/', include('apps.campo.urls', namespace='campo')),

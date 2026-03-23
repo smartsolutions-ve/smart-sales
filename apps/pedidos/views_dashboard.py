@@ -6,7 +6,8 @@ from decimal import Decimal
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Value
+from django.db.models.functions import Coalesce
 
 from apps.accounts.decorators import role_required
 from .models import Pedido
@@ -18,15 +19,14 @@ COLORES_CHART = ['#0066FF', '#22C55E', '#F59E0B', '#8B5CF6',
                  '#EF4444', '#06B6D4', '#F97316', '#84CC16']
 
 ESTADO_COLORES = {
-    'Borrador':   '#94a3b8',
+    'Pendiente':  '#94a3b8',
     'Confirmado': '#3b82f6',
     'En Proceso': '#f59e0b',
-    'Despachado': '#8b5cf6',
     'Entregado':  '#22c55e',
     'Cancelado':  '#ef4444',
 }
 
-ORDEN_EMBUDO = ['Borrador', 'Confirmado', 'En Proceso', 'Despachado', 'Entregado']
+ORDEN_EMBUDO = ['Pendiente', 'Confirmado', 'En Proceso', 'Entregado']
 
 
 def _intervalos_6_meses(hoy):
@@ -53,27 +53,50 @@ def _intervalos_6_meses(hoy):
 def index(request):
     org    = request.org
     periodo = request.GET.get('periodo', 'mes')
+    desde_param = request.GET.get('desde', '')
+    hasta_param = request.GET.get('hasta', '')
 
     hoy = timezone.now().date()
-    if periodo == 'mes':
-        inicio = hoy.replace(day=1)
-    elif periodo == 'mes_anterior':
-        primer_dia_mes_actual   = hoy.replace(day=1)
-        ultimo_dia_mes_anterior = primer_dia_mes_actual - datetime.timedelta(days=1)
-        inicio = ultimo_dia_mes_anterior.replace(day=1)
-    elif periodo == 'tres_meses':
-        inicio = hoy - datetime.timedelta(days=90)
-    elif periodo == 'anio':
-        inicio = hoy.replace(month=1, day=1)
-    else:
+
+    # Custom date range overrides periodo presets
+    if desde_param or hasta_param:
         inicio = None
+        fin = None
+        if desde_param:
+            try:
+                inicio = datetime.date.fromisoformat(desde_param)
+            except ValueError:
+                inicio = None
+        if hasta_param:
+            try:
+                fin = datetime.date.fromisoformat(hasta_param)
+            except ValueError:
+                fin = None
+    else:
+        fin = None
+        if periodo == 'mes':
+            inicio = hoy.replace(day=1)
+        elif periodo == 'mes_anterior':
+            primer_dia_mes_actual   = hoy.replace(day=1)
+            ultimo_dia_mes_anterior = primer_dia_mes_actual - datetime.timedelta(days=1)
+            inicio = ultimo_dia_mes_anterior.replace(day=1)
+        elif periodo == 'tres_meses':
+            inicio = hoy - datetime.timedelta(days=90)
+        elif periodo == 'anio':
+            inicio = hoy.replace(month=1, day=1)
+        else:
+            inicio = None
 
     pedidos_base = Pedido.objects.filter(organization=org).exclude(estado='Cancelado')
     if inicio:
         pedidos_base = pedidos_base.filter(fecha_pedido__gte=inicio)
+    if fin:
+        pedidos_base = pedidos_base.filter(fecha_pedido__lte=fin)
 
     # ── KPIs ────────────────────────────────────────────────────────────────
-    ventas_totales = pedidos_base.aggregate(total=Sum('total'))['total'] or Decimal('0')
+    ventas_totales = pedidos_base.aggregate(
+        total=Coalesce(Sum('total'), Value(Decimal('0')))
+    )['total']
     pedidos_activos = Pedido.objects.filter(
         organization=org, estado__in=['Confirmado', 'En Proceso']
     ).count()
@@ -105,7 +128,7 @@ def index(request):
             Pedido.objects
             .filter(organization=org, fecha_pedido__gte=primer_dia, fecha_pedido__lte=ultimo_dia)
             .exclude(estado='Cancelado')
-            .aggregate(t=Sum('total'))['t'] or Decimal('0')
+            .aggregate(t=Coalesce(Sum('total'), Value(Decimal('0'))))['t']
         )
         meses_ventas.append(float(total))
 
@@ -175,7 +198,7 @@ def index(request):
                 .filter(organization=org, vendedor=user,
                         fecha_pedido__gte=primer_dia, fecha_pedido__lte=ultimo_dia)
                 .exclude(estado='Cancelado')
-                .aggregate(t=Sum('total'))['t'] or Decimal('0')
+                .aggregate(t=Coalesce(Sum('total'), Value(Decimal('0'))))['t']
             )
             data.append(float(total))
         datasets_vendedores_mes.append({
@@ -191,6 +214,8 @@ def index(request):
         'tasa_cumplimiento':    tasa_cumplimiento,
         'pedidos_urgentes':     pedidos_urgentes,
         'periodo':              periodo,
+        'desde':                desde_param,
+        'hasta':                hasta_param,
         # Gráfica 1 – ventas por mes
         'chart_meses_labels':   json.dumps(meses_labels),
         'chart_meses_ventas':   json.dumps(meses_ventas),

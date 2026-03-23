@@ -52,6 +52,13 @@
         </div>
 
         <div>
+          <label class="label-base">Peso por unidad (kg)</label>
+          <input type="number" name="peso_kg" value="{{ producto.peso_kg|default:'' }}"
+                 step="0.001" min="0" class="input-base" placeholder="0.000">
+          <p class="text-xs text-subtitle mt-1">Usado para calcular peso de despacho.</p>
+        </div>
+
+        <div>
           <label class="label-base">Categoría</label>
           <select name="categoria_id" class="input-base">
             <option value="">Sin categoría</option>

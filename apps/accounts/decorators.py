@@ -16,6 +16,9 @@ def role_required(*roles):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect('accounts:login')
+            # Superusers y superadmins siempre tienen acceso
+            if getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_superadmin', False):
+                return view_func(request, *args, **kwargs)
             if request.user.role not in roles:
                 messages.error(request, 'No tienes permiso para acceder a esta sección.')
                 return redirect('accounts:login')

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cuotas por Vendedor — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'cuotas:lista' %}" class="hover:text-brand-blue">Cuotas</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i> Por Vendedor
+{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-title">Ranking de Vendedores</h1>
+    <form method="get" class="flex gap-3 items-end">
+      <div>
+        <label class="text-xs text-slate-500 font-medium">Periodo</label>
+        <input type="month" name="periodo" value="{{ periodo_filtro }}" class="input-base !py-2">
+      </div>
+      <button type="submit" class="btn-secondary !py-2"><i class="fas fa-filter"></i></button>
+    </form>
+  </div>
+
+  {% if datos %}
+  <div class="card-glass !p-0 overflow-hidden">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200">
+        <tr>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase w-10">#</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Vendedor</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Plan USD</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Real USD</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-center">% Cumpl.</th>
+          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Barra</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for d in datos %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5">
+          <td class="px-5 py-3 text-sm text-slate-400 font-mono">{{ forloop.counter }}</td>
+          <td class="px-5 py-3 text-sm font-medium">{{ d.vendedor_nombre }}</td>
+          <td class="px-5 py-3 text-sm text-right">${{ d.plan_total|intcomma }}</td>
+          <td class="px-5 py-3 text-sm text-right font-medium">${{ d.real_total|intcomma }}</td>
+          <td class="px-5 py-3 text-center">
+            {% if d.cumplimiento >= 100 %}<span class="badge-success">{{ d.cumplimiento }}%</span>
+            {% elif d.cumplimiento >= 70 %}<span class="badge-warning">{{ d.cumplimiento }}%</span>
+            {% else %}<span class="badge-danger">{{ d.cumplimiento }}%</span>{% endif %}
+          </td>
+          <td class="px-5 py-3 w-40">
+            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+              <div class="h-2.5 rounded-full {% if d.cumplimiento >= 100 %}bg-green-500{% elif d.cumplimiento >= 70 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                   style="width: {% if d.cumplimiento > 100 %}100{% else %}{{ d.cumplimiento }}{% endif %}%"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-slate-400 text-center py-10">No hay datos para el periodo seleccionado.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

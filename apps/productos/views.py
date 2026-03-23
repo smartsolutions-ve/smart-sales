@@ -85,6 +85,8 @@ def eliminar(request, pk):
 @login_required
 def buscar_json(request):
     """Endpoint JSON para autocompletar productos en el formulario de pedido."""
+    from django.db.models import Q
+
     q = request.GET.get('q', '').strip()
     if len(q) < 2:
         return JsonResponse({'results': []})
@@ -92,10 +94,7 @@ def buscar_json(request):
     productos = (
         Producto.objects
         .filter(organization=request.org, is_active=True)
-        .filter(
-            __import__('django.db.models', fromlist=['Q']).Q(nombre__icontains=q) |
-            __import__('django.db.models', fromlist=['Q']).Q(sku__icontains=q)
-        )
+        .filter(Q(nombre__icontains=q) | Q(sku__icontains=q))
         .values('id', 'nombre', 'sku', 'precio_base', 'unidad')[:10]
     )
 
@@ -118,6 +117,7 @@ def _guardar_producto(request, producto):
     sku = data.get('sku', '').strip()
     descripcion = data.get('descripcion', '').strip()
     precio_base = data.get('precio_base', '').strip() or None
+    peso_kg = data.get('peso_kg', '').strip() or None
     unidad = data.get('unidad', '').strip()
     categoria_id = data.get('categoria_id', '').strip() or None
     is_active = data.get('is_active') == 'on'
@@ -148,6 +148,7 @@ def _guardar_producto(request, producto):
     producto.sku = sku
     producto.descripcion = descripcion
     producto.precio_base = precio_base
+    producto.peso_kg = peso_kg
     producto.unidad = unidad
     producto.categoria = categoria
     producto.is_active = is_active

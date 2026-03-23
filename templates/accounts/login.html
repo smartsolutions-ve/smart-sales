@@ -34,26 +34,24 @@
         {% csrf_token %}
 
         <div>
-          <label for="username" class="label-base">Usuario</label>
-          <div class="relative">
-            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="username" name="username"
-                   value="{{ username|default:'' }}"
-                   required autofocus
-                   class="input-base pl-11"
-                   placeholder="tu.usuario">
-          </div>
+          <label for="username" class="label-base">
+            <i class="fas fa-user text-slate-400 mr-1.5 text-xs"></i> Usuario
+          </label>
+          <input type="text" id="username" name="username"
+                 value="{{ username|default:'' }}"
+                 required autofocus
+                 class="input-base"
+                 placeholder="tu.usuario">
         </div>
 
         <div>
-          <label for="password" class="label-base">Contraseña</label>
-          <div class="relative">
-            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="password" id="password" name="password"
-                   required
-                   class="input-base pl-11"
-                   placeholder="••••••••">
-          </div>
+          <label for="password" class="label-base">
+            <i class="fas fa-lock text-slate-400 mr-1.5 text-xs"></i> Contraseña
+          </label>
+          <input type="password" id="password" name="password"
+                 required
+                 class="input-base"
+                 placeholder="••••••••">
         </div>
 
         {% if messages %}

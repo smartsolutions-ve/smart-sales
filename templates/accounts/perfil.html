@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil — SmartSales{% endblock %}
+{% block breadcrumb %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-xl space-y-6">
+
+  <h1 class="text-title">Mi Perfil</h1>
+
+  <!-- Datos personales -->
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="datos">
+    <div class="card-glass space-y-4">
+      <h2 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider">Datos personales</h2>
+
+      <div>
+        <label class="label-base">Usuario</label>
+        <div class="input-base !bg-slate-50 dark:!bg-slate-800/30 text-slate-500 font-mono">
+          {{ user.username }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label-base">Nombre</label>
+          <input type="text" name="first_name" value="{{ user.first_name }}"
+                 class="input-base" placeholder="Tu nombre">
+        </div>
+        <div>
+          <label class="label-base">Apellido</label>
+          <input type="text" name="last_name" value="{{ user.last_name }}"
+                 class="input-base" placeholder="Tu apellido">
+        </div>
+      </div>
+
+      <div>
+        <label class="label-base">Email</label>
+        <input type="email" name="email" value="{{ user.email }}"
+               class="input-base" placeholder="tu@email.com">
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar Datos
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Cambiar contraseña -->
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="password">
+    <div class="card-glass space-y-4 border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5">
+      <h2 class="font-bold text-sm text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+        <i class="fas fa-key mr-1"></i> Cambiar Contraseña
+      </h2>
+
+      <div>
+        <label class="label-base">Contraseña actual</label>
+        <input type="password" name="current_password" required
+               class="input-base" placeholder="Tu contraseña actual">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label-base">Nueva contraseña</label>
+          <input type="password" name="new_password" required minlength="8"
+                 class="input-base" placeholder="Mínimo 8 caracteres">
+        </div>
+        <div>
+          <label class="label-base">Confirmar nueva</label>
+          <input type="password" name="new_password2" required minlength="8"
+                 class="input-base" placeholder="Repetir contraseña">
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400
+                       hover:bg-amber-200 text-sm font-semibold transition-colors">
+          <i class="fas fa-lock mr-1"></i> Cambiar Contraseña
+        </button>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

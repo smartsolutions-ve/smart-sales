@@ -6,7 +6,7 @@
 <div class="min-h-screen bg-slate-50">
 
   <!-- Header móvil -->
-  <header class="bg-navy text-white px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+  <header class="bg-gradient-to-r from-brand-blue to-brand-green text-white px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
     <a href="{% url 'campo:index' %}" class="text-white/70 hover:text-white">
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -33,12 +33,7 @@
     {% endif %}
 
     <form method="post" action="{% url 'campo:pedido_nuevo' %}"
-          x-data="{
-            items: [{ producto: '', cantidad: 1, precio: 0 }],
-            agregarItem() { this.items.push({ producto: '', cantidad: 1, precio: 0 }) },
-            quitarItem(i) { if(this.items.length > 1) this.items.splice(i, 1) },
-            total() { return this.items.reduce((s,i) => s + (parseFloat(i.cantidad)||0)*(parseFloat(i.precio)||0), 0) }
-          }">
+          x-data="campoPedidoForm()">
       {% csrf_token %}
 
       <div class="space-y-4">
@@ -94,12 +89,35 @@
 
           <template x-for="(item, idx) in items" :key="idx">
             <div class="border border-slate-100 rounded-xl p-3 space-y-2">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 relative">
                 <input type="text" x-model="item.producto" :name="'items[][producto]'"
-                       placeholder="Nombre del producto"
-                       class="flex-1 px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+                       @input.debounce.300ms="buscarProducto(idx, $event.target.value)"
+                       @focus="buscarProducto(idx, item.producto)"
+                       @keydown.escape="item._sug = []"
+                       autocomplete="off"
+                       placeholder="Buscar producto..."
+                       class="flex-1 px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                <input type="hidden" :name="'items[][sku]'" :value="item.sku || ''">
                 <button @click="quitarItem(idx)" x-show="items.length > 1" type="button"
-                        class="text-red-400 hover:text-red-600 p-1">✕</button>
+                        class="text-red-400 hover:text-red-600 p-1 flex-shrink-0">✕</button>
+                <!-- Sugerencias -->
+                <div x-show="item._sug && item._sug.length > 0"
+                     @click.outside="item._sug = []"
+                     class="absolute z-30 left-0 right-8 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                  <template x-for="(s, si) in item._sug" :key="si">
+                    <button type="button" @click="seleccionarProducto(idx, s)"
+                            class="w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 border-b border-slate-100 last:border-0">
+                      <span class="font-medium" x-text="s.nombre"></span>
+                      <span class="text-green-600 text-xs float-right" x-show="s.precio_base" x-text="'$' + s.precio_base"></span>
+                    </button>
+                  </template>
+                </div>
+                <!-- Sin resultados -->
+                <div x-show="item._sinResultados && (!item._sug || item._sug.length === 0)"
+                     @click.outside="item._sinResultados = false"
+                     class="absolute z-30 left-0 right-8 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl px-3 py-3 text-sm text-slate-500">
+                  No se encontraron productos
+                </div>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
@@ -135,7 +153,7 @@
         </div>
 
         <button type="submit"
-                class="w-full bg-brand text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg">
+                class="w-full btn-primary py-3.5 rounded-2xl shadow-lg">
           Registrar Pedido
         </button>
 
@@ -143,4 +161,32 @@
     </form>
   </div>
 </div>
+
+<script>
+function campoPedidoForm() {
+  return {
+    items: [{ producto: '', sku: '', cantidad: 1, precio: 0, _sug: [], _sinResultados: false }],
+    agregarItem() { this.items.push({ producto: '', sku: '', cantidad: 1, precio: 0, _sug: [], _sinResultados: false }) },
+    quitarItem(i) { if (this.items.length > 1) this.items.splice(i, 1) },
+    total() { return this.items.reduce((s, i) => s + (parseFloat(i.cantidad)||0) * (parseFloat(i.precio)||0), 0) },
+    async buscarProducto(idx, q) {
+      if (!q || q.length < 2) { this.items[idx]._sug = []; this.items[idx]._sinResultados = false; return }
+      try {
+        const r = await fetch(`/productos/buscar/?q=${encodeURIComponent(q)}`)
+        const d = await r.json()
+        this.items[idx]._sug = d.results || []
+        this.items[idx]._sinResultados = this.items[idx]._sug.length === 0
+      } catch(e) { this.items[idx]._sug = []; this.items[idx]._sinResultados = false }
+    },
+    seleccionarProducto(idx, s) {
+      this.items[idx].producto = s.nombre
+      this.items[idx].sku = s.sku || ''
+      if (s.precio_base && !this.items[idx].precio) {
+        this.items[idx].precio = parseFloat(s.precio_base)
+      }
+      this.items[idx]._sug = []
+    },
+  }
+}
+</script>
 {% endblock %}

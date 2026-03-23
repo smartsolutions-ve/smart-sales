@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Chat IA — SmartSales{% endblock %}
+{% block breadcrumb %}Asistente IA{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-6 max-w-4xl mx-auto flex flex-col" style="height: calc(100vh - 4rem);">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-4 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-green
+                  flex items-center justify-center shadow-lg shadow-brand-blue/20">
+        <i class="fas fa-robot text-white text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Asistente IA</h1>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            {% if request.org %}{{ request.org.name }}{% endif %} — En línea
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="document.getElementById('chat-historial').innerHTML='<div class=\'flex flex-col items-center justify-center h-full text-center py-12\'><div class=\'w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-green flex items-center justify-center mb-4 shadow-lg\'><i class=\'fas fa-robot text-white text-2xl\'></i></div><p class=\'font-semibold text-slate-700 dark:text-slate-300\'>Conversación limpiada</p><p class=\'text-sm text-slate-400 mt-1\'>Los mensajes anteriores siguen guardados en el historial.</p></div>'"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500
+                     hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Limpiar vista">
+        <i class="fas fa-broom mr-1"></i> Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div id="chat-historial"
+       class="flex-1 overflow-y-auto rounded-2xl bg-slate-50 dark:bg-slate-900/40
+              border border-slate-200 dark:border-slate-700/50 p-4 mb-4
+              scroll-smooth"
+       x-data x-init="$el.scrollTop = $el.scrollHeight">
+    {% if mensajes %}
+      {% include 'chat_ia/_mensaje.html' %}
+    {% else %}
+    <div class="flex flex-col items-center justify-center h-full text-center py-12"
+         x-data="{ sugerencias: [
+           '¿Cuántos pedidos están pendientes?',
+           'Dame un resumen del negocio',
+           '¿Cómo va el cumplimiento de ventas?',
+           '¿Cuánto falta por facturar?',
+           '¿Qué viajes hay programados?',
+           '¿Quiénes son los top clientes?',
+         ]}">
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-blue to-brand-green
+                  flex items-center justify-center mb-5 shadow-xl shadow-brand-blue/20">
+        <i class="fas fa-robot text-white text-3xl"></i>
+      </div>
+      <p class="text-lg font-bold text-slate-700 dark:text-slate-200">
+        ¿En qué puedo ayudarte?
+      </p>
+      <p class="text-sm text-slate-400 mt-1 max-w-md">
+        Tengo acceso a datos de pedidos, clientes, productos, despachos, facturación, flotas y cuotas de ventas.
+      </p>
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
+        <template x-for="sug in sugerencias" :key="sug">
+          <button @click="
+                    const input = document.querySelector('input[name=pregunta]');
+                    const form = document.querySelector('#chat-form');
+                    input.value = sug;
+                    input.dispatchEvent(new Event('input'));
+                    form.requestSubmit();
+                  "
+                  class="text-left text-sm px-4 py-3 rounded-xl
+                         bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
+                         text-slate-600 dark:text-slate-400
+                         hover:border-brand-blue hover:shadow-md hover:shadow-brand-blue/5
+                         hover:text-brand-blue transition-all group/sug">
+            <i class="fas fa-sparkles text-[10px] mr-1.5 opacity-40 group-hover/sug:opacity-100
+                      text-brand-blue transition-opacity"></i>
+            <span x-text="sug"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Input -->
+  <div class="flex-shrink-0" x-data="chatInput()">
+    <form id="chat-form"
+          hx-post="{% url 'chat_ia:ask' %}"
+          hx-target="#chat-historial"
+          hx-swap="beforeend"
+          hx-indicator="#chat-loading"
+          @htmx:before-request="onSend()"
+          @htmx:after-request="onReceive()"
+          class="relative">
+      {% csrf_token %}
+
+      <div class="flex gap-2 items-end">
+        <div class="flex-1 relative">
+          <input type="text"
+                 name="pregunta"
+                 x-model="pregunta"
+                 x-ref="input"
+                 @keydown.enter.prevent="if(pregunta.trim() && !cargando) $el.form.requestSubmit()"
+                 :disabled="cargando"
+                 placeholder="Escribe tu consulta..."
+                 maxlength="500"
+                 autocomplete="off"
+                 class="w-full pl-4 pr-12 py-3.5 rounded-2xl text-sm
+                        bg-white dark:bg-slate-800
+                        border-2 border-slate-200 dark:border-slate-700
+                        focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20
+                        dark:focus:border-brand-blue
+                        placeholder-slate-400 dark:placeholder-slate-500
+                        text-slate-900 dark:text-white
+                        transition-all duration-200
+                        disabled:opacity-50">
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 dark:text-slate-600"
+                x-show="pregunta.length > 400"
+                x-text="pregunta.length + '/500'"></span>
+        </div>
+
+        <button type="submit"
+                :disabled="cargando || !pregunta.trim()"
+                class="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-blue to-brand-green
+                       text-white flex items-center justify-center flex-shrink-0
+                       shadow-lg shadow-brand-blue/25
+                       hover:shadow-xl hover:shadow-brand-blue/30 hover:scale-105
+                       active:scale-95
+                       transition-all duration-200
+                       disabled:opacity-40 disabled:shadow-none disabled:scale-100">
+          <i class="fas fa-paper-plane text-sm" x-show="!cargando"></i>
+          <div x-show="cargando" class="flex gap-0.5">
+            <div class="w-1 h-1 rounded-full bg-white animate-bounce" style="animation-delay:0ms"></div>
+            <div class="w-1 h-1 rounded-full bg-white animate-bounce" style="animation-delay:150ms"></div>
+            <div class="w-1 h-1 rounded-full bg-white animate-bounce" style="animation-delay:300ms"></div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Loading indicator (inside chat) -->
+      <div id="chat-loading" class="hidden"></div>
+    </form>
+
+    <p class="text-center text-[10px] text-slate-400 dark:text-slate-600 mt-2">
+      El asistente puede cometer errores. Verifica la información importante.
+    </p>
+  </div>
+
+</div>
+
+<style>
+  @keyframes chatMsgEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-msg-enter { animation: chatMsgEnter 0.3s ease-out; }
+</style>
+
+<script>
+function chatInput() {
+  return {
+    pregunta: '',
+    cargando: false,
+
+    onSend() {
+      this.cargando = true;
+      // Insertar indicador de typing
+      const hist = document.getElementById('chat-historial');
+      const typing = document.createElement('div');
+      typing.id = 'typing-indicator';
+      typing.className = 'flex justify-start mb-4 chat-msg-enter';
+      typing.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-blue to-brand-green
+                    flex items-center justify-center flex-shrink-0 mr-2 mt-1 shadow-sm">
+          <i class="fas fa-robot text-white text-xs"></i>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl rounded-tl-sm px-5 py-4
+                    border border-slate-100 dark:border-slate-700 shadow-sm">
+          <div class="flex gap-1.5 items-center">
+            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:0ms"></div>
+            <div class="w-2 h-2 rounded-full bg-brand-green animate-bounce" style="animation-delay:150ms"></div>
+            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:300ms"></div>
+          </div>
+        </div>`;
+      hist.appendChild(typing);
+      hist.scrollTop = hist.scrollHeight;
+    },
+
+    onReceive() {
+      this.cargando = false;
+      this.pregunta = '';
+      // Remover typing indicator
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+      // Scroll
+      this.$nextTick(() => {
+        const hist = document.getElementById('chat-historial');
+        if (hist) hist.scrollTop = hist.scrollHeight;
+        this.$refs.input?.focus();
+      });
+    },
+  }
+}
+
+// Scroll al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  const hist = document.getElementById('chat-historial');
+  if (hist) hist.scrollTop = hist.scrollHeight;
+});
+</script>
+{% endblock %}

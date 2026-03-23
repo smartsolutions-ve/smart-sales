@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{% if vehiculo %}Editar{% else %}Nuevo{% endif %} Vehículo — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'flotas:lista' %}" class="hover:text-brand-blue">Flotas</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i>
+  <a href="{% url 'flotas:vehiculos' %}" class="hover:text-brand-blue">Vehículos</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i>
+  {% if vehiculo %}Editar{% else %}Nuevo{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'flotas:vehiculos' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-title">{% if vehiculo %}Editar Vehículo{% else %}Nuevo Vehículo{% endif %}</h1>
+  </div>
+
+  <div class="card-glass space-y-5">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label-base">Placa <span class="text-red-500">*</span></label>
+          <input type="text" name="placa" value="{{ vehiculo.placa|default:'' }}"
+                 required class="input-base font-mono uppercase" placeholder="ABC-123">
+        </div>
+        <div>
+          <label class="label-base">Capacidad (kg) <span class="text-red-500">*</span></label>
+          <input type="number" name="capacidad_kg" value="{{ vehiculo.capacidad_kg|default:'' }}"
+                 step="0.01" min="0" required class="input-base" placeholder="5000.00">
+        </div>
+        <div>
+          <label class="label-base">Marca</label>
+          <input type="text" name="marca" value="{{ vehiculo.marca|default:'' }}" class="input-base" placeholder="Ej: Ford">
+        </div>
+        <div>
+          <label class="label-base">Modelo</label>
+          <input type="text" name="modelo" value="{{ vehiculo.modelo|default:'' }}" class="input-base" placeholder="Ej: F-350">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="label-base">Chofer habitual</label>
+          <select name="chofer_habitual" class="input-base">
+            <option value="">Sin asignar</option>
+            {% for u in usuarios %}
+            <option value="{{ u.pk }}"
+                    {% if vehiculo and vehiculo.chofer_habitual_id == u.pk %}selected{% endif %}>
+              {{ u.get_full_name|default:u.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if vehiculo %}
+        <div class="sm:col-span-2">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" name="is_active" value="on"
+                   {% if vehiculo.is_active %}checked{% endif %}
+                   class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-blue">
+            <span class="text-sm font-medium">Vehículo activo</span>
+          </label>
+        </div>
+        {% else %}
+        <input type="hidden" name="is_active" value="on">
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-white/5 mt-5">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar
+        </button>
+        <a href="{% url 'flotas:vehiculos' %}" class="btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

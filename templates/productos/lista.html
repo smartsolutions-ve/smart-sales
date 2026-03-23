@@ -17,10 +17,11 @@
   <!-- Filtros -->
   <form method="get" class="flex flex-wrap gap-3">
     <div class="relative flex-1 min-w-48">
-      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
       <input type="text" name="q" value="{{ q }}"
              placeholder="Buscar por nombre o SKU..."
-             class="input-base pl-9 !py-2">
+             aria-label="Buscar"
+             class="input-base pr-9 !py-2">
+      <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
     </div>
     {% if categorias %}
     <select name="categoria" class="input-base !py-2 w-48">
@@ -88,9 +89,9 @@
           </td>
           <td class="px-5 py-3">
             {% if producto.is_active %}
-              <span class="badge-green">Activo</span>
+              <span class="badge-success">Activo</span>
             {% else %}
-              <span class="badge-gray">Inactivo</span>
+              <span class="badge-neutral">Inactivo</span>
             {% endif %}
           </td>
           <td class="px-5 py-3 text-right">
@@ -101,15 +102,15 @@
                 <i class="fas fa-edit"></i>
               </a>
               {% if producto.is_active %}
-              <form method="post" action="{% url 'productos:eliminar' producto.pk %}"
-                    x-data @submit.prevent="if(confirm('¿Desactivar este producto?')) $el.submit()">
+              <form x-ref="formDesact{{ producto.pk }}" method="post" action="{% url 'productos:eliminar' producto.pk %}">
                 {% csrf_token %}
-                <button type="submit"
-                        class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors"
-                        title="Desactivar">
-                  <i class="fas fa-ban"></i>
-                </button>
               </form>
+              <button type="button"
+                      @click="confirmar('Desactivar producto', '¿Desactivar « {{ producto.nombre }} »? No aparecerá en nuevos pedidos.', $refs.formDesact{{ producto.pk }})"
+                      class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors"
+                      title="Desactivar">
+                <i class="fas fa-ban"></i>
+              </button>
               {% endif %}
             </div>
           </td>

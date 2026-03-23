@@ -18,6 +18,16 @@ django-htmx==1.21.0             # request.htmx + middleware
 # ── Email ────────────────────────────────────────────────────────
 django-anymail[resend]==12.0    # Backend de email para Resend.com
 
+# ── PDF ─────────────────────────────────────────────────────────
+weasyprint==68.1                # Generación de PDFs desde HTML/CSS
+
+# ── Excel ───────────────────────────────────────────────────────
+openpyxl==3.1.5                 # Lectura de archivos Excel (.xlsx)
+
+# ── Chat IA ─────────────────────────────────────────────────────
+google-generativeai==0.8.3      # Google Gemini Flash para chat IA
+openai==2.29.0                  # SDK compatible con OpenRouter / OpenAI
+
 # ── Formularios y validación ──────────────────────────────────────
 django-crispy-forms==2.3
 crispy-tailwind==1.0.3          # Template pack de Tailwind para crispy-forms

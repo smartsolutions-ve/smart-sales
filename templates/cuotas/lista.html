@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cuotas y Ventas — SmartSales{% endblock %}
+{% block breadcrumb %}Cuotas{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-5">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-title">Cuotas y Ventas</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'cuotas:resumen_zona' %}{% if periodo_filtro %}?periodo={{ periodo_filtro }}{% endif %}" class="btn-secondary">
+        <i class="fas fa-map-marker-alt"></i> Por Zona
+      </a>
+      <a href="{% url 'cuotas:resumen_vendedor' %}{% if periodo_filtro %}?periodo={{ periodo_filtro }}{% endif %}" class="btn-secondary">
+        <i class="fas fa-users"></i> Por Vendedor
+      </a>
+      <a href="{% url 'cuotas:resumen_producto' %}{% if periodo_filtro %}?periodo={{ periodo_filtro }}{% endif %}" class="btn-secondary">
+        <i class="fas fa-box"></i> Por Producto
+      </a>
+      <a href="{% url 'cuotas:importar' %}" class="btn-primary">
+        <i class="fas fa-file-excel"></i> Importar
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex gap-3 flex-wrap items-end">
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Periodo</label>
+      <input type="month" name="periodo" value="{{ periodo_filtro }}" class="input-base !py-2">
+    </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Zona</label>
+      <input type="text" name="zona" value="{{ zona_filtro }}" class="input-base !py-2 !w-36" placeholder="Filtrar zona...">
+    </div>
+    <div>
+      <label class="text-xs text-slate-500 font-medium">Vendedor</label>
+      <input type="text" name="vendedor" value="{{ vendedor_filtro }}" class="input-base !py-2 !w-36" placeholder="Filtrar vendedor...">
+    </div>
+    <select name="canal" class="input-base !w-auto !py-2">
+      <option value="">Todos los canales</option>
+      <option value="DIRECTO" {% if canal_filtro == 'DIRECTO' %}selected{% endif %}>Directo</option>
+      <option value="DISTRIBUCIÓN" {% if canal_filtro == 'DISTRIBUCIÓN' %}selected{% endif %}>Distribución</option>
+    </select>
+    <button type="submit" class="btn-secondary !py-2">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
+    <a href="{% url 'cuotas:exportar_csv' %}{% if periodo_filtro %}?periodo={{ periodo_filtro }}{% endif %}" class="btn-secondary !py-2" title="Exportar CSV">
+      <i class="fas fa-file-csv"></i>
+    </a>
+    {% if periodo_filtro or zona_filtro or vendedor_filtro or canal_filtro %}
+    <a href="{% url 'cuotas:lista' %}" class="text-xs text-slate-400 hover:text-red-500 self-center">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Tabla -->
+  <div class="card-glass !p-0 overflow-x-auto">
+    {% if ventas %}
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+        <tr>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Periodo</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Vendedor</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Producto</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Zona</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Plan Cant.</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Real Cant.</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Plan USD</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Real USD</th>
+          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-center">% Cumpl.</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for v in ventas %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-white/5">
+          <td class="px-3 py-2 font-mono text-xs">{{ v.periodo|date:"Y-m" }}</td>
+          <td class="px-3 py-2 whitespace-nowrap">{{ v.vendedor_nombre }}</td>
+          <td class="px-3 py-2 whitespace-nowrap">{{ v.producto_nombre }}</td>
+          <td class="px-3 py-2 text-slate-500">{{ v.zona_nombre|default:"—" }}</td>
+          <td class="px-3 py-2 text-right">{{ v.plan_cantidad|intcomma }}</td>
+          <td class="px-3 py-2 text-right">{{ v.real_cantidad|intcomma }}</td>
+          <td class="px-3 py-2 text-right">${{ v.plan_venta_usd|intcomma }}</td>
+          <td class="px-3 py-2 text-right">${{ v.real_venta_usd|intcomma }}</td>
+          <td class="px-3 py-2 text-center">
+            {% if v.cumplimiento_venta >= 100 %}
+              <span class="badge-success">{{ v.cumplimiento_venta }}%</span>
+            {% elif v.cumplimiento_venta >= 70 %}
+              <span class="badge-warning">{{ v.cumplimiento_venta }}%</span>
+            {% else %}
+              <span class="badge-danger">{{ v.cumplimiento_venta }}%</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if page_obj %}{% include 'partials/paginacion.html' %}{% endif %}
+    {% else %}
+    <div class="text-center py-16 text-slate-400">
+      <i class="fas fa-bullseye text-4xl mb-3 opacity-30"></i>
+      <p class="text-lg font-medium">No hay datos de cuotas</p>
+      <a href="{% url 'cuotas:importar' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-medium">
+        Importar desde Excel →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

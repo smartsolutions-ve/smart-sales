@@ -6,9 +6,9 @@
 <div class="min-h-screen bg-slate-50">
 
   <!-- Header móvil -->
-  <header class="bg-navy text-white px-4 py-4 flex items-center justify-between sticky top-0 z-10">
+  <header class="bg-gradient-to-r from-brand-blue to-brand-green text-white px-4 py-4 flex items-center justify-between sticky top-0 z-10">
     <div>
-      <p class="font-bold text-base">Smart<span class="text-gold">Sales</span></p>
+      <p class="font-bold text-base">Smart<span class="text-white/80">Sales</span></p>
       {% if request.org %}
       <p class="text-xs text-white/60">{{ request.org.name }}</p>
       {% endif %}
@@ -24,25 +24,16 @@
     <!-- Acciones principales -->
     <div class="grid grid-cols-2 gap-4">
       <a href="{% url 'campo:pedido_nuevo' %}"
-         class="bg-brand text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-3
+         class="bg-gradient-to-r from-brand-blue to-brand-green text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-3
                 shadow-lg active:scale-95 transition-transform">
-        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
-                   M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 11v6m-3-3h6"/>
-        </svg>
+        <i class="fas fa-clipboard-list text-3xl"></i>
         <span class="font-semibold text-center">Nuevo Pedido</span>
       </a>
 
       <a href="{% url 'campo:competencia_nueva' %}"
-         class="bg-slate-700 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-3
+         class="bg-slate-700 dark:bg-slate-600 text-white rounded-2xl p-6 flex flex-col items-center justify-center gap-3
                 shadow-lg active:scale-95 transition-transform">
-        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0
-                   V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5
-                   a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+        <i class="fas fa-chart-bar text-3xl"></i>
         <span class="font-semibold text-center">Competencia</span>
       </a>
     </div>
@@ -62,9 +53,9 @@
     {% endif %}
 
     <!-- Mis últimos pedidos -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-      <div class="px-4 py-3 border-b border-slate-100">
-        <h2 class="font-semibold text-slate-900 text-sm">Mis últimos pedidos</h2>
+    <div class="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-100 dark:border-white/10">
+        <h2 class="font-semibold text-slate-900 dark:text-white text-sm">Mis últimos pedidos</h2>
       </div>
 
       {% if mis_pedidos %}

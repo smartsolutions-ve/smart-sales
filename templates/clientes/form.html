@@ -14,7 +14,8 @@
   </div>
 
   <form method="post"
-        action="{% if cliente %}{% url 'clientes:editar' cliente.pk %}{% else %}{% url 'clientes:crear' %}{% endif %}">
+        action="{% if cliente %}{% url 'clientes:editar' cliente.pk %}{% else %}{% url 'clientes:crear' %}{% endif %}"
+        data-warn-unsaved>
     {% csrf_token %}
 
     <div class="card-glass space-y-4">

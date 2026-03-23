@@ -1,32 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Registrar Competencia — SmartSales{% endblock %}
+{% block title %}{% if registro %}Editar{% else %}Registrar{% endif %} Competencia — SmartSales{% endblock %}
 {% block breadcrumb %}Competencia{% endblock %}
 
 {% block content %}
 <div class="p-6 max-w-2xl">
 
   <div class="flex items-center gap-4 mb-6">
-    <a href="{% url 'competencia:lista' %}" class="text-slate-400 hover:text-brand-blue transition-colors">
+    <a href="{% url 'competencia:lista' %}" class="text-slate-400 hover:text-brand-blue transition-colors" aria-label="Volver">
       <i class="fas fa-arrow-left"></i>
     </a>
-    <h1 class="text-title">Registrar Hallazgo de Competencia</h1>
+    <h1 class="text-title">{% if registro %}Editar{% else %}Registrar{% endif %} Hallazgo de Competencia</h1>
   </div>
 
-  <form method="post" action="{% url 'competencia:crear' %}">
+  <form method="post" action="{% if registro %}{% url 'competencia:editar' registro.pk %}{% else %}{% url 'competencia:crear' %}{% endif %}" x-data="compForm()" data-warn-unsaved>
     {% csrf_token %}
 
     <div class="card-glass space-y-4">
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
+        <div class="relative">
           <label class="label-base">Producto <span class="text-red-500">*</span></label>
-          <input type="text" name="producto" required
-                 class="input-base" placeholder="Nombre del producto">
+          <input type="text" name="producto" required x-model="productoNombre" value="{{ registro.producto|default:'' }}"
+                 @input.debounce.300ms="buscar($event.target.value)"
+                 @focus="buscar(productoNombre)"
+                 @keydown.escape="sugerencias = []"
+                 autocomplete="off"
+                 class="input-base" placeholder="Buscar producto...">
+          <div x-show="sugerencias.length > 0" @click.outside="sugerencias = []"
+               class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+            <template x-for="(s, i) in sugerencias" :key="i">
+              <button type="button" @click="productoNombre = s.nombre; precioNuestro = s.precio_base; sugerencias = []; sinResultados = false"
+                      class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-white/5 border-b border-slate-100 dark:border-white/5 last:border-0">
+                <span class="font-medium" x-text="s.nombre"></span>
+                <span class="text-green-600 text-xs float-right" x-show="s.precio_base" x-text="'$' + s.precio_base"></span>
+              </button>
+            </template>
+          </div>
+          <div x-show="sinResultados && sugerencias.length === 0" @click.outside="sinResultados = false"
+               class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
+            No se encontraron productos
+          </div>
         </div>
         <div>
           <label class="label-base">Competidor <span class="text-red-500">*</span></label>
-          <input type="text" name="competidor" required
+          <input type="text" name="competidor" required value="{{ registro.competidor|default:'' }}"
                  class="input-base" placeholder="Nombre del competidor">
         </div>
       </div>
@@ -37,13 +55,13 @@
           <select name="cliente_id" class="input-base">
             <option value="">— Sin cliente específico —</option>
             {% for c in clientes %}
-            <option value="{{ c.pk }}">{{ c.nombre }}</option>
+            <option value="{{ c.pk }}" {% if registro.cliente_id == c.pk %}selected{% endif %}>{{ c.nombre }}</option>
             {% endfor %}
           </select>
         </div>
         <div>
           <label class="label-base">Fecha del hallazgo</label>
-          <input type="date" name="fecha" class="input-base">
+          <input type="date" name="fecha" value="{% if registro %}{{ registro.fecha|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" class="input-base">
         </div>
       </div>
 
@@ -53,6 +71,7 @@
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
             <input type="number" name="precio_comp" min="0" step="0.01"
+                   value="{{ registro.precio_comp|default:'' }}"
                    class="input-base pl-8" placeholder="0.00">
           </div>
         </div>
@@ -61,6 +80,7 @@
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
             <input type="number" name="precio_nuestro" min="0" step="0.01"
+                   x-model="precioNuestro" value="{{ registro.precio_nuestro|default:'' }}"
                    class="input-base pl-8" placeholder="0.00">
           </div>
         </div>
@@ -70,17 +90,37 @@
         <label class="label-base">Acción tomada</label>
         <textarea name="accion_tomada" rows="2"
                   class="input-base"
-                  placeholder="¿Qué decisión tomaste ante este hallazgo?"></textarea>
+                  placeholder="¿Qué decisión tomaste ante este hallazgo?">{{ registro.accion_tomada|default:'' }}</textarea>
       </div>
     </div>
 
     <div class="flex gap-3 mt-5">
       <button type="submit" class="btn-primary">
-        <i class="fas fa-save"></i> Guardar Registro
+        <i class="fas fa-save"></i> {% if registro %}Guardar Cambios{% else %}Guardar Registro{% endif %}
       </button>
       <a href="{% url 'competencia:lista' %}" class="btn-secondary">Cancelar</a>
     </div>
   </form>
 
 </div>
+
+<script>
+function compForm() {
+  return {
+    productoNombre: '{{ registro.producto|default:"" }}',
+    precioNuestro: '{{ registro.precio_nuestro|default:"" }}',
+    sugerencias: [],
+    sinResultados: false,
+    async buscar(q) {
+      if (!q || q.length < 2) { this.sugerencias = []; this.sinResultados = false; return }
+      try {
+        const r = await fetch(`/productos/buscar/?q=${encodeURIComponent(q)}`)
+        const d = await r.json()
+        this.sugerencias = d.results || []
+        this.sinResultados = this.sugerencias.length === 0
+      } catch(e) { this.sugerencias = []; this.sinResultados = false }
+    },
+  }
+}
+</script>
 {% endblock %}

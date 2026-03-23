@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('cuenta-suspendida/', views.cuenta_suspendida, name='cuenta_suspendida'),
+    path('perfil/', views.perfil, name='perfil'),
 
     # Password reset flow
     path('password-reset/',

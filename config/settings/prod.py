@@ -13,6 +13,12 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# ── CSRF trusted origins (requerido en Django 4+ con HTTPS) ──────────────────
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=['https://smartsales.app', 'https://www.smartsales.app'],
+)
+
 # ── Email con Resend ───────────────────────────────────────────────────────────
 EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
 ANYMAIL = {

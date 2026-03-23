@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Viaje {{ viaje.fecha }} — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'flotas:lista' %}" class="hover:text-brand-blue">Flotas</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i> {{ viaje.fecha|date:"d/m/Y" }}
+{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6 max-w-4xl">
+
+  <div class="flex items-center gap-4">
+    <a href="{% url 'flotas:lista' %}" class="text-slate-400 hover:text-slate-600">← Volver</a>
+    <h1 class="text-title">Viaje {{ viaje.fecha|date:"d/m/Y" }}</h1>
+    {% if viaje.estado == 'Completado' %}<span class="badge-success">{{ viaje.estado }}</span>
+    {% elif viaje.estado == 'En Ruta' %}<span class="badge-info">{{ viaje.estado }}</span>
+    {% elif viaje.estado == 'Cancelado' %}<span class="badge-danger">{{ viaje.estado }}</span>
+    {% else %}<span class="badge-warning">{{ viaje.estado }}</span>{% endif %}
+  </div>
+
+  <!-- Info general -->
+  <div class="card-glass grid grid-cols-2 sm:grid-cols-4 gap-6">
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Vehículo</p>
+      <p class="text-sm font-medium font-mono">{{ viaje.vehiculo.placa }}</p>
+      <p class="text-xs text-slate-400">{{ viaje.vehiculo.marca }} {{ viaje.vehiculo.modelo }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Chofer</p>
+      <p class="text-sm font-medium">{{ viaje.chofer.get_full_name|default:viaje.chofer.username }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Km recorridos</p>
+      <p class="text-sm font-medium">{{ viaje.km_recorridos|default:"—" }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Costo flete</p>
+      <p class="text-sm font-medium">${{ viaje.costo_flete|default:"—" }}</p>
+    </div>
+  </div>
+
+  <!-- Barra de utilización -->
+  <div class="card-glass">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-semibold">Utilización del vehículo</span>
+      <span class="text-sm font-mono {% if viaje.porcentaje_utilizacion > 100 %}text-red-500{% elif viaje.porcentaje_utilizacion > 80 %}text-yellow-500{% else %}text-green-500{% endif %}">
+        {{ viaje.peso_total_kg }} / {{ viaje.vehiculo.capacidad_kg }} kg ({{ viaje.porcentaje_utilizacion }}%)
+      </span>
+    </div>
+    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+      <div class="h-3 rounded-full {% if viaje.porcentaje_utilizacion > 100 %}bg-red-500{% elif viaje.porcentaje_utilizacion > 80 %}bg-yellow-500{% else %}bg-green-500{% endif %}"
+           style="width: {% if viaje.porcentaje_utilizacion > 100 %}100{% else %}{{ viaje.porcentaje_utilizacion }}{% endif %}%"></div>
+    </div>
+  </div>
+
+  <!-- Pedidos del viaje -->
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-white/10">
+      <h2 class="font-semibold text-slate-900 dark:text-white">Pedidos ({{ viaje.num_pedidos }})</h2>
+    </div>
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 dark:bg-white/5">
+        <tr>
+          <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">Orden</th>
+          <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">N° Pedido</th>
+          <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">Cliente</th>
+          <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase text-right">Total</th>
+          <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase text-right">Peso (kg)</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        {% for det in detalles %}
+        <tr>
+          <td class="px-4 py-3 text-sm text-slate-400 font-mono">{{ det.orden_entrega }}</td>
+          <td class="px-4 py-3 text-sm font-mono">
+            <a href="{% url 'pedidos:detalle' det.pedido.pk %}" class="text-brand-blue hover:underline">{{ det.pedido.numero }}</a>
+          </td>
+          <td class="px-4 py-3 text-sm">{{ det.pedido.cliente }}</td>
+          <td class="px-4 py-3 text-sm text-right">${{ det.pedido.total }}</td>
+          <td class="px-4 py-3 text-sm text-right font-medium">{{ det.peso_estimado_kg }} kg</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Cambiar estado -->
+  <div class="card-glass">
+    <h3 class="text-sm font-semibold mb-3">Cambiar estado</h3>
+    <form method="post" action="{% url 'flotas:cambiar_estado' viaje.pk %}" class="flex gap-3 items-center">
+      {% csrf_token %}
+      <select name="estado" class="input-base !w-auto">
+        {% for valor, label in viaje.ESTADOS %}
+        <option value="{{ valor }}" {% if viaje.estado == valor %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-primary">Actualizar</button>
+    </form>
+  </div>
+
+  <!-- Acciones -->
+  <div class="flex gap-3">
+    <a href="{% url 'flotas:editar' viaje.pk %}" class="btn-primary">
+      <i class="fas fa-edit"></i> Editar
+    </a>
+    {% if viaje.puede_eliminarse %}
+    <form method="post" action="{% url 'flotas:eliminar' viaje.pk %}" class="inline"
+          onsubmit="return confirm('¿Eliminar este viaje?')">
+      {% csrf_token %}
+      <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">
+        <i class="fas fa-trash mr-1"></i> Eliminar
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if viaje.observaciones %}
+  <div class="card-glass">
+    <p class="text-xs text-slate-500 font-medium uppercase mb-1">Observaciones</p>
+    <p class="text-sm text-slate-700 dark:text-slate-300">{{ viaje.observaciones }}</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

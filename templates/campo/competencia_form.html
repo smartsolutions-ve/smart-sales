@@ -6,7 +6,7 @@
 <div class="min-h-screen bg-slate-50">
 
   <!-- Header móvil -->
-  <header class="bg-navy text-white px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+  <header class="bg-gradient-to-r from-brand-blue to-brand-green text-white px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
     <a href="{% url 'campo:index' %}" class="text-white/70 hover:text-white">
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -32,7 +32,7 @@
     </div>
     {% endif %}
 
-    <form method="post" action="{% url 'campo:competencia_nueva' %}">
+    <form method="post" action="{% url 'campo:competencia_nueva' %}" x-data="campoCompForm()">
       {% csrf_token %}
 
       <div class="space-y-4">
@@ -40,11 +40,25 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
           <h2 class="font-semibold text-slate-900 text-sm">Información del hallazgo</h2>
 
-          <div>
+          <div class="relative">
             <label class="block text-xs font-medium text-slate-700 mb-1">Producto observado *</label>
-            <input type="text" name="producto" required
-                   placeholder="Nombre del producto de la competencia"
-                   class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+            <input type="text" name="producto" required x-model="productoNombre"
+                   @input.debounce.300ms="buscar($event.target.value)"
+                   @focus="buscar(productoNombre)"
+                   @keydown.escape="sug = []"
+                   autocomplete="off"
+                   placeholder="Buscar producto..."
+                   class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            <div x-show="sug.length > 0" @click.outside="sug = []"
+                 class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+              <template x-for="(s, i) in sug" :key="i">
+                <button type="button" @click="productoNombre = s.nombre; precioNuestro = s.precio_base; sug = []"
+                        class="w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 border-b border-slate-100 last:border-0">
+                  <span class="font-medium" x-text="s.nombre"></span>
+                  <span class="text-green-600 text-xs float-right" x-show="s.precio_base" x-text="'$' + s.precio_base"></span>
+                </button>
+              </template>
+            </div>
           </div>
 
           <div>
@@ -85,8 +99,9 @@
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">Nuestro precio</label>
               <input type="number" name="precio_nuestro" step="0.01" min="0" inputmode="decimal"
+                     x-model="precioNuestro"
                      placeholder="0.00"
-                     class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                     class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
             </div>
           </div>
         </div>
@@ -99,7 +114,7 @@
         </div>
 
         <button type="submit"
-                class="w-full bg-slate-700 text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg">
+                class="w-full btn-primary py-3.5 rounded-2xl shadow-lg">
           Registrar Hallazgo
         </button>
 
@@ -107,4 +122,22 @@
     </form>
   </div>
 </div>
+
+<script>
+function campoCompForm() {
+  return {
+    productoNombre: '',
+    precioNuestro: '',
+    sug: [],
+    async buscar(q) {
+      if (!q || q.length < 2) { this.sug = []; return }
+      try {
+        const r = await fetch(`/productos/buscar/?q=${encodeURIComponent(q)}`)
+        const d = await r.json()
+        this.sug = d.results || []
+      } catch(e) { this.sug = [] }
+    },
+  }
+}
+</script>
 {% endblock %}

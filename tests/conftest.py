@@ -82,6 +82,64 @@ class PedidoItemFactory(DjangoModelFactory):
     precio   = Decimal('50.00')
 
 
+class FacturaFactory(DjangoModelFactory):
+    class Meta:
+        model = 'pedidos.Factura'
+
+    pedido          = factory.SubFactory(PedidoFactory)
+    numero_factura  = factory.Sequence(lambda n: f'FAC-{n+1:04d}')
+    fecha_factura   = factory.LazyFunction(lambda: timezone.now().date())
+    monto           = Decimal('500.00')
+    observaciones   = ''
+
+
+class VehiculoFactory(DjangoModelFactory):
+    class Meta:
+        model = 'flotas.Vehiculo'
+
+    organization   = factory.SubFactory(OrganizationFactory)
+    placa          = factory.Sequence(lambda n: f'ABC-{n+1:03d}')
+    marca          = 'Ford'
+    modelo         = 'F-350'
+    capacidad_kg   = Decimal('5000.00')
+    is_active      = True
+
+
+class ViajeFactory(DjangoModelFactory):
+    class Meta:
+        model = 'flotas.Viaje'
+
+    organization   = factory.SubFactory(OrganizationFactory)
+    vehiculo       = factory.SubFactory(VehiculoFactory)
+    chofer         = factory.SubFactory(UserFactory)
+    fecha          = factory.LazyFunction(lambda: timezone.now().date())
+    estado         = 'Programado'
+
+
+class ZonaFactory(DjangoModelFactory):
+    class Meta:
+        model = 'cuotas.Zona'
+
+    organization   = factory.SubFactory(OrganizationFactory)
+    nombre         = factory.LazyFunction(lambda: fake.city())
+
+
+class VentaMensualFactory(DjangoModelFactory):
+    class Meta:
+        model = 'cuotas.VentaMensual'
+
+    organization      = factory.SubFactory(OrganizationFactory)
+    periodo           = factory.LazyFunction(lambda: timezone.now().date().replace(day=1))
+    vendedor_nombre   = factory.LazyFunction(lambda: fake.name())
+    producto_nombre   = factory.LazyFunction(lambda: fake.bs().title()[:100])
+    codigo_producto   = factory.Sequence(lambda n: f'PROD-{n+1:03d}')
+    zona_nombre       = factory.LazyFunction(lambda: fake.city())
+    plan_cantidad     = Decimal('100.00')
+    plan_venta_usd    = Decimal('5000.00')
+    real_cantidad     = Decimal('80.00')
+    real_venta_usd    = Decimal('4000.00')
+
+
 class CompetenciaRegistroFactory(DjangoModelFactory):
     class Meta:
         model = 'competencia.CompetenciaRegistro'
@@ -165,3 +223,17 @@ def client_superadmin(client, superadmin):
     """Cliente HTTP autenticado como superadmin."""
     client.force_login(superadmin)
     return client
+
+
+@pytest.fixture
+def vehiculo(org):
+    return VehiculoFactory(organization=org)
+
+
+@pytest.fixture
+def viaje(org, vehiculo, gerente):
+    return ViajeFactory(
+        organization=org,
+        vehiculo=vehiculo,
+        chofer=gerente,
+    )

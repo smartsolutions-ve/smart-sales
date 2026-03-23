@@ -1,0 +1,91 @@
+{% for mensaje in mensajes %}
+<div class="flex {% if mensaje.rol == 'user' %}justify-end{% else %}justify-start{% endif %} mb-4 chat-msg-enter">
+
+  {% if mensaje.rol == 'assistant' %}
+  <!-- Avatar IA -->
+  <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-blue to-brand-green
+              flex items-center justify-center flex-shrink-0 mr-2 mt-1 shadow-sm">
+    <i class="fas fa-robot text-white text-xs"></i>
+  </div>
+  {% endif %}
+
+  <div class="max-w-[78%] group relative">
+    <div class="rounded-2xl px-4 py-3 text-sm leading-relaxed
+                {% if mensaje.rol == 'user' %}
+                  bg-gradient-to-r from-brand-blue to-brand-green text-white rounded-tr-sm shadow-md shadow-brand-blue/20
+                {% else %}
+                  bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-tl-sm
+                  shadow-sm border border-slate-100 dark:border-slate-700
+                {% endif %}">
+
+      {% if mensaje.rol == 'assistant' %}
+      <div class="chat-ia-content prose prose-sm dark:prose-invert max-w-none
+                  prose-p:my-1.5 prose-li:my-0.5 prose-headings:mt-3 prose-headings:mb-1.5
+                  prose-ul:my-1.5 prose-ol:my-1.5 prose-strong:text-brand-blue
+                  [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4">
+        {{ mensaje.contenido }}
+      </div>
+      {% else %}
+      <p class="whitespace-pre-wrap">{{ mensaje.contenido }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-2 mt-1 px-1
+                {% if mensaje.rol == 'user' %}justify-end{% else %}justify-start{% endif %}">
+      <span class="text-[10px] text-slate-400 dark:text-slate-500">
+        {{ mensaje.created_at|date:"H:i" }}
+      </span>
+      {% if mensaje.rol == 'assistant' %}
+      <button onclick="navigator.clipboard.writeText(this.closest('.group').querySelector('.chat-ia-content').innerText).then(() => { this.innerHTML='<i class=\'fas fa-check text-green-500\'></i>'; setTimeout(() => this.innerHTML='<i class=\'fas fa-copy\'></i>', 1500) })"
+              class="text-[10px] text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400
+                     opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              title="Copiar respuesta">
+        <i class="fas fa-copy"></i>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if mensaje.rol == 'user' %}
+  <!-- Avatar usuario -->
+  <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700
+              flex items-center justify-center flex-shrink-0 ml-2 mt-1">
+    <i class="fas fa-user text-slate-500 dark:text-slate-400 text-xs"></i>
+  </div>
+  {% endif %}
+
+</div>
+{% endfor %}
+<script>
+(function(){
+  document.querySelectorAll('.chat-ia-content').forEach(function(el) {
+    if (el.dataset.rendered) return;
+    let html = el.textContent;
+    // Escapar HTML
+    html = html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Bold: **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text*
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Headers: ### text
+    html = html.replace(/^### (.+)$/gm, '<h4 class="font-bold text-sm mt-3 mb-1">$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3 class="font-bold text-base mt-3 mb-1">$1</h3>');
+    // Unordered lists: - item or * item
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul class="list-disc pl-4 my-1.5">$1</ul>');
+    // Ordered lists: 1. item
+    html = html.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+    // Inline code: `text`
+    html = html.replace(/`(.+?)`/g, '<code class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+    // Line breaks
+    html = html.replace(/\n/g, '<br>');
+    // Clean up double br after block elements
+    html = html.replace(/(<\/h[34]>)<br>/g, '$1');
+    html = html.replace(/(<\/ul>)<br>/g, '$1');
+    html = html.replace(/(<\/li>)<br>/g, '$1');
+
+    el.innerHTML = html;
+    el.dataset.rendered = 'true';
+  });
+})();
+</script>

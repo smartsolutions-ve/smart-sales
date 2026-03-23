@@ -38,6 +38,10 @@ class Producto(TenantModel):
         'unidad de medida', max_length=30, blank=True,
         help_text='Ej: unidad, kg, litro, caja',
     )
+    peso_kg     = models.DecimalField(
+        'peso por unidad (kg)', max_digits=8, decimal_places=3,
+        null=True, blank=True,
+    )
     is_active   = models.BooleanField('activo', default=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)

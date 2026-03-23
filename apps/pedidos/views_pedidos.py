@@ -1,4 +1,7 @@
 """Vistas CRUD de pedidos."""
+import csv
+
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,11 +18,13 @@ def _get_pedido_or_404(pk, org):
     return get_object_or_404(Pedido, pk=pk, organization=org)
 
 
-@login_required
-@role_required('gerente', 'superadmin')
-def lista(request):
+def _filtrar_pedidos(request):
+    """Aplica filtros comunes a la lista de pedidos y retorna queryset + contexto."""
+    from django.db.models import Q as DQ
     q = request.GET.get('q', '')
     estado = request.GET.get('estado', '')
+    desde = request.GET.get('desde', '')
+    hasta = request.GET.get('hasta', '')
 
     pedidos = (
         Pedido.objects
@@ -28,29 +33,62 @@ def lista(request):
         .order_by('-fecha_pedido', '-created_at')
     )
     if q:
-        from django.db.models import Q
         pedidos = pedidos.filter(
-            Q(numero__icontains=q) |
-            Q(cliente__nombre__icontains=q) |
-            Q(vendedor__first_name__icontains=q) |
-            Q(vendedor__last_name__icontains=q)
+            DQ(numero__icontains=q) |
+            DQ(cliente__nombre__icontains=q) |
+            DQ(vendedor__first_name__icontains=q) |
+            DQ(vendedor__last_name__icontains=q)
         )
     if estado:
         pedidos = pedidos.filter(estado=estado)
+    if desde:
+        pedidos = pedidos.filter(fecha_pedido__gte=desde)
+    if hasta:
+        pedidos = pedidos.filter(fecha_pedido__lte=hasta)
+
+    return pedidos, {'q': q, 'estado_filtro': estado, 'desde': desde, 'hasta': hasta, 'estados': Pedido.ESTADOS}
+
+
+@login_required
+@role_required('gerente', 'superadmin')
+def lista(request):
+    pedidos, filtros = _filtrar_pedidos(request)
 
     paginator = Paginator(pedidos, 25)
     page_obj = paginator.get_page(request.GET.get('page'))
 
-    context = {
-        'pedidos': page_obj,
-        'page_obj': page_obj,
-        'q': q,
-        'estado_filtro': estado,
-        'estados': Pedido.ESTADOS,
-    }
+    context = {'pedidos': page_obj, 'page_obj': page_obj, **filtros}
     if request.htmx:
         return render(request, 'partials/tabla_pedidos.html', context)
     return render(request, 'pedidos/lista.html', context)
+
+
+@login_required
+@role_required('gerente', 'superadmin')
+def exportar_csv(request):
+    """Exportar pedidos filtrados a CSV."""
+    pedidos, _ = _filtrar_pedidos(request)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="pedidos.csv"'
+    response.write('\ufeff')  # BOM para Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['N° Pedido', 'Fecha', 'Cliente', 'Vendedor', 'Estado', 'Estado Despacho', 'Total', 'Observaciones'])
+
+    for p in pedidos:
+        writer.writerow([
+            p.numero,
+            p.fecha_pedido,
+            str(p.cliente),
+            p.vendedor.get_full_name() or p.vendedor.username,
+            p.estado,
+            p.estado_despacho,
+            p.total,
+            p.observaciones,
+        ])
+
+    return response
 
 
 @login_required
@@ -68,7 +106,7 @@ def crear(request):
         vendedores = User.objects.none()
     else:
         clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True) if request.org else []
+        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
 
     context = {
         'clientes': clientes,
@@ -87,6 +125,36 @@ def detalle(request, pk):
 
 @login_required
 @role_required('gerente', 'superadmin')
+def detalle_pdf(request, pk):
+    """Genera PDF del detalle de un pedido."""
+    from django.utils import timezone
+    from django.http import Http404
+    from weasyprint import HTML
+
+    pedido = (
+        Pedido.objects
+        .filter(pk=pk, organization=request.org)
+        .select_related('cliente', 'vendedor')
+        .prefetch_related('items')
+        .first()
+    )
+    if not pedido:
+        raise Http404
+    html_string = render(request, 'pedidos/detalle_pdf.html', {
+        'pedido': pedido,
+        'org': request.org,
+        'fecha_generacion': timezone.now().strftime('%d/%m/%Y %H:%M'),
+    }).content.decode('utf-8')
+
+    pdf_file = HTML(string=html_string).write_pdf()
+
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="pedido_{pedido.numero}.pdf"'
+    return response
+
+
+@login_required
+@role_required('gerente', 'superadmin')
 @require_http_methods(['GET', 'POST'])
 def editar(request, pk):
     pedido = _get_pedido_or_404(pk, request.org)
@@ -99,7 +167,7 @@ def editar(request, pk):
         vendedores = User.objects.none()
     else:
         clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True) if request.org else []
+        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
 
     context = {
         'pedido': pedido,
@@ -136,12 +204,21 @@ def cambiar_estado(request, pk):
     elif nuevo_estado not in estados_validos:
         messages.error(request, 'Estado no válido.')
     else:
+        estado_anterior = pedido.estado
         pedido.estado = nuevo_estado
         # RN-008: Al marcar Entregado, despacho pasa a Despachado
         if nuevo_estado == 'Entregado':
             pedido.estado_despacho = 'Despachado'
         pedido.save(update_fields=['estado', 'estado_despacho'])
         messages.success(request, f'Estado actualizado a {nuevo_estado}.')
+
+        # Auditoría
+        from .audit import log_pedido
+        log_pedido(pedido, request.user, 'cambio_estado', f'{estado_anterior} → {nuevo_estado}')
+
+        # Notificar al vendedor por email
+        from .notifications import notificar_cambio_estado
+        notificar_cambio_estado(pedido, estado_anterior, request.user)
 
     if request.htmx:
         return render(request, 'partials/fila_pedido.html', {'pedido': pedido})
@@ -159,13 +236,56 @@ def cambiar_estado_despacho(request, pk):
     if nuevo_estado not in estados_validos:
         messages.error(request, 'Estado de despacho no válido.')
     else:
+        estado_anterior = pedido.estado_despacho
         pedido.estado_despacho = nuevo_estado
         pedido.save(update_fields=['estado_despacho'])
         messages.success(request, f'Estado de despacho actualizado a {nuevo_estado}.')
 
+        from .audit import log_pedido
+        log_pedido(pedido, request.user, 'cambio_despacho', f'{estado_anterior} → {nuevo_estado}')
+
     if request.htmx:
         return render(request, 'partials/fila_pedido.html', {'pedido': pedido})
     return redirect('pedidos:lista')
+
+
+@login_required
+@role_required('gerente', 'superadmin')
+def clonar(request, pk):
+    """Crea un nuevo pedido como copia de uno existente."""
+    from django.utils import timezone
+
+    original = _get_pedido_or_404(pk, request.org)
+
+    with transaction.atomic():
+        nuevo = Pedido(
+            organization=request.org,
+            numero=generar_numero_pedido(request.org),
+            created_by=request.user,
+            cliente=original.cliente,
+            vendedor=original.vendedor,
+            fecha_pedido=timezone.now().date(),
+            observaciones=original.observaciones,
+            ref_competencia=original.ref_competencia,
+        )
+        nuevo.save()
+
+        for item in original.items.all():
+            PedidoItem.objects.create(
+                pedido=nuevo,
+                producto=item.producto,
+                sku=item.sku,
+                cantidad=item.cantidad,
+                precio=item.precio,
+            )
+
+        nuevo.recalcular_total()
+
+        from .audit import log_pedido
+        log_pedido(nuevo, request.user, 'creado', f'Clonado de pedido {original.numero}')
+
+    messages.success(request, f'Pedido {nuevo.numero} creado como copia de {original.numero}.')
+    return redirect('pedidos:detalle', pk=nuevo.pk)
 
 
 def _guardar_pedido(request, pedido):
@@ -245,8 +365,13 @@ def _guardar_pedido(request, pedido):
         errores.append('El pedido debe tener al menos un ítem.')
 
     if errores:
-        clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True) if request.org else []
+        if not request.org:
+            clientes = Cliente.objects.none()
+            from apps.accounts.models import User
+            vendedores = User.objects.none()
+        else:
+            clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
+            vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
         for e in errores:
             messages.error(request, e)
         return render(request, 'pedidos/form.html', {
@@ -256,8 +381,10 @@ def _guardar_pedido(request, pedido):
             'estados': Pedido.ESTADOS,
         })
 
+    es_nuevo = pedido is None
+
     with transaction.atomic():
-        if pedido is None:
+        if es_nuevo:
             # Crear nuevo pedido
             pedido = Pedido(
                 organization=request.org,
@@ -280,6 +407,13 @@ def _guardar_pedido(request, pedido):
             PedidoItem.objects.create(pedido=pedido, **item_data)
 
         pedido.recalcular_total()
+
+        # Auditoría
+        from .audit import log_pedido
+        if es_nuevo:
+            log_pedido(pedido, request.user, 'creado', f'Cliente: {cliente}, Total: ${pedido.total}')
+        else:
+            log_pedido(pedido, request.user, 'editado', f'Cliente: {cliente}, Total: ${pedido.total}')
 
     messages.success(request, f'Pedido {pedido.numero} guardado correctamente.')
     return redirect('pedidos:detalle', pk=pedido.pk)

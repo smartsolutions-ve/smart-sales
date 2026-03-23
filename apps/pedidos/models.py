@@ -118,6 +118,22 @@ class Pedido(TenantModel):
         """Solo los pedidos en Pendiente pueden eliminarse."""
         return self.estado == 'Pendiente'
 
+    @property
+    def monto_facturado(self):
+        """Suma de montos de todas las facturas asociadas."""
+        from django.db.models import Sum
+        return self.facturas.aggregate(total=Sum('monto'))['total'] or 0
+
+    @property
+    def estado_facturacion(self):
+        """Estado de facturación: sin_facturar, parcial, facturado."""
+        facturado = self.monto_facturado
+        if facturado == 0:
+            return 'sin_facturar'
+        if facturado < self.total:
+            return 'parcial'
+        return 'facturado'
+
 
 class PedidoItem(models.Model):
     """Ítem / línea de un pedido."""
@@ -137,3 +153,46 @@ class PedidoItem(models.Model):
     @property
     def subtotal(self):
         return self.cantidad * self.precio
+
+
+class Factura(models.Model):
+    """Factura externa asociada a un pedido."""
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='facturas')
+    numero_factura = models.CharField('número de factura', max_length=50)
+    fecha_factura = models.DateField('fecha de factura')
+    monto = models.DecimalField('monto', max_digits=12, decimal_places=2)
+    observaciones = models.TextField('observaciones', blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='facturas_creadas',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Factura'
+        verbose_name_plural = 'Facturas'
+        ordering = ['-fecha_factura']
+
+    def __str__(self):
+        return f'{self.numero_factura} — ${self.monto}'
+
+
+class PedidoLog(models.Model):
+    """Log de auditoría para cambios en pedidos."""
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='logs')
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+    )
+    accion = models.CharField(max_length=50)
+    detalle = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Log de pedido'
+        verbose_name_plural = 'Logs de pedidos'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.pedido.numero} — {self.accion}'

@@ -16,10 +16,11 @@
 
   <form method="get">
     <div class="relative w-full max-w-sm">
-      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
       <input type="text" name="q" value="{{ q }}"
              placeholder="Buscar cliente..."
-             class="input-base pl-9 !py-2">
+             aria-label="Buscar"
+             class="input-base pr-9 !py-2">
+      <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
     </div>
   </form>
 

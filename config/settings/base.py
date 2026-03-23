@@ -44,6 +44,9 @@ LOCAL_APPS = [
     'apps.competencia',
     'apps.campo',
     'apps.reportes',
+    'apps.flotas',
+    'apps.cuotas',
+    'apps.chat_ia',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -129,3 +132,11 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Expira al cerrar browser
 
 # ── Email ───────────────────────────────────────────────────────────────────────
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@smartsales.com.ve')
+
+# ── Chat IA ────────────────────────────────────────────────────────────────────
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+OPENROUTER_API_KEY = env('OPENROUTER_API_KEY', default='')
+OPENROUTER_MODEL = env('OPENROUTER_MODEL', default='deepseek/deepseek-chat:free')
+CHAT_IA_BACKEND = env('CHAT_IA_BACKEND', default='apps.chat_ia.services.openrouter.OpenRouterBackend')
+CHAT_IA_HISTORY_LENGTH = 10
+CHAT_IA_RATE_LIMIT_HOUR = 30

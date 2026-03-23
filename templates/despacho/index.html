@@ -6,11 +6,10 @@
 {% block content %}
 <div class="p-6 space-y-5">
 
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
     <h1 class="text-title">Control de Despacho</h1>
-    <form method="get">
-      <select name="vendedor" onchange="this.form.submit()"
-              class="input-base !w-auto">
+    <form method="get" class="flex flex-wrap items-center gap-2">
+      <select name="vendedor" class="input-base !w-auto">
         <option value="">Todos los vendedores</option>
         {% for v in vendedores %}
         <option value="{{ v.pk }}" {% if vendedor_filtro == v.pk|stringformat:"s" %}selected{% endif %}>
@@ -18,11 +17,25 @@
         </option>
         {% endfor %}
       </select>
+      <label class="text-xs text-slate-500 dark:text-slate-400">Desde</label>
+      <input type="date" name="desde" value="{{ desde|default:'' }}"
+             class="input-base !w-auto text-sm">
+      <label class="text-xs text-slate-500 dark:text-slate-400">Hasta</label>
+      <input type="date" name="hasta" value="{{ hasta|default:'' }}"
+             class="input-base !w-auto text-sm">
+      <button type="submit"
+              class="px-3 py-1.5 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+        Filtrar
+      </button>
+      {% if vendedor_filtro or desde or hasta %}
+      <a href="{% url 'despacho:index' %}"
+         class="text-xs text-slate-500 hover:text-red-500 underline transition-colors">Limpiar</a>
+      {% endif %}
     </form>
   </div>
 
   <!-- Kanban -->
-  <div class="grid grid-cols-5 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
     {% for estado, col in columnas.items %}
     <div class="space-y-3">
       <div class="flex items-center justify-between px-1">

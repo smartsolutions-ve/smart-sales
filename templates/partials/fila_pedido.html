@@ -16,12 +16,21 @@
       {% csrf_token %}
       <select name="estado" onchange="this.form.submit()"
               {% if not pedido.puede_cambiar_estado %}disabled{% endif %}
-              class="text-xs border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 dark:text-slate-300 cursor-pointer disabled:opacity-50">
+              class="input-base !w-auto !px-2 !py-1 !text-xs !rounded-lg cursor-pointer disabled:opacity-50">
         {% for valor, label in pedido.ESTADOS %}
         <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </form>
+  </td>
+  <td class="px-5 py-3 text-center">
+    {% if pedido.estado_facturacion == 'facturado' %}
+      <span class="badge-success text-[10px]">Facturado</span>
+    {% elif pedido.estado_facturacion == 'parcial' %}
+      <span class="badge-warning text-[10px]">Parcial</span>
+    {% else %}
+      <span class="badge-neutral text-[10px]">Sin fact.</span>
+    {% endif %}
   </td>
   <td class="px-5 py-3 text-sm font-bold text-right">${{ pedido.total }}</td>
   <td class="px-5 py-3 text-right">

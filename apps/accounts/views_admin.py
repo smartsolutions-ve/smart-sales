@@ -15,10 +15,13 @@ def index(request):
         users_count=Count('user', filter=Q(user__is_active=True)),
     ).order_by('-created_at')
 
+    total_orgs = orgs.count()
+    orgs_activas = orgs.filter(is_active=True).count()
     context = {
         'orgs': orgs,
-        'total_orgs': orgs.count(),
-        'orgs_activas': orgs.filter(is_active=True).count(),
+        'total_orgs': total_orgs,
+        'orgs_activas': orgs_activas,
+        'orgs_suspendidas': total_orgs - orgs_activas,
     }
     return render(request, 'admin_panel/index.html', context)
 

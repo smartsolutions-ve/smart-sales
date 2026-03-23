@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Cuotas — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'cuotas:lista' %}" class="hover:text-brand-blue">Cuotas</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i> Importar
+{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl space-y-6">
+
+  <div class="flex items-center gap-4">
+    <a href="{% url 'cuotas:lista' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-title">Importar desde Excel</h1>
+  </div>
+
+  <div class="card-glass">
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="label-base">Archivo Excel (.xlsx)</label>
+        <input type="file" name="archivo" accept=".xlsx,.xls"
+               required class="input-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-blue file:text-white hover:file:bg-blue-700">
+        <p class="text-xs text-subtitle mt-1">El archivo debe tener una hoja "Cuotas" (o usará la primera hoja). La primera fila debe ser los encabezados.</p>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-upload"></i> Importar
+      </button>
+    </form>
+  </div>
+
+  {% if resultado %}
+  <div class="card-glass space-y-3">
+    <h3 class="font-semibold text-slate-900 dark:text-white">Resultado de importación</h3>
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div>
+        <p class="text-2xl font-bold text-brand-blue">{{ resultado.total }}</p>
+        <p class="text-xs text-slate-500">Total procesados</p>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-green-500">{{ resultado.creados }}</p>
+        <p class="text-xs text-slate-500">Creados</p>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-yellow-500">{{ resultado.actualizados }}</p>
+        <p class="text-xs text-slate-500">Actualizados</p>
+      </div>
+    </div>
+    {% if resultado.errores %}
+    <div class="mt-3">
+      <p class="text-sm font-medium text-red-500 mb-1">Errores ({{ resultado.errores|length }}):</p>
+      <ul class="text-xs text-red-400 space-y-1 max-h-40 overflow-y-auto">
+        {% for err in resultado.errores %}
+        <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card-glass">
+    <h3 class="font-semibold text-slate-900 dark:text-white mb-2">Columnas esperadas</h3>
+    <p class="text-sm text-slate-500 mb-3">El sistema busca estas columnas (o variantes) en la primera fila:</p>
+    <div class="grid grid-cols-2 gap-1 text-xs text-slate-600 dark:text-slate-400">
+      <span>periodo / mes</span>
+      <span>vendedor</span>
+      <span>producto</span>
+      <span>codigo / sku</span>
+      <span>zona</span>
+      <span>canal</span>
+      <span>plan cantidad</span>
+      <span>plan venta usd</span>
+      <span>real cantidad</span>
+      <span>real venta usd</span>
+      <span>... y más campos financieros</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

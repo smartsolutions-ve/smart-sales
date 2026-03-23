@@ -147,5 +147,9 @@ def _crear_pedido_campo(request):
             PedidoItem.objects.create(pedido=pedido, **item_data)
         pedido.recalcular_total()
 
+    # Notificar a gerentes por email
+    from apps.pedidos.notifications import notificar_pedido_nuevo_campo
+    notificar_pedido_nuevo_campo(pedido)
+
     messages.success(request, f'Pedido {pedido.numero} registrado correctamente.')
     return redirect('campo:index')

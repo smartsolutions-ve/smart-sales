@@ -1,0 +1,85 @@
+{% load humanize %}
+<div class="card-glass !p-0 overflow-hidden">
+  <div class="px-6 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+    <h2 class="font-semibold text-slate-900 dark:text-white">
+      <i class="fas fa-file-invoice-dollar text-slate-400 mr-1"></i> Facturas
+    </h2>
+    <div class="flex items-center gap-2">
+      {% if pedido.estado_facturacion == 'facturado' %}
+        <span class="badge-success">Facturado</span>
+      {% elif pedido.estado_facturacion == 'parcial' %}
+        <span class="badge-warning">Parcial</span>
+      {% else %}
+        <span class="badge-neutral">Sin facturar</span>
+      {% endif %}
+      <span class="text-xs text-slate-500">${{ pedido.monto_facturado|intcomma }} / ${{ pedido.total|intcomma }}</span>
+    </div>
+  </div>
+
+  {% if pedido.facturas.all %}
+  <table class="w-full">
+    <thead class="bg-slate-50 dark:bg-white/5">
+      <tr>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">N° Factura</th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Fecha</th>
+        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Monto</th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Observaciones</th>
+        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Acción</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+      {% for factura in pedido.facturas.all %}
+      <tr>
+        <td class="px-4 py-3 text-sm font-mono font-medium text-slate-900 dark:text-white">{{ factura.numero_factura }}</td>
+        <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{{ factura.fecha_factura|date:"d/m/Y" }}</td>
+        <td class="px-4 py-3 text-sm text-right font-medium text-slate-900 dark:text-white">${{ factura.monto|intcomma }}</td>
+        <td class="px-4 py-3 text-sm text-slate-500">{{ factura.observaciones|default:"—" }}</td>
+        <td class="px-4 py-3 text-center">
+          <form method="post" action="{% url 'pedidos:factura_eliminar' factura.pk %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="text-red-400 hover:text-red-600 text-xs" title="Eliminar factura"
+                    onclick="return confirm('¿Eliminar factura {{ factura.numero_factura }}?')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="px-6 py-4 text-sm text-slate-400">No hay facturas registradas.</p>
+  {% endif %}
+
+  <!-- Form inline para agregar factura -->
+  <div x-data="{ open: false }" class="border-t border-slate-100 dark:border-white/5">
+    <button @click="open = !open" class="w-full px-6 py-3 text-sm text-brand-blue font-medium hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left">
+      <i class="fas fa-plus mr-1"></i> Agregar factura
+    </button>
+    <div x-show="open" x-transition class="px-6 pb-4">
+      <form method="post" action="{% url 'pedidos:factura_crear' pedido.pk %}" class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+        {% csrf_token %}
+        <div>
+          <label class="label-base">N° Factura</label>
+          <input type="text" name="numero_factura" required class="input-base" placeholder="FAC-001">
+        </div>
+        <div>
+          <label class="label-base">Fecha</label>
+          <input type="date" name="fecha_factura" required class="input-base">
+        </div>
+        <div>
+          <label class="label-base">Monto</label>
+          <input type="number" name="monto" step="0.01" min="0.01" required class="input-base" placeholder="0.00">
+        </div>
+        <div>
+          <button type="submit" class="btn-primary w-full">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+        <div class="col-span-2 sm:col-span-4">
+          <input type="text" name="observaciones" class="input-base" placeholder="Observaciones (opcional)">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

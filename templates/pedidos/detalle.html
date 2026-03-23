@@ -7,19 +7,18 @@
 <div class="p-6 space-y-6 max-w-4xl">
 
   <div class="flex items-center gap-4">
-    <a href="{% url 'pedidos:lista' %}" class="text-slate-400 hover:text-slate-600">← Volver</a>
-    <h1 class="text-2xl font-bold text-slate-900">{{ pedido.numero }}</h1>
-    <span class="px-2 py-1 rounded-full text-xs font-semibold
-                 {% if pedido.estado == 'Entregado' %}bg-green-100 text-green-700
-                 {% elif pedido.estado == 'Cancelado' %}bg-red-100 text-red-700
-                 {% elif pedido.estado == 'En Proceso' %}bg-blue-100 text-blue-700
-                 {% elif pedido.estado == 'Confirmado' %}bg-amber-100 text-amber-700
-                 {% else %}bg-slate-100 text-slate-700{% endif %}">
+    <a href="{% url 'pedidos:lista' %}" class="text-slate-400 hover:text-slate-600" aria-label="Volver">← Volver</a>
+    <h1 class="text-title">{{ pedido.numero }}</h1>
+    <span class="{% if pedido.estado == 'Entregado' %}badge-success
+                 {% elif pedido.estado == 'Cancelado' %}badge-danger
+                 {% elif pedido.estado == 'En Proceso' %}badge-info
+                 {% elif pedido.estado == 'Confirmado' %}badge-warning
+                 {% else %}badge-neutral{% endif %}">
       {{ pedido.estado }}
     </span>
   </div>
 
-  <div class="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-6">
+  <div class="card-glass grid grid-cols-2 gap-6">
     <div>
       <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Cliente</p>
       <p class="text-sm font-medium text-slate-900">{{ pedido.cliente }}</p>
@@ -53,9 +52,9 @@
   </div>
 
   <!-- Items -->
-  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100">
-      <h2 class="font-semibold text-slate-900">Ítems del pedido</h2>
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-white/10">
+      <h2 class="font-semibold text-slate-900 dark:text-white">Ítems del pedido</h2>
     </div>
     <table class="w-full">
       <thead class="bg-slate-50">
@@ -87,23 +86,58 @@
     </table>
   </div>
 
+  <!-- Facturas -->
+  {% include "partials/seccion_facturas.html" %}
+
+  <!-- Historial de cambios -->
+  {% if pedido.logs.all %}
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-white/10">
+      <h2 class="font-semibold text-slate-900 dark:text-white"><i class="fas fa-history text-slate-400 mr-1"></i> Historial</h2>
+    </div>
+    <div class="divide-y divide-slate-100">
+      {% for log in pedido.logs.all %}
+      <div class="px-6 py-3 flex items-center gap-3 text-sm">
+        <span class="text-slate-400 text-xs w-32 flex-shrink-0">{{ log.created_at|date:"d/m/Y H:i" }}</span>
+        <span class="font-medium text-slate-700">
+          {% if log.accion == 'creado' %}<i class="fas fa-plus-circle text-green-500 mr-1"></i>
+          {% elif log.accion == 'editado' %}<i class="fas fa-edit text-blue-500 mr-1"></i>
+          {% elif log.accion == 'cambio_estado' %}<i class="fas fa-exchange-alt text-amber-500 mr-1"></i>
+          {% elif log.accion == 'cambio_despacho' %}<i class="fas fa-truck text-purple-500 mr-1"></i>
+          {% endif %}
+          {{ log.accion|title }}
+        </span>
+        <span class="text-slate-500">{{ log.detalle }}</span>
+        <span class="text-slate-400 text-xs ml-auto">{{ log.usuario.get_full_name|default:log.usuario.username }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Acciones -->
   <div class="flex gap-3">
     <a href="{% url 'pedidos:editar' pedido.pk %}"
-       class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+       class="btn-primary">
       Editar
     </a>
+    <a href="{% url 'pedidos:clonar' pedido.pk %}"
+       class="btn-secondary">
+      <i class="fas fa-copy mr-1"></i> Duplicar
+    </a>
+    <a href="{% url 'pedidos:detalle_pdf' pedido.pk %}" target="_blank"
+       class="btn-secondary">
+      <i class="fas fa-file-pdf mr-1"></i> PDF
+    </a>
     {% if pedido.puede_eliminarse %}
-    <button
-      @click="if(confirm('¿Eliminar este pedido?')) $refs.formEliminar.submit()"
-      type="button"
-      x-data
-      class="text-red-500 hover:text-red-700 text-sm font-medium">
-      Eliminar
-    </button>
-    <form x-ref="formEliminar" method="post" action="{% url 'pedidos:eliminar' pedido.pk %}">
+    <form x-ref="formElimPedido" method="post" action="{% url 'pedidos:eliminar' pedido.pk %}" class="inline">
       {% csrf_token %}
     </form>
+    <button type="button"
+      @click="confirmar('Eliminar pedido', '¿Estás seguro de eliminar el pedido {{ pedido.numero }}? Esta acción no se puede deshacer.', $refs.formElimPedido)"
+      class="text-red-500 hover:text-red-700 text-sm font-medium">
+      <i class="fas fa-trash mr-1"></i> Eliminar
+    </button>
     {% endif %}
   </div>
 

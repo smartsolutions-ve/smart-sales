@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{% if viaje %}Editar{% else %}Nuevo{% endif %} Viaje — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'flotas:lista' %}" class="hover:text-brand-blue">Flotas</a>
+  <i class="fas fa-chevron-right text-xs mx-2"></i>
+  {% if viaje %}Editar{% else %}Nuevo{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-4xl" x-data="viajeForm()">
+
+  <div class="flex items-center gap-4 mb-6">
+    <a href="{% url 'flotas:lista' %}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white transition-colors">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-title">{% if viaje %}Editar Viaje{% else %}Nuevo Viaje{% endif %}</h1>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="card-glass">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="label-base">Vehículo <span class="text-red-500">*</span></label>
+          <select name="vehiculo" required class="input-base" @change="updateCapacidad($event)">
+            <option value="">Seleccionar...</option>
+            {% for v in vehiculos %}
+            <option value="{{ v.pk }}" data-capacidad="{{ v.capacidad_kg }}"
+                    {% if viaje and viaje.vehiculo_id == v.pk %}selected{% endif %}>
+              {{ v.placa }} — {{ v.capacidad_kg }} kg
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label-base">Chofer <span class="text-red-500">*</span></label>
+          <select name="chofer" required class="input-base">
+            <option value="">Seleccionar...</option>
+            {% for u in usuarios %}
+            <option value="{{ u.pk }}" {% if viaje and viaje.chofer_id == u.pk %}selected{% endif %}>
+              {{ u.get_full_name|default:u.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label-base">Fecha <span class="text-red-500">*</span></label>
+          <input type="date" name="fecha" value="{% if viaje %}{{ viaje.fecha|date:'Y-m-d' }}{% endif %}"
+                 required class="input-base">
+        </div>
+        <div>
+          <label class="label-base">Km recorridos</label>
+          <input type="number" name="km_recorridos" value="{{ viaje.km_recorridos|default:'' }}"
+                 step="0.01" min="0" class="input-base" placeholder="0.00">
+        </div>
+        <div>
+          <label class="label-base">Costo flete ($)</label>
+          <input type="number" name="costo_flete" value="{{ viaje.costo_flete|default:'' }}"
+                 step="0.01" min="0" class="input-base" placeholder="0.00">
+        </div>
+        <div>
+          <label class="label-base">Observaciones</label>
+          <input type="text" name="observaciones" value="{{ viaje.observaciones|default:'' }}" class="input-base">
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de capacidad -->
+    <div class="card-glass" x-show="capacidad > 0">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-semibold">Capacidad del vehículo</span>
+        <span class="text-sm font-mono" :class="porcentaje > 100 ? 'text-red-500' : porcentaje > 80 ? 'text-yellow-500' : 'text-green-500'">
+          <span x-text="pesoTotal.toFixed(1)"></span> / <span x-text="capacidad"></span> kg
+          (<span x-text="porcentaje.toFixed(1)"></span>%)
+        </span>
+      </div>
+      <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+        <div class="h-3 rounded-full transition-all duration-300"
+             :class="porcentaje > 100 ? 'bg-red-500' : porcentaje > 80 ? 'bg-yellow-500' : 'bg-green-500'"
+             :style="'width:' + Math.min(porcentaje, 100) + '%'"></div>
+      </div>
+      <template x-if="porcentaje > 100">
+        <div class="mt-2 flex items-center gap-2">
+          <label class="flex items-center gap-2 text-sm text-red-500 cursor-pointer">
+            <input type="checkbox" name="forzar" value="on" class="w-4 h-4 rounded border-red-300 text-red-500">
+            Forzar asignación (excede capacidad)
+          </label>
+        </div>
+      </template>
+    </div>
+
+    <!-- Pedidos disponibles -->
+    <div class="card-glass !p-0 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-white/10">
+        <h2 class="font-semibold text-slate-900 dark:text-white">Seleccionar pedidos</h2>
+      </div>
+      {% if pedidos_disponibles %}
+      <table class="w-full text-left">
+        <thead class="bg-slate-50 dark:bg-white/5">
+          <tr>
+            <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase w-10"></th>
+            <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">N° Pedido</th>
+            <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">Cliente</th>
+            <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase text-right">Total</th>
+            <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase text-right">Peso (kg)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+          {% for p in pedidos_disponibles %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-white/5">
+            <td class="px-4 py-3">
+              <input type="checkbox" name="pedidos" value="{{ p.pk }}"
+                     {% if detalles_dict and p.pk in detalles_dict %}checked{% endif %}
+                     @change="togglePedido({{ p.pk }}, $event)"
+                     class="w-4 h-4 rounded border-slate-300 text-brand-blue">
+            </td>
+            <td class="px-4 py-3 text-sm font-mono font-medium">{{ p.numero }}</td>
+            <td class="px-4 py-3 text-sm">{{ p.cliente }}</td>
+            <td class="px-4 py-3 text-sm text-right">${{ p.total }}</td>
+            <td class="px-4 py-3">
+              <input type="number" name="peso_{{ p.pk }}"
+                     value="{% for dpk, dobj in detalles_dict.items %}{% if dpk == p.pk %}{{ dobj.peso_estimado_kg }}{% endif %}{% endfor %}"
+                     step="0.01" min="0" placeholder="0.00"
+                     @input="recalcular()"
+                     class="input-base !w-24 !py-1 !text-sm text-right"
+                     :id="'peso_' + {{ p.pk }}">
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="px-6 py-8 text-center text-slate-400">No hay pedidos disponibles para despacho.</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-save"></i> Guardar Viaje
+      </button>
+      <a href="{% url 'flotas:lista' %}" class="btn-secondary">Cancelar</a>
+    </div>
+  </form>
+
+</div>
+
+<script>
+function viajeForm() {
+  return {
+    capacidad: 0,
+    pesoTotal: 0,
+    get porcentaje() {
+      return this.capacidad > 0 ? (this.pesoTotal / this.capacidad) * 100 : 0;
+    },
+    updateCapacidad(e) {
+      const opt = e.target.selectedOptions[0];
+      this.capacidad = parseFloat(opt?.dataset.capacidad || 0);
+    },
+    togglePedido(id, e) {
+      this.recalcular();
+    },
+    recalcular() {
+      let total = 0;
+      document.querySelectorAll('input[name="pedidos"]:checked').forEach(cb => {
+        const pesoInput = document.getElementById('peso_' + cb.value);
+        if (pesoInput) total += parseFloat(pesoInput.value || 0);
+      });
+      this.pesoTotal = total;
+    },
+    init() {
+      // Inicializar capacidad si hay vehículo preseleccionado
+      const sel = document.querySelector('select[name="vehiculo"]');
+      if (sel && sel.selectedIndex > 0) {
+        this.capacidad = parseFloat(sel.selectedOptions[0].dataset.capacidad || 0);
+      }
+      this.recalcular();
+    }
+  }
+}
+</script>
+{% endblock %}

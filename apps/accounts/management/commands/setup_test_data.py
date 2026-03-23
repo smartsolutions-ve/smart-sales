@@ -18,6 +18,7 @@ from apps.accounts.models import Organization, User
 from apps.pedidos.models import Cliente, Pedido, PedidoItem
 from apps.pedidos.utils import generar_numero_pedido
 from apps.competencia.models import CompetenciaRegistro
+from apps.productos.models import CategoriaProducto, Producto
 
 
 # ─── Datos maestros del negocio ──────────────────────────────────────────────
@@ -220,8 +221,10 @@ class Command(BaseCommand):
             Pedido.objects.filter(organization=org).delete()
             Cliente.objects.filter(organization=org).delete()
             CompetenciaRegistro.objects.filter(organization=org).delete()
+            Producto.objects.filter(organization=org).delete()
+            CategoriaProducto.objects.filter(organization=org).delete()
             self.stdout.write(self.style.WARNING(
-                f'  ⚠ Reset: {pedidos_del} pedidos + clientes + competencia eliminados.'
+                f'  ⚠ Reset: {pedidos_del} pedidos + clientes + competencia + productos eliminados.'
             ))
 
         # ── 3. Usuarios ───────────────────────────────────────────────────────
@@ -259,7 +262,50 @@ class Command(BaseCommand):
             clientes_db.append(cliente)
         self.stdout.write(self.style.SUCCESS(f'  ✓ Clientes: {len(clientes_db)} creados/verificados'))
 
-        # ── 5. Pedidos ────────────────────────────────────────────────────────
+        # ── 5. Catálogo de Productos ─────────────────────────────────────────
+        CATEGORIAS_MAP = {
+            'ABA': 'Alimentos Balanceados (ABA)',
+            'SubProd': 'Subproductos y Materias Primas',
+            'Medicina': 'Medicinas Veterinarias',
+            'Accesorio': 'Accesorios y Equipos',
+            'Mascota': 'Productos para Mascotas',
+        }
+        categorias_db = {}
+        for clave, nombre_cat in CATEGORIAS_MAP.items():
+            cat, _ = CategoriaProducto.objects.get_or_create(
+                organization=org, nombre=nombre_cat,
+            )
+            categorias_db[clave] = cat
+
+        SKU_PREFIJOS = {
+            'ABA': 'ABA', 'SubProd': 'SUB', 'Medicina': 'MED',
+            'Accesorio': 'ACC', 'Mascota': 'MAS',
+        }
+        productos_creados = 0
+        for i, (nombre, pmin, pmax, cat_clave) in enumerate(PRODUCTOS, start=1):
+            precio_promedio = Decimal(str(round((pmin + pmax) / 2, 2)))
+            unidad = 'saco' if cat_clave in ('ABA', 'SubProd') else 'unidad'
+            sku = f'{SKU_PREFIJOS[cat_clave]}-{i:03d}'
+            _, created = Producto.objects.get_or_create(
+                organization=org, nombre=nombre,
+                defaults={
+                    'sku': sku,
+                    'precio_base': precio_promedio,
+                    'categoria': categorias_db[cat_clave],
+                    'unidad': unidad,
+                    'is_active': True,
+                },
+            )
+            if created:
+                productos_creados += 1
+
+        total_productos = Producto.objects.filter(organization=org).count()
+        if productos_creados > 0:
+            self.stdout.write(self.style.SUCCESS(f'  ✓ Productos: {productos_creados} creados ({total_productos} total)'))
+        else:
+            self.stdout.write(f'  → Productos: ya existen {total_productos} (sin crear nuevos)')
+
+        # ── 6. Pedidos ────────────────────────────────────────────────────────
         pedidos_existentes = Pedido.objects.filter(organization=org).count()
         pedidos_a_crear = n_pedidos - pedidos_existentes
         pedidos_creados = 0
@@ -309,7 +355,7 @@ class Command(BaseCommand):
                 f'  ✓ Pedidos: {pedidos_creados} creados ({Pedido.objects.filter(organization=org).count()} total)'
             ))
 
-        # ── 6. Registros de competencia ───────────────────────────────────────
+        # ── 7. Registros de competencia ───────────────────────────────────────
         comp_existentes = CompetenciaRegistro.objects.filter(organization=org).count()
         comp_data = [
             ("Pollo Iniciador ALIPA x 40kg", "Agro Barinas Distribuidora", 21.00, 24.50,
@@ -358,15 +404,17 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(f'  ✓ Competencia: {comp_creados} registros creados'))
 
-        # ── 7. Resumen ────────────────────────────────────────────────────────
+        # ── 8. Resumen ────────────────────────────────────────────────────────
         total_pedidos = Pedido.objects.filter(organization=org).count()
         total_clientes = Cliente.objects.filter(organization=org).count()
+        total_productos = Producto.objects.filter(organization=org).count()
         total_comp = CompetenciaRegistro.objects.filter(organization=org).count()
 
         self.stdout.write('\n' + '─' * 55)
         self.stdout.write(self.style.SUCCESS('  ✓ Setup completado exitosamente\n'))
         self.stdout.write(f'  Organización : {org.name}')
         self.stdout.write(f'  Clientes     : {total_clientes}')
+        self.stdout.write(f'  Productos    : {total_productos}')
         self.stdout.write(f'  Pedidos      : {total_pedidos}')
         self.stdout.write(f'  Competencia  : {total_comp} registros')
         self.stdout.write(f'\n  Credenciales de acceso:')

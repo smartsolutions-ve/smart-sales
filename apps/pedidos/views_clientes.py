@@ -19,7 +19,13 @@ def lista(request):
     q = request.GET.get('q', '')
     clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
     if q:
-        clientes = clientes.filter(nombre__icontains=q)
+        from django.db.models import Q as Qfilter
+        clientes = clientes.filter(
+            Qfilter(nombre__icontains=q) |
+            Qfilter(telefono__icontains=q) |
+            Qfilter(email__icontains=q) |
+            Qfilter(contacto__icontains=q)
+        )
 
     paginator = Paginator(clientes, 25)
     page_obj = paginator.get_page(request.GET.get('page'))

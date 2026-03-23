@@ -19,7 +19,7 @@
       <p class="text-subtitle mt-0.5">{{ request.org.name }}</p>
       {% endif %}
     </div>
-    <form method="get">
+    <form method="get" class="flex items-center flex-wrap gap-2">
       <select name="periodo" onchange="this.form.submit()" class="input-base !w-auto">
         <option value="mes"          {% if periodo == 'mes' %}selected{% endif %}>Este mes</option>
         <option value="mes_anterior" {% if periodo == 'mes_anterior' %}selected{% endif %}>Mes anterior</option>
@@ -27,6 +27,15 @@
         <option value="anio"         {% if periodo == 'anio' %}selected{% endif %}>Este año</option>
         <option value="todo"         {% if periodo == 'todo' %}selected{% endif %}>Todo el tiempo</option>
       </select>
+      <span class="text-xs text-slate-400">o</span>
+      <input type="date" name="desde" value="{{ desde }}" placeholder="Desde"
+             class="input-base !w-auto text-sm" title="Desde">
+      <input type="date" name="hasta" value="{{ hasta }}" placeholder="Hasta"
+             class="input-base !w-auto text-sm" title="Hasta">
+      <button type="submit" class="btn-primary !py-1.5 !px-3 text-sm">Filtrar</button>
+      {% if desde or hasta %}
+      <a href="{% url 'dashboard:index' %}" class="text-xs text-red-500 hover:text-red-400 font-medium">Limpiar</a>
+      {% endif %}
     </form>
   </div>
 
@@ -37,7 +46,7 @@
         <i class="fas fa-dollar-sign"></i>
       </div>
       <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Ventas Totales</p>
-      <p class="text-3xl font-bold mt-1">${{ ventas_totales|intcomma }}</p>
+      <p class="text-3xl font-bold mt-1">${{ ventas_totales|floatformat:2|intcomma }}</p>
       <p class="text-xs text-slate-400 mt-1">Pedidos no cancelados</p>
     </div>
     <div class="card-glass">
@@ -76,12 +85,12 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="card-glass lg:col-span-2 flex flex-col">
       <h2 class="chart-title"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Ventas últimos 6 meses</h2>
-      <div style="height:220px;"><canvas id="chartVentasMes"></canvas></div>
+      <div style="height:220px;"><canvas id="chartVentasMes" aria-label="Gráfica de ventas de los últimos 6 meses"></canvas></div>
     </div>
     <div class="card-glass flex flex-col">
       <h2 class="chart-title"><i class="fas fa-circle-half-stroke mr-1.5 text-brand-blue"></i> Pedidos por estado</h2>
       <div class="flex-1 flex items-center justify-center" style="height:220px;">
-        <canvas id="chartEstados"></canvas>
+        <canvas id="chartEstados" aria-label="Gráfica de pedidos por estado"></canvas>
       </div>
     </div>
   </div>
@@ -93,7 +102,7 @@
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-filter mr-1.5 text-brand-blue"></i> Embudo de pipeline</h2>
       <p class="text-xs text-subtitle mb-3">Cantidad de pedidos en cada etapa del proceso</p>
-      <div style="height:200px;"><canvas id="chartEmbudo"></canvas></div>
+      <div style="height:200px;"><canvas id="chartEmbudo" aria-label="Gráfica de embudo de pipeline"></canvas></div>
     </div>
 
     <!-- Top 10 clientes -->
@@ -101,7 +110,7 @@
       <h2 class="chart-title"><i class="fas fa-building mr-1.5 text-brand-blue"></i> Top 10 clientes</h2>
       <p class="text-xs text-subtitle mb-3">Por volumen de ventas en el período</p>
       {% if chart_clientes_labels != '[]' %}
-      <div style="height:200px;"><canvas id="chartClientes"></canvas></div>
+      <div style="height:200px;"><canvas id="chartClientes" aria-label="Gráfica de top 10 clientes por ventas"></canvas></div>
       {% else %}
       <div class="flex items-center justify-center h-48 text-slate-300 dark:text-slate-600">
         <p class="text-sm">Sin datos de clientes en el período</p>
@@ -116,7 +125,7 @@
   <div class="card-glass">
     <h2 class="chart-title"><i class="fas fa-chart-line mr-1.5 text-brand-blue"></i> Ventas por vendedor — últimos 6 meses</h2>
     <p class="text-xs text-subtitle mb-3">Evolución mensual de cada vendedor activo</p>
-    <div style="height:260px;"><canvas id="chartVendedoresMes"></canvas></div>
+    <div style="height:260px;"><canvas id="chartVendedoresMes" aria-label="Gráfica de ventas por vendedor en los últimos 6 meses"></canvas></div>
   </div>
   {% endif %}
 
@@ -124,7 +133,7 @@
   {% if chart_vendedores_labels != '[]' %}
   <div class="card-glass">
     <h2 class="chart-title"><i class="fas fa-trophy mr-1.5 text-brand-blue"></i> Top vendedores — período seleccionado</h2>
-    <div style="height:180px;"><canvas id="chartVendedores"></canvas></div>
+    <div style="height:180px;"><canvas id="chartVendedores" aria-label="Gráfica de top vendedores en el período seleccionado"></canvas></div>
   </div>
   {% endif %}
 
@@ -391,9 +400,6 @@
     });
   }
 
-  // Recargar al cambiar modo oscuro para actualizar colores
-  new MutationObserver(() => location.reload())
-    .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
 {% endblock %}

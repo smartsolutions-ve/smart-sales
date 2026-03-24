@@ -5,92 +5,98 @@
 {% block breadcrumb %}Panel Admin{% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-6">
+<div class="p-4 md:p-6 space-y-5">
 
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-      <h1 class="text-title">Panel de Administración</h1>
+      <h1 class="text-title">Panel de Administracion</h1>
       <p class="text-subtitle mt-0.5">SmartSales — Control de organizaciones</p>
     </div>
-    <a href="{% url 'admin_panel:org_crear' %}" class="btn-primary">
-      <i class="fas fa-plus"></i> Nueva Organización
+    <a href="{% url 'admin_panel:org_crear' %}" class="btn-primary !py-2 self-start sm:self-auto">
+      <i class="fas fa-plus"></i> Nueva Organizacion
     </a>
   </div>
 
   <!-- KPIs globales -->
-  <div class="grid grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
     <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-blue-100 text-brand-blue dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-building"></i>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-brand-blue dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center text-base">
+          <i class="fas fa-building"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold">Total Organizaciones</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Total Organizaciones</p>
-      <p class="text-3xl font-bold mt-1">{{ total_orgs }}</p>
+      <p class="text-3xl font-bold">{{ total_orgs }}</p>
     </div>
     <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-circle-check"></i>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center text-base">
+          <i class="fas fa-circle-check"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold">Activas</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Activas</p>
-      <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">{{ orgs_activas }}</p>
+      <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ orgs_activas }}</p>
     </div>
     <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-red-100 text-red-500 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-ban"></i>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center text-base">
+          <i class="fas fa-ban"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold">Suspendidas</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Suspendidas</p>
-      <p class="text-3xl font-bold text-red-500 mt-1">{{ orgs_suspendidas }}</p>
+      <p class="text-3xl font-bold text-red-500">{{ orgs_suspendidas }}</p>
     </div>
   </div>
 
   <!-- Lista de organizaciones -->
   <div class="card-glass !p-0 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-white/5">
-      <h2 class="font-bold">Organizaciones</h2>
+    <div class="px-5 md:px-6 py-4 border-b border-slate-200/80 dark:border-white/[0.06]">
+      <h2 class="font-bold text-sm">Organizaciones</h2>
     </div>
 
     {% if orgs %}
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 dark:bg-white/5">
+      <table data-datatable class="w-full text-left min-w-[600px]">
+        <thead>
           <tr>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Organización</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Plan</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Usuarios</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Creada</th>
-            <th class="px-5 py-3"></th>
+            <th>Organizacion</th>
+            <th>Plan</th>
+            <th>Usuarios</th>
+            <th>Estado</th>
+            <th>Creada</th>
+            <th data-sortable="false"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for org in orgs %}
-          <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-            <td class="px-5 py-3">
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
+            <td class="td-base">
               <a href="{% url 'admin_panel:org_detalle' org.pk %}"
-                 class="text-sm font-semibold text-brand-blue hover:underline">{{ org.name }}</a>
+                 class="font-semibold text-brand-blue hover:underline">{{ org.name }}</a>
               <p class="text-xs text-slate-400 font-mono">{{ org.slug }}</p>
             </td>
-            <td class="px-5 py-3">
+            <td class="td-base hidden md:table-cell">
               <span class="badge-neutral capitalize">{{ org.get_plan_display }}</span>
             </td>
-            <td class="px-5 py-3 text-sm text-slate-700 dark:text-slate-300">{{ org.users_count }}</td>
-            <td class="px-5 py-3">
+            <td class="td-base text-slate-700 dark:text-slate-300">{{ org.users_count }}</td>
+            <td class="td-base">
               {% if org.is_active %}
               <span class="badge-success">Activa</span>
               {% else %}
               <span class="badge-danger">Suspendida</span>
               {% endif %}
             </td>
-            <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ org.created_at|date:"d/m/Y" }}</td>
-            <td class="px-5 py-3">
-              <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden sm:table-cell">{{ org.created_at|date:"d/m/Y" }}</td>
+            <td class="td-base">
+              <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
                 <a href="{% url 'admin_panel:org_detalle' org.pk %}"
-                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-colors">
+                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all">
                   <i class="fas fa-eye"></i>
                 </a>
                 <form method="post" action="{% url 'admin_panel:org_toggle' org.pk %}" class="inline">
                   {% csrf_token %}
                   <button type="submit"
-                          class="w-7 h-7 rounded-lg {% if org.is_active %}bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500{% else %}bg-green-50 dark:bg-green-500/10 text-green-600 hover:bg-green-500{% endif %} hover:text-white flex items-center justify-center text-xs transition-colors">
+                          class="w-7 h-7 rounded-lg {% if org.is_active %}bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500{% else %}bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500{% endif %} hover:text-white flex items-center justify-center text-xs transition-all">
                     <i class="fas {% if org.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
                   </button>
                 </form>
@@ -106,7 +112,7 @@
       <i class="fas fa-building text-4xl opacity-30 mb-3"></i>
       <p class="text-lg font-medium">No hay organizaciones registradas.</p>
       <a href="{% url 'admin_panel:org_crear' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-semibold">
-        Crear la primera →
+        Crear la primera &rarr;
       </a>
     </div>
     {% endif %}

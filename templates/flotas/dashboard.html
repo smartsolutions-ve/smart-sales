@@ -3,39 +3,39 @@
 
 {% block title %}Dashboard Flotas — SmartSales{% endblock %}
 {% block breadcrumb %}
-  <a href="{% url 'flotas:lista' %}" class="hover:text-brand-blue">Flotas</a>
-  <i class="fas fa-chevron-right text-xs mx-2"></i> Dashboard
+  <a href="{% url 'flotas:lista' %}" class="hover:text-brand-blue transition-colors">Flotas</a>
+  <i class="fas fa-chevron-right text-[8px] mx-2 opacity-40"></i> Dashboard
 {% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-6">
+<div class="p-4 md:p-6 space-y-5">
 
   <h1 class="text-title">Dashboard de Flotas</h1>
 
   <!-- KPIs -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
     <div class="card-glass text-center">
-      <p class="text-3xl font-bold text-brand-blue">{{ total_vehiculos }}</p>
-      <p class="text-xs text-slate-500 font-medium uppercase mt-1">Vehículos activos</p>
+      <p class="text-2xl md:text-3xl font-bold text-brand-blue">{{ total_vehiculos }}</p>
+      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Vehiculos activos</p>
     </div>
     <div class="card-glass text-center">
-      <p class="text-3xl font-bold text-brand-blue">{{ total_viajes }}</p>
-      <p class="text-xs text-slate-500 font-medium uppercase mt-1">Total viajes</p>
+      <p class="text-2xl md:text-3xl font-bold text-brand-blue">{{ total_viajes }}</p>
+      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Total viajes</p>
     </div>
     <div class="card-glass text-center">
-      <p class="text-3xl font-bold text-brand-green">{{ viajes_completados }}</p>
-      <p class="text-xs text-slate-500 font-medium uppercase mt-1">Completados</p>
+      <p class="text-2xl md:text-3xl font-bold text-emerald-500">{{ viajes_completados }}</p>
+      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Completados</p>
     </div>
     <div class="card-glass text-center">
-      <p class="text-3xl font-bold {% if utilizacion_promedio > 80 %}text-green-500{% elif utilizacion_promedio > 50 %}text-yellow-500{% else %}text-red-500{% endif %}">
+      <p class="text-2xl md:text-3xl font-bold {% if utilizacion_promedio > 80 %}text-emerald-500{% elif utilizacion_promedio > 50 %}text-amber-500{% else %}text-red-500{% endif %}">
         {{ utilizacion_promedio }}%
       </p>
-      <p class="text-xs text-slate-500 font-medium uppercase mt-1">Utilización promedio</p>
+      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Utilizacion promedio</p>
     </div>
   </div>
 
   <div class="card-glass text-center">
-    <p class="text-xs text-slate-500 font-medium uppercase mb-1">Costo total de fletes</p>
+    <p class="text-[11px] text-slate-500 font-semibold uppercase mb-1.5">Costo total de fletes</p>
     <p class="text-2xl font-bold text-slate-900 dark:text-white">${{ costo_total|intcomma }}</p>
   </div>
 

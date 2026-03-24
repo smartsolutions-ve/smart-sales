@@ -4,7 +4,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
-from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Q
 
 from apps.accounts.decorators import role_required
@@ -115,14 +114,11 @@ def viajes_lista(request):
         viajes = viajes.filter(vehiculo_id=vehiculo_id)
 
     viajes = viajes.order_by('-fecha', '-created_at')
-    paginator = Paginator(viajes, 20)
-    page_obj = paginator.get_page(request.GET.get('page'))
 
     vehiculos = Vehiculo.objects.filter(organization=request.org, is_active=True)
 
     return render(request, 'flotas/viajes_lista.html', {
-        'viajes': page_obj,
-        'page_obj': page_obj,
+        'viajes': viajes,
         'vehiculos': vehiculos,
         'estado_filtro': estado,
         'fecha_filtro': fecha,

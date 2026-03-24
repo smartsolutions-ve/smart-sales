@@ -1,31 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Iniciar sesión — SmartSales{% endblock %}
+{% block title %}Iniciar sesion — SmartSales{% endblock %}
 
 {% block content_simple %}
 <div class="min-h-screen flex items-center justify-center px-4
-            bg-gradient-to-br from-slate-50 to-slate-100
-            dark:from-[#020617] dark:to-[#0F172A]"
+            bg-slate-50 dark:bg-[#0B1120]"
      x-data="loginPage()">
 
   <div class="w-full max-w-sm">
 
     <!-- Logo -->
     <div class="text-center mb-8">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-green flex items-center justify-center font-bold text-white text-xl shadow-lg mx-auto mb-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-blue to-blue-600 flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-brand-blue/25 mx-auto mb-4">
         SS
       </div>
-      <h1 class="text-2xl font-bold">Smart<span class="text-brand-blue">Sales</span></h1>
-      <p class="text-subtitle text-sm mt-1">Sistema de gestión comercial</p>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Smart<span class="text-brand-blue">Sales</span></h1>
+      <p class="text-subtitle text-sm mt-1">Sistema de gestion comercial</p>
     </div>
 
     <!-- Card -->
     <div class="card-glass">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-bold">Iniciar sesión</h2>
-        <!-- Toggle dark mode en login -->
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Iniciar sesion</h2>
         <button @click="toggleDark()"
-                class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-all text-sm">
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all text-sm">
           <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
         </button>
       </div>
@@ -46,7 +44,7 @@
 
         <div>
           <label for="password" class="label-base">
-            <i class="fas fa-lock text-slate-400 mr-1.5 text-xs"></i> Contraseña
+            <i class="fas fa-lock text-slate-400 mr-1.5 text-xs"></i> Contrasena
           </label>
           <input type="password" id="password" name="password"
                  required
@@ -54,32 +52,23 @@
                  placeholder="••••••••">
         </div>
 
-        {% if messages %}
-        {% for message in messages %}
-        <div class="rounded-xl px-4 py-3 text-sm flex items-center gap-2
-                    {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400
-                    {% else %}bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-yellow-400{% endif %}">
-          <i class="fas fa-circle-exclamation"></i>
-          {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
+        {# Los mensajes de error se muestran en el toast global de base.html #}
 
         <button type="submit" class="btn-primary w-full mt-2">
           <i class="fas fa-sign-in-alt"></i> Ingresar
         </button>
       </form>
 
-      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 text-center">
+      <div class="mt-4 pt-4 border-t border-slate-200/80 dark:border-white/[0.06] text-center">
         <a href="{% url 'accounts:password_reset' %}"
            class="text-sm text-brand-blue hover:underline">
-          ¿Olvidaste tu contraseña?
+          Olvidaste tu contrasena?
         </a>
       </div>
     </div>
 
     <p class="text-center text-xs text-slate-400 mt-6">
-      SmartSales © 2026 — Smart Consultoría
+      SmartSales 2026 — Smart Consultoria
     </p>
   </div>
 </div>
@@ -89,7 +78,7 @@
     const savedDark = localStorage.getItem('darkMode');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initDark = savedDark !== null ? savedDark === 'true' : prefersDark;
-    if (initDark) document.documentElement.classList.add('dark');
+    // Dark class already applied by FOUC fix script
     return {
       darkMode: initDark,
       toggleDark() {

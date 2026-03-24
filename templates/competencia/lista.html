@@ -5,39 +5,39 @@
 {% block breadcrumb %}Competencia{% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-5">
+<div class="p-4 md:p-6 space-y-4">
 
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <h1 class="text-title">Inteligencia de Competencia</h1>
     <div class="flex gap-2">
       <a href="{% url 'competencia:exportar_csv' %}?q={{ q }}&desde={{ desde }}&hasta={{ hasta }}"
-         class="btn-secondary" title="Exportar CSV">
-        <i class="fas fa-file-csv"></i> Exportar
+         class="btn-secondary !py-2 !px-3 text-sm" title="Exportar CSV">
+        <i class="fas fa-file-csv"></i> <span class="hidden sm:inline">Exportar</span>
       </a>
-      <a href="{% url 'competencia:crear' %}" class="btn-primary">
-        <i class="fas fa-plus"></i> Nuevo Registro
+      <a href="{% url 'competencia:crear' %}" class="btn-primary !py-2 !px-4">
+        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Nuevo Registro</span>
       </a>
     </div>
   </div>
 
   <!-- Filtros -->
-  <form method="get" class="flex gap-3 flex-wrap items-end">
-    <div class="relative flex-1 min-w-48">
+  <form method="get" class="flex gap-2 md:gap-3 flex-wrap items-end">
+    <div class="relative flex-1 min-w-[180px]">
       <input type="text" name="q" value="{{ q }}"
-             placeholder="Buscar por producto, competidor, vendedor..."
+             placeholder="Buscar por producto, competidor..."
              aria-label="Buscar"
              class="input-base pr-9 !py-2">
       <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
     </div>
-    <div>
-      <label class="text-xs text-slate-500 font-medium">Desde</label>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Desde</label>
       <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
     </div>
-    <div>
-      <label class="text-xs text-slate-500 font-medium">Hasta</label>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Hasta</label>
       <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
     </div>
-    <button type="submit" class="btn-secondary !py-2">
+    <button type="submit" class="btn-secondary !py-2 !px-3">
       <i class="fas fa-filter"></i> Filtrar
     </button>
     {% if q or desde or hasta %}
@@ -50,46 +50,46 @@
   {% if registros %}
   <div class="card-glass !p-0 overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+      <table data-datatable class="w-full text-left min-w-[750px]">
+        <thead>
           <tr>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Fecha</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Producto</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Competidor</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Precio Comp.</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Nuestro</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Diferencia</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vendedor</th>
-            <th class="px-5 py-3"></th>
+            <th>Fecha</th>
+            <th>Producto</th>
+            <th>Competidor</th>
+            <th>Precio Comp.</th>
+            <th>Nuestro</th>
+            <th>Diferencia</th>
+            <th>Vendedor</th>
+            <th data-sortable="false"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for r in registros %}
-          <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-            <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ r.fecha }}</td>
-            <td class="px-5 py-3 text-sm font-semibold">{{ r.producto }}</td>
-            <td class="px-5 py-3 text-sm text-slate-600 dark:text-slate-300">{{ r.competidor }}</td>
-            <td class="px-5 py-3 text-sm text-right text-slate-600 dark:text-slate-300">
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
+            <td class="td-base text-slate-500 dark:text-slate-400">{{ r.fecha }}</td>
+            <td class="td-base font-semibold">{{ r.producto }}</td>
+            <td class="td-base text-slate-600 dark:text-slate-300">{{ r.competidor }}</td>
+            <td class="td-base text-right text-slate-600 dark:text-slate-300">
               {% if r.precio_comp %}${{ r.precio_comp }}{% else %}—{% endif %}
             </td>
-            <td class="px-5 py-3 text-sm text-right text-slate-600 dark:text-slate-300">
+            <td class="td-base text-right text-slate-600 dark:text-slate-300">
               {% if r.precio_nuestro %}${{ r.precio_nuestro }}{% else %}—{% endif %}
             </td>
-            <td class="px-5 py-3 text-sm font-bold text-right">
+            <td class="td-base font-bold text-right">
               {% if r.diferencia_precio is not None %}
-                <span class="{% if r.somos_mas_caros %}text-red-500{% else %}text-green-500{% endif %}">
+                <span class="{% if r.somos_mas_caros %}text-red-500{% else %}text-emerald-500{% endif %}">
                   {% if r.somos_mas_caros %}<i class="fas fa-arrow-up text-xs mr-0.5"></i>{% else %}<i class="fas fa-arrow-down text-xs mr-0.5"></i>{% endif %}
                   ${{ r.diferencia_precio|floatformat:2 }}
                 </span>
               {% else %}—{% endif %}
             </td>
-            <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden lg:table-cell">
               {{ r.vendedor.get_full_name|default:r.vendedor.username }}
             </td>
-            <td class="px-5 py-3 text-right">
-              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
+            <td class="td-base text-right">
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-1.5">
                 <a href="{% url 'competencia:editar' r.pk %}"
-                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-colors"
+                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
                    title="Editar">
                   <i class="fas fa-edit"></i>
                 </a>
@@ -97,8 +97,8 @@
                   {% csrf_token %}
                 </form>
                 <button type="button"
-                        @click="confirmar('Eliminar registro', '¿Eliminar este registro de competencia?', $refs.formElimComp{{ r.pk }})"
-                        class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-colors"
+                        @click="confirmar('Eliminar registro', 'Eliminar este registro de competencia?', $refs.formElimComp{{ r.pk }})"
+                        class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-xs transition-all"
                         title="Eliminar">
                   <i class="fas fa-trash-alt"></i>
                 </button>
@@ -109,16 +109,13 @@
         </tbody>
       </table>
     </div>
-    <div class="px-5 py-3 border-t border-slate-100 dark:border-white/5">
-      {% include 'partials/paginacion.html' %}
-    </div>
   </div>
   {% else %}
   <div class="card-glass text-center py-12">
     <i class="fas fa-chart-bar text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
     <p class="text-subtitle text-lg font-medium">No hay registros de competencia.</p>
     <a href="{% url 'competencia:crear' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-medium">
-      Registrar el primero →
+      Registrar el primero &rarr;
     </a>
   </div>
   {% endif %}

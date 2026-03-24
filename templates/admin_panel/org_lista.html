@@ -19,15 +19,15 @@
   <div class="card-glass !p-0 overflow-hidden">
     {% if orgs %}
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 dark:bg-white/5">
+      <table data-datatable class="w-full text-left">
+        <thead>
           <tr>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Organización</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Plan</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Usuarios</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Creada</th>
-            <th class="px-5 py-3"></th>
+            <th>Organización</th>
+            <th>Plan</th>
+            <th>Usuarios</th>
+            <th>Estado</th>
+            <th>Creada</th>
+            <th data-sortable="false"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-white/5">

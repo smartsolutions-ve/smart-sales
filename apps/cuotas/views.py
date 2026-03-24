@@ -5,7 +5,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
-from django.core.paginator import Paginator
 from django.db.models import Sum, F
 from django.http import HttpResponse
 
@@ -33,15 +32,11 @@ def lista(request):
     if canal:
         qs = qs.filter(canal=canal)
 
-    paginator = Paginator(qs, 50)
-    page_obj = paginator.get_page(request.GET.get('page'))
-
     zonas = VentaMensual.objects.filter(organization=request.org).values_list('zona_nombre', flat=True).distinct().order_by('zona_nombre')
     vendedores = VentaMensual.objects.filter(organization=request.org).values_list('vendedor_nombre', flat=True).distinct().order_by('vendedor_nombre')
 
     return render(request, 'cuotas/lista.html', {
-        'ventas': page_obj,
-        'page_obj': page_obj,
+        'ventas': qs,
         'periodo_filtro': periodo,
         'zona_filtro': zona,
         'vendedor_filtro': vendedor,

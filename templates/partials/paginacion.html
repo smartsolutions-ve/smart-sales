@@ -1,12 +1,12 @@
 {% if page_obj.has_other_pages %}
-<div class="flex items-center justify-between mt-4 px-1">
-  <p class="text-sm text-subtitle">
-    Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 dark:border-white/[0.04]">
+  <p class="text-sm text-subtitle order-2 sm:order-1">
+    Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ page_obj.paginator.count }}
   </p>
-  <nav class="flex items-center gap-1">
+  <nav class="flex items-center gap-1 order-1 sm:order-2">
     {% if page_obj.has_previous %}
       <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
-         class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+         class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
          title="Anterior">
         <i class="fas fa-chevron-left text-xs"></i>
       </a>
@@ -18,12 +18,12 @@
 
     {% for num in page_obj.paginator.page_range %}
       {% if page_obj.number == num %}
-        <span class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-semibold bg-brand-blue text-white">
+        <span class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-semibold bg-brand-blue text-white shadow-sm">
           {{ num }}
         </span>
       {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
         <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}"
-           class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+           class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
           {{ num }}
         </a>
       {% endif %}
@@ -31,7 +31,7 @@
 
     {% if page_obj.has_next %}
       <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
-         class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+         class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
          title="Siguiente">
         <i class="fas fa-chevron-right text-xs"></i>
       </a>

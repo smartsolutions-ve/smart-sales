@@ -6,7 +6,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
-from django.core.paginator import Paginator
 from django.db.models import Q
 
 from apps.accounts.decorators import role_required
@@ -45,10 +44,8 @@ def _filtrar_competencia(request):
 @role_required('gerente', 'superadmin')
 def lista(request):
     registros, filtros = _filtrar_competencia(request)
-    paginator = Paginator(registros, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
 
-    context = {'registros': page_obj, 'page_obj': page_obj, **filtros}
+    context = {'registros': registros, **filtros}
     return render(request, 'competencia/lista.html', context)
 
 

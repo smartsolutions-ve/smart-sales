@@ -3,39 +3,37 @@
 {% block breadcrumb %}Asistente IA{% endblock %}
 
 {% block content %}
-<div class="p-4 sm:p-6 max-w-4xl mx-auto flex flex-col" style="height: calc(100vh - 4rem);">
+<div class="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto flex flex-col" style="height: calc(100vh - 3.5rem);">
 
   <!-- Header -->
-  <div class="flex items-center justify-between mb-4 flex-shrink-0">
+  <div class="flex items-center justify-between mb-3 flex-shrink-0">
     <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-green
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-blue to-blue-600
                   flex items-center justify-center shadow-lg shadow-brand-blue/20">
-        <i class="fas fa-robot text-white text-lg"></i>
+        <i class="fas fa-robot text-white text-base"></i>
       </div>
       <div>
-        <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Asistente IA</h1>
+        <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Asistente IA</h1>
         <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            {% if request.org %}{{ request.org.name }}{% endif %} — En línea
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+            {% if request.org %}{{ request.org.name }} — {% endif %}En linea
           </p>
         </div>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <button onclick="document.getElementById('chat-historial').innerHTML='<div class=\'flex flex-col items-center justify-center h-full text-center py-12\'><div class=\'w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-green flex items-center justify-center mb-4 shadow-lg\'><i class=\'fas fa-robot text-white text-2xl\'></i></div><p class=\'font-semibold text-slate-700 dark:text-slate-300\'>Conversación limpiada</p><p class=\'text-sm text-slate-400 mt-1\'>Los mensajes anteriores siguen guardados en el historial.</p></div>'"
-              class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500
-                     hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Limpiar vista">
-        <i class="fas fa-broom mr-1"></i> Limpiar
-      </button>
-    </div>
+    <button onclick="document.getElementById('chat-historial').innerHTML='<div class=\'flex flex-col items-center justify-center h-full text-center py-12\'><div class=\'w-14 h-14 rounded-xl bg-gradient-to-br from-brand-blue to-blue-600 flex items-center justify-center mb-4 shadow-lg\'><i class=\'fas fa-robot text-white text-xl\'></i></div><p class=\'font-semibold text-slate-700 dark:text-slate-300\'>Conversacion limpiada</p><p class=\'text-sm text-slate-400 mt-1\'>Los mensajes anteriores siguen guardados.</p></div>'"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400
+                   hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-600 dark:hover:text-slate-300 transition-all"
+            title="Limpiar vista">
+      <i class="fas fa-broom mr-1"></i> <span class="hidden sm:inline">Limpiar</span>
+    </button>
   </div>
 
   <!-- Historial -->
   <div id="chat-historial"
-       class="flex-1 overflow-y-auto rounded-2xl bg-slate-50 dark:bg-slate-900/40
-              border border-slate-200 dark:border-slate-700/50 p-4 mb-4
+       class="flex-1 overflow-y-auto rounded-2xl bg-slate-50/80 dark:bg-slate-900/40
+              border border-slate-200/80 dark:border-white/[0.06] p-3 sm:p-4 mb-3
               scroll-smooth"
        x-data x-init="$el.scrollTop = $el.scrollHeight">
     {% if mensajes %}
@@ -43,24 +41,24 @@
     {% else %}
     <div class="flex flex-col items-center justify-center h-full text-center py-12"
          x-data="{ sugerencias: [
-           '¿Cuántos pedidos están pendientes?',
+           'Cuantos pedidos estan pendientes?',
            'Dame un resumen del negocio',
-           '¿Cómo va el cumplimiento de ventas?',
-           '¿Cuánto falta por facturar?',
-           '¿Qué viajes hay programados?',
-           '¿Quiénes son los top clientes?',
+           'Como va el cumplimiento de ventas?',
+           'Cuanto falta por facturar?',
+           'Que viajes hay programados?',
+           'Quienes son los top clientes?',
          ]}">
-      <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-blue to-brand-green
+      <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-blue to-blue-600
                   flex items-center justify-center mb-5 shadow-xl shadow-brand-blue/20">
-        <i class="fas fa-robot text-white text-3xl"></i>
+        <i class="fas fa-robot text-white text-2xl sm:text-3xl"></i>
       </div>
-      <p class="text-lg font-bold text-slate-700 dark:text-slate-200">
-        ¿En qué puedo ayudarte?
+      <p class="text-base sm:text-lg font-bold text-slate-700 dark:text-slate-200">
+        En que puedo ayudarte?
       </p>
-      <p class="text-sm text-slate-400 mt-1 max-w-md">
-        Tengo acceso a datos de pedidos, clientes, productos, despachos, facturación, flotas y cuotas de ventas.
+      <p class="text-sm text-slate-400 mt-1 max-w-md px-4">
+        Tengo acceso a datos de pedidos, clientes, productos, despachos, facturacion, flotas y cuotas de ventas.
       </p>
-      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
         <template x-for="sug in sugerencias" :key="sug">
           <button @click="
                     const input = document.querySelector('input[name=pregunta]');
@@ -69,12 +67,12 @@
                     input.dispatchEvent(new Event('input'));
                     form.requestSubmit();
                   "
-                  class="text-left text-sm px-4 py-3 rounded-xl
-                         bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
+                  class="text-left text-sm px-4 py-2.5 rounded-xl
+                         bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/[0.06]
                          text-slate-600 dark:text-slate-400
-                         hover:border-brand-blue hover:shadow-md hover:shadow-brand-blue/5
+                         hover:border-brand-blue/50 hover:shadow-sm
                          hover:text-brand-blue transition-all group/sug">
-            <i class="fas fa-sparkles text-[10px] mr-1.5 opacity-40 group-hover/sug:opacity-100
+            <i class="fas fa-sparkles text-[9px] mr-1.5 opacity-30 group-hover/sug:opacity-100
                       text-brand-blue transition-opacity"></i>
             <span x-text="sug"></span>
           </button>
@@ -107,14 +105,14 @@
                  placeholder="Escribe tu consulta..."
                  maxlength="500"
                  autocomplete="off"
-                 class="w-full pl-4 pr-12 py-3.5 rounded-2xl text-sm
-                        bg-white dark:bg-slate-800
-                        border-2 border-slate-200 dark:border-slate-700
+                 class="w-full pl-4 pr-12 py-3 rounded-xl text-sm
+                        bg-white dark:bg-slate-800/60
+                        border border-slate-200 dark:border-white/[0.08]
                         focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20
-                        dark:focus:border-brand-blue
+                        dark:focus:border-brand-blue/60
                         placeholder-slate-400 dark:placeholder-slate-500
                         text-slate-900 dark:text-white
-                        transition-all duration-200
+                        transition-all duration-200 outline-none
                         disabled:opacity-50">
           <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 dark:text-slate-600"
                 x-show="pregunta.length > 400"
@@ -123,10 +121,10 @@
 
         <button type="submit"
                 :disabled="cargando || !pregunta.trim()"
-                class="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-blue to-brand-green
+                class="w-11 h-11 rounded-xl bg-gradient-to-r from-brand-blue to-blue-600
                        text-white flex items-center justify-center flex-shrink-0
-                       shadow-lg shadow-brand-blue/25
-                       hover:shadow-xl hover:shadow-brand-blue/30 hover:scale-105
+                       shadow-md shadow-brand-blue/20
+                       hover:shadow-lg hover:shadow-brand-blue/25 hover:scale-105
                        active:scale-95
                        transition-all duration-200
                        disabled:opacity-40 disabled:shadow-none disabled:scale-100">
@@ -139,12 +137,11 @@
         </button>
       </div>
 
-      <!-- Loading indicator (inside chat) -->
       <div id="chat-loading" class="hidden"></div>
     </form>
 
     <p class="text-center text-[10px] text-slate-400 dark:text-slate-600 mt-2">
-      El asistente puede cometer errores. Verifica la información importante.
+      El asistente puede cometer errores. Verifica la informacion importante.
     </p>
   </div>
 
@@ -166,21 +163,20 @@ function chatInput() {
 
     onSend() {
       this.cargando = true;
-      // Insertar indicador de typing
       const hist = document.getElementById('chat-historial');
       const typing = document.createElement('div');
       typing.id = 'typing-indicator';
       typing.className = 'flex justify-start mb-4 chat-msg-enter';
       typing.innerHTML = `
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-blue to-brand-green
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-blue to-blue-600
                     flex items-center justify-center flex-shrink-0 mr-2 mt-1 shadow-sm">
           <i class="fas fa-robot text-white text-xs"></i>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-2xl rounded-tl-sm px-5 py-4
-                    border border-slate-100 dark:border-slate-700 shadow-sm">
+                    border border-slate-100 dark:border-white/[0.06] shadow-sm">
           <div class="flex gap-1.5 items-center">
             <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:0ms"></div>
-            <div class="w-2 h-2 rounded-full bg-brand-green animate-bounce" style="animation-delay:150ms"></div>
+            <div class="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style="animation-delay:150ms"></div>
             <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:300ms"></div>
           </div>
         </div>`;
@@ -191,10 +187,8 @@ function chatInput() {
     onReceive() {
       this.cargando = false;
       this.pregunta = '';
-      // Remover typing indicator
       const typing = document.getElementById('typing-indicator');
       if (typing) typing.remove();
-      // Scroll
       this.$nextTick(() => {
         const hist = document.getElementById('chat-historial');
         if (hist) hist.scrollTop = hist.scrollHeight;
@@ -204,7 +198,6 @@ function chatInput() {
   }
 }
 
-// Scroll al cargar
 document.addEventListener('DOMContentLoaded', () => {
   const hist = document.getElementById('chat-historial');
   if (hist) hist.scrollTop = hist.scrollHeight;

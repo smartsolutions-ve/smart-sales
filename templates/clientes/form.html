@@ -4,11 +4,11 @@
 {% block breadcrumb %}{% if cliente %}Editar Cliente{% else %}Nuevo Cliente{% endif %}{% endblock %}
 
 {% block content %}
-<div class="p-6 max-w-2xl">
+<div class="p-4 md:p-6 max-w-2xl">
 
-  <div class="flex items-center gap-4 mb-6">
-    <a href="{% url 'clientes:lista' %}" class="text-slate-400 hover:text-brand-blue transition-colors">
-      <i class="fas fa-arrow-left"></i>
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'clientes:lista' %}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all">
+      <i class="fas fa-arrow-left text-sm"></i>
     </a>
     <h1 class="text-title">{% if cliente %}Editar {{ cliente.nombre }}{% else %}Nuevo Cliente{% endif %}</h1>
   </div>
@@ -28,7 +28,7 @@
                placeholder="Nombre del cliente">
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="label-base">Persona de Contacto</label>
           <input type="text" name="contacto"
@@ -37,7 +37,7 @@
                  placeholder="Nombre del contacto">
         </div>
         <div>
-          <label class="label-base">Teléfono</label>
+          <label class="label-base">Telefono</label>
           <input type="text" name="telefono"
                  value="{{ cliente.telefono|default:'' }}"
                  class="input-base"
@@ -54,14 +54,14 @@
       </div>
 
       <div>
-        <label class="label-base">Dirección</label>
+        <label class="label-base">Direccion</label>
         <textarea name="direccion" rows="2"
                   class="input-base"
-                  placeholder="Dirección del cliente">{{ cliente.direccion|default:'' }}</textarea>
+                  placeholder="Direccion del cliente">{{ cliente.direccion|default:'' }}</textarea>
       </div>
     </div>
 
-    <div class="flex gap-3 mt-5">
+    <div class="flex flex-col sm:flex-row gap-3 mt-5">
       <button type="submit" class="btn-primary">
         <i class="fas fa-save"></i> Guardar Cliente
       </button>

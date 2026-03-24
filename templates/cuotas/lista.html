@@ -60,18 +60,18 @@
   <!-- Tabla -->
   <div class="card-glass !p-0 overflow-x-auto">
     {% if ventas %}
-    <table class="w-full text-left text-sm">
-      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+    <table data-datatable data-datatable-options='{"perPage":25}' class="w-full text-left text-sm">
+      <thead>
         <tr>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Periodo</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Vendedor</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Producto</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Zona</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Plan Cant.</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Real Cant.</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Plan USD</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-right">Real USD</th>
-          <th class="px-3 py-3 text-xs font-bold text-slate-500 uppercase whitespace-nowrap text-center">% Cumpl.</th>
+          <th>Periodo</th>
+          <th>Vendedor</th>
+          <th>Producto</th>
+          <th>Zona</th>
+          <th>Plan Cant.</th>
+          <th>Real Cant.</th>
+          <th>Plan USD</th>
+          <th>Real USD</th>
+          <th>% Cumpl.</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-white/5">
@@ -98,7 +98,6 @@
         {% endfor %}
       </tbody>
     </table>
-    {% if page_obj %}{% include 'partials/paginacion.html' %}{% endif %}
     {% else %}
     <div class="text-center py-16 text-slate-400">
       <i class="fas fa-bullseye text-4xl mb-3 opacity-30"></i>

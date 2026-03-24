@@ -59,13 +59,13 @@
     </div>
 
     {% if usuarios %}
-    <table class="w-full text-left">
-      <thead class="bg-slate-50 dark:bg-white/5">
+    <table data-datatable data-datatable-options='{"perPage":10}' class="w-full text-left">
+      <thead>
         <tr>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Usuario</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Email</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Rol</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-white/5">

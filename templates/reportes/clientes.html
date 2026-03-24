@@ -5,35 +5,35 @@
 {% block breadcrumb %}Reportes{% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-6">
+<div class="p-4 md:p-6 space-y-5">
 
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
       <h1 class="text-title">Reporte por Cliente</h1>
       <p class="text-subtitle mt-0.5">Top clientes por monto acumulado (pedidos no cancelados)</p>
     </div>
     <div class="flex gap-2">
       <a href="{% url 'reportes:clientes_csv' %}?desde={{ desde }}&hasta={{ hasta }}"
-         class="btn-secondary" title="Exportar CSV">
-        <i class="fas fa-file-csv"></i> Exportar
+         class="btn-secondary !py-2 !px-3 text-sm" title="Exportar CSV">
+        <i class="fas fa-file-csv"></i> <span class="hidden sm:inline">Exportar</span>
       </a>
-      <a href="{% url 'reportes:vendedores' %}" class="btn-secondary">
-        <i class="fas fa-arrow-left"></i> Por Vendedor
+      <a href="{% url 'reportes:vendedores' %}" class="btn-secondary !py-2 !px-3 text-sm">
+        <i class="fas fa-arrow-left"></i> <span class="hidden sm:inline">Por Vendedor</span>
       </a>
     </div>
   </div>
 
-  <!-- Filtros de fecha -->
-  <form method="get" class="flex gap-3 flex-wrap items-end">
+  <!-- Filtros -->
+  <form method="get" class="flex gap-2 md:gap-3 flex-wrap items-end">
     <div>
-      <label class="text-xs text-slate-500 font-medium">Desde</label>
+      <label class="text-[11px] text-slate-500 font-medium">Desde</label>
       <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
     </div>
     <div>
-      <label class="text-xs text-slate-500 font-medium">Hasta</label>
+      <label class="text-[11px] text-slate-500 font-medium">Hasta</label>
       <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
     </div>
-    <button type="submit" class="btn-secondary !py-2">
+    <button type="submit" class="btn-secondary !py-2 !px-3">
       <i class="fas fa-filter"></i> Filtrar
     </button>
     {% if desde or hasta %}
@@ -46,35 +46,35 @@
   {% if clientes %}
   <div class="card-glass !p-0 overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+      <table data-datatable class="w-full text-left min-w-[450px]">
+        <thead>
           <tr>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">#</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Cliente</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Pedidos</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Total Acumulado</th>
-            <th class="px-5 py-3"></th>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Pedidos</th>
+            <th>Total Acumulado</th>
+            <th data-sortable="false"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for cliente in clientes %}
-          <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-            <td class="px-5 py-3 text-sm text-slate-400 dark:text-slate-500">{{ forloop.counter }}</td>
-            <td class="px-5 py-3">
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
+            <td class="td-base text-slate-400 dark:text-slate-500">{{ forloop.counter }}</td>
+            <td class="td-base">
               <a href="{% url 'clientes:detalle' cliente.pk %}"
-                 class="text-sm font-semibold text-brand-blue hover:underline">{{ cliente.nombre }}</a>
+                 class="font-semibold text-brand-blue hover:underline">{{ cliente.nombre }}</a>
               {% if cliente.contacto %}
               <p class="text-xs text-slate-400 dark:text-slate-500">{{ cliente.contacto }}</p>
               {% endif %}
             </td>
-            <td class="px-5 py-3 text-sm text-right">{{ cliente.cantidad_pedidos|default:0 }}</td>
-            <td class="px-5 py-3 text-right">
-              <span class="text-sm font-bold">${{ cliente.total_compras|default:0|intcomma }}</span>
+            <td class="td-base text-right tabular-nums">{{ cliente.cantidad_pedidos|default:0 }}</td>
+            <td class="td-base text-right">
+              <span class="font-bold tabular-nums">${{ cliente.total_compras|default:0|intcomma }}</span>
             </td>
-            <td class="px-5 py-3 text-right">
+            <td class="td-base text-right">
               <a href="{% url 'clientes:detalle' cliente.pk %}"
                  class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-blue hover:underline font-medium">
-                Ver →
+                Ver &rarr;
               </a>
             </td>
           </tr>
@@ -84,24 +84,22 @@
     </div>
   </div>
 
-  {% include 'partials/paginacion.html' %}
-
-  <!-- Distribución visual -->
+  <!-- Distribucion visual -->
   {% with max_total=clientes.0.total_compras %}
   {% if max_total %}
   <div class="card-glass">
-    <h2 class="font-bold mb-5">Distribución de compras</h2>
-    <div class="space-y-4">
+    <h2 class="font-bold text-sm mb-5">Distribucion de compras</h2>
+    <div class="space-y-3">
       {% for cliente in clientes %}
       {% if cliente.total_compras %}
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 md:gap-4">
         <a href="{% url 'clientes:detalle' cliente.pk %}"
-           class="text-sm w-36 truncate text-slate-600 dark:text-slate-300 hover:text-brand-blue">{{ cliente.nombre }}</a>
-        <div class="flex-1 bg-slate-100 dark:bg-white/10 rounded-full h-3">
-          <div class="bg-gradient-to-r from-brand-blue to-brand-green h-3 rounded-full transition-all"
+           class="text-sm w-28 md:w-36 truncate text-slate-600 dark:text-slate-300 hover:text-brand-blue flex-shrink-0">{{ cliente.nombre }}</a>
+        <div class="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-full h-2.5">
+          <div class="bg-gradient-to-r from-brand-blue to-brand-green h-2.5 rounded-full transition-all duration-500"
                style="width: {% widthratio cliente.total_compras max_total 100 %}%"></div>
         </div>
-        <span class="text-sm font-bold w-24 text-right">${{ cliente.total_compras|intcomma }}</span>
+        <span class="text-sm font-bold w-24 text-right tabular-nums flex-shrink-0">${{ cliente.total_compras|intcomma }}</span>
       </div>
       {% endif %}
       {% endfor %}
@@ -113,7 +111,7 @@
   {% else %}
   <div class="card-glass text-center py-12">
     <i class="fas fa-building text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
-    <p class="text-subtitle text-lg font-medium">No hay clientes con pedidos todavía.</p>
+    <p class="text-subtitle text-lg font-medium">No hay clientes con pedidos todavia.</p>
   </div>
   {% endif %}
 

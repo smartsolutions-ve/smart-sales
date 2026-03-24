@@ -1,32 +1,31 @@
 {% if pedidos %}
-<table class="w-full text-left">
-  <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
-    <tr>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">N° Pedido</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Fecha</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cliente</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vendedor</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Estado</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide text-center">Facturación</th>
-      <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide text-right">Total</th>
-      <th class="px-5 py-3"></th>
-    </tr>
-  </thead>
-  <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-    {% for pedido in pedidos %}
-    {% include 'partials/fila_pedido.html' %}
-    {% endfor %}
-  </tbody>
-</table>
-{% if page_obj %}
-{% include 'partials/paginacion.html' %}
-{% endif %}
+<div class="overflow-x-auto">
+  <table data-datatable class="w-full text-left min-w-[700px]">
+    <thead>
+      <tr>
+        <th>N Pedido</th>
+        <th>Fecha</th>
+        <th>Cliente</th>
+        <th>Vendedor</th>
+        <th>Estado</th>
+        <th>Facturacion</th>
+        <th>Total</th>
+        <th data-sortable="false"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos %}
+      {% include 'partials/fila_pedido.html' %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% else %}
 <div class="text-center py-16 text-slate-400">
   <i class="fas fa-clipboard-list text-4xl mb-3 opacity-30"></i>
   <p class="text-lg font-medium">No hay pedidos</p>
   <a href="{% url 'pedidos:crear' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-medium">
-    Crear el primero →
+    Crear el primero &rarr;
   </a>
 </div>
 {% endif %}

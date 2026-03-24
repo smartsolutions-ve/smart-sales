@@ -4,7 +4,7 @@
 {% block breadcrumb %}Mi Perfil{% endblock %}
 
 {% block content %}
-<div class="p-6 max-w-xl space-y-6">
+<div class="p-4 md:p-6 max-w-xl space-y-5">
 
   <h1 class="text-title">Mi Perfil</h1>
 
@@ -13,16 +13,16 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="datos">
     <div class="card-glass space-y-4">
-      <h2 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider">Datos personales</h2>
+      <h2 class="font-bold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Datos personales</h2>
 
       <div>
         <label class="label-base">Usuario</label>
-        <div class="input-base !bg-slate-50 dark:!bg-slate-800/30 text-slate-500 font-mono">
+        <div class="input-base !bg-slate-50 dark:!bg-slate-800/30 text-slate-500 font-mono cursor-default">
           {{ user.username }}
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="label-base">Nombre</label>
           <input type="text" name="first_name" value="{{ user.first_name }}"
@@ -49,38 +49,38 @@
     </div>
   </form>
 
-  <!-- Cambiar contraseña -->
+  <!-- Cambiar contrasena -->
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="action" value="password">
-    <div class="card-glass space-y-4 border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5">
-      <h2 class="font-bold text-sm text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-        <i class="fas fa-key mr-1"></i> Cambiar Contraseña
+    <div class="card-glass space-y-4 !border-amber-200/60 dark:!border-amber-500/15 !bg-amber-50/30 dark:!bg-amber-500/[0.03]">
+      <h2 class="font-bold text-[11px] text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+        <i class="fas fa-key mr-1"></i> Cambiar Contrasena
       </h2>
 
       <div>
-        <label class="label-base">Contraseña actual</label>
+        <label class="label-base">Contrasena actual</label>
         <input type="password" name="current_password" required
-               class="input-base" placeholder="Tu contraseña actual">
+               class="input-base" placeholder="Tu contrasena actual">
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="label-base">Nueva contraseña</label>
+          <label class="label-base">Nueva contrasena</label>
           <input type="password" name="new_password" required minlength="8"
-                 class="input-base" placeholder="Mínimo 8 caracteres">
+                 class="input-base" placeholder="Minimo 8 caracteres">
         </div>
         <div>
           <label class="label-base">Confirmar nueva</label>
           <input type="password" name="new_password2" required minlength="8"
-                 class="input-base" placeholder="Repetir contraseña">
+                 class="input-base" placeholder="Repetir contrasena">
         </div>
       </div>
 
       <div class="flex justify-end">
-        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400
-                       hover:bg-amber-200 text-sm font-semibold transition-colors">
-          <i class="fas fa-lock mr-1"></i> Cambiar Contraseña
+        <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400
+                       hover:bg-amber-200 dark:hover:bg-amber-500/20 text-sm font-semibold transition-all">
+          <i class="fas fa-lock mr-1"></i> Cambiar Contrasena
         </button>
       </div>
     </div>

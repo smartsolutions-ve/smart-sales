@@ -23,15 +23,15 @@
 
   {% if datos %}
   <div class="card-glass !p-0 overflow-hidden">
-    <table class="w-full text-left">
-      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200">
+    <table data-datatable data-datatable-options='{"perPage":10}' class="w-full text-left">
+      <thead>
         <tr>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase w-10">#</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Vendedor</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Plan USD</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Real USD</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-center">% Cumpl.</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Barra</th>
+          <th>#</th>
+          <th>Vendedor</th>
+          <th>Plan USD</th>
+          <th>Real USD</th>
+          <th>% Cumpl.</th>
+          <th data-sortable="false">Barra</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">

@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}{% if pedido %}Editar {{ pedido.numero }}{% else %}Nuevo Pedido{% endif %} — SmartSales{% endblock %}
+{% block breadcrumb %}{% if pedido %}Editar Pedido{% else %}Nuevo Pedido{% endif %}{% endblock %}
 
 {% block content %}
-<div class="p-6 max-w-4xl">
+<div class="p-4 md:p-6 max-w-4xl">
 
-  <div class="flex items-center gap-4 mb-6">
-    <a href="{% url 'pedidos:lista' %}" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" aria-label="Volver">← Volver</a>
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'pedidos:lista' %}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all" aria-label="Volver">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
     <h1 class="text-title">
       {% if pedido %}Editar {{ pedido.numero }}{% else %}Nuevo Pedido{% endif %}
     </h1>
@@ -19,26 +22,26 @@
     {% csrf_token %}
 
     <div class="card-glass space-y-4">
-      <h2 class="font-semibold text-slate-900 dark:text-white">Datos del pedido</h2>
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Datos del pedido</h2>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Cliente -->
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cliente</label>
+        <div class="sm:col-span-2">
+          <label class="label-base">Cliente</label>
           <select name="cliente_id" class="input-base">
             <option value="">-- Seleccionar cliente existente --</option>
             {% for c in clientes %}
             <option value="{{ c.pk }}" {% if pedido and pedido.cliente_id == c.pk %}selected{% endif %}>{{ c.nombre }}</option>
             {% endfor %}
           </select>
-          <p class="text-xs text-slate-500 mt-1">O escribe el nombre de un cliente nuevo:</p>
+          <p class="text-xs text-slate-500 mt-1.5">O escribe el nombre de un cliente nuevo:</p>
           <input type="text" name="cliente_nuevo_nombre" placeholder="Nombre del cliente nuevo"
                  class="mt-1 input-base">
         </div>
 
         <!-- Vendedor -->
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Vendedor</label>
+          <label class="label-base">Vendedor</label>
           <select name="vendedor_id" required class="input-base">
             <option value="">-- Seleccionar --</option>
             {% for v in vendedores %}
@@ -49,10 +52,10 @@
           </select>
         </div>
 
-        <!-- Estado (solo en edición) -->
+        <!-- Estado (solo en edicion) -->
         {% if pedido %}
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Estado</label>
+          <label class="label-base">Estado</label>
           <select name="estado" class="input-base">
             {% for valor, label in estados %}
             <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ label }}</option>
@@ -63,7 +66,7 @@
 
         <!-- Fecha pedido -->
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha del Pedido</label>
+          <label class="label-base">Fecha del Pedido</label>
           <input type="date" name="fecha_pedido" required
                  value="{{ pedido.fecha_pedido|default:'' }}"
                  class="input-base">
@@ -71,82 +74,84 @@
 
         <!-- Fecha entrega -->
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha de Entrega</label>
+          <label class="label-base">Fecha de Entrega</label>
           <input type="date" name="fecha_entrega"
                  value="{{ pedido.fecha_entrega|default:'' }}"
                  class="input-base">
         </div>
 
         <!-- Observaciones -->
-        <div class="col-span-2">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observaciones</label>
+        <div class="sm:col-span-2">
+          <label class="label-base">Observaciones</label>
           <textarea name="observaciones" rows="2"
                     class="input-base">{{ pedido.observaciones|default:'' }}</textarea>
         </div>
       </div>
     </div>
 
-    <!-- Ítems -->
+    <!-- Items -->
     <div class="card-glass mt-4 space-y-4">
-      <h2 class="font-semibold text-slate-900 dark:text-white">Ítems</h2>
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Items</h2>
 
       <div class="space-y-3">
         <template x-for="(item, index) in items" :key="index">
           <div class="grid grid-cols-12 gap-2 items-end">
-            <div class="col-span-5 relative">
-              <label class="text-xs text-slate-500">Producto</label>
+            <div class="col-span-12 sm:col-span-5 relative">
+              <label class="text-[11px] text-slate-500 font-medium">Producto</label>
               <input type="text" x-model="item.producto" :name="'items[][producto]'"
                      @input.debounce.300ms="buscarProducto(index, $event.target.value)"
                      @focus="buscarProducto(index, item.producto)"
                      @keydown.escape="item._sugerencias = []"
                      autocomplete="off"
-                     class="w-full px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-800/50 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue"
+                     class="input-base !py-2"
                      placeholder="Buscar producto...">
               <!-- Dropdown de sugerencias -->
               <div x-show="item._sugerencias && item._sugerencias.length > 0"
                    @click.outside="item._sugerencias = []"
-                   class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                   class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                 <template x-for="(sug, si) in item._sugerencias" :key="si">
                   <button type="button"
                           @click="seleccionarProducto(index, sug)"
-                          class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-white/5 border-b border-slate-100 dark:border-white/5 last:border-0">
+                          class="w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.04] last:border-0 transition-colors">
                     <span class="font-medium" x-text="sug.nombre"></span>
                     <span class="text-xs text-slate-400 ml-1" x-show="sug.sku" x-text="'[' + sug.sku + ']'"></span>
-                    <span class="text-xs text-green-600 float-right" x-show="sug.precio_base" x-text="'$' + sug.precio_base"></span>
+                    <span class="text-xs text-emerald-600 float-right" x-show="sug.precio_base" x-text="'$' + sug.precio_base"></span>
                   </button>
                 </template>
               </div>
             </div>
-            <div class="col-span-2">
-              <label class="text-xs text-slate-500">SKU</label>
+            <div class="col-span-4 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">SKU</label>
               <input type="text" x-model="item.sku" :name="'items[][sku]'"
-                     class="w-full px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-800/50 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue bg-slate-50 dark:bg-slate-800/30"
+                     class="input-base !py-2 bg-slate-50 dark:bg-slate-800/30"
                      placeholder="Auto" readonly>
             </div>
-            <div class="col-span-2">
-              <label class="text-xs text-slate-500">Cantidad</label>
+            <div class="col-span-3 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">Cantidad</label>
               <input type="number" x-model.number="item.cantidad" :name="'items[][cantidad]'"
                      min="0.01" step="0.01"
-                     class="w-full px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-800/50 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                     class="input-base !py-2">
             </div>
-            <div class="col-span-2">
-              <label class="text-xs text-slate-500">Precio</label>
+            <div class="col-span-4 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">Precio</label>
               <input type="number" x-model.number="item.precio" :name="'items[][precio]'"
                      min="0" step="0.01"
-                     class="w-full px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded text-sm bg-white dark:bg-slate-800/50 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-blue">
+                     class="input-base !py-2">
             </div>
-            <div class="col-span-1 flex justify-center">
+            <div class="col-span-1 flex justify-center items-end pb-1">
               <button @click="quitarItem(index)" x-show="items.length > 1"
-                      type="button" class="text-red-400 hover:text-red-600 p-1">✕</button>
+                      type="button" class="w-8 h-8 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all">
+                <i class="fas fa-times text-sm"></i>
+              </button>
             </div>
           </div>
         </template>
       </div>
 
-      <div class="flex items-center justify-between pt-2">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-3">
         <button @click="agregarItem()" type="button"
-                class="text-sm text-brand hover:text-blue-700 font-medium">
-          + Agregar ítem
+                class="text-sm text-brand-blue hover:text-blue-700 font-semibold transition-colors">
+          <i class="fas fa-plus mr-1"></i> Agregar item
         </button>
         <div class="text-right">
           <span class="text-slate-500 text-sm">Total estimado:</span>
@@ -156,12 +161,11 @@
       </div>
     </div>
 
-    <div class="flex gap-3 mt-4">
-      <button type="submit"
-              class="btn-primary">
-        Guardar Pedido
+    <div class="flex flex-col sm:flex-row gap-3 mt-4">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-save"></i> Guardar Pedido
       </button>
-      <a href="{% url 'pedidos:lista' %}" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+      <a href="{% url 'pedidos:lista' %}" class="btn-secondary">
         Cancelar
       </a>
     </div>

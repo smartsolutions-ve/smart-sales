@@ -1,8 +1,8 @@
-{# Botón flotante + panel de chat deslizante #}
+{# Boton flotante + panel de chat deslizante #}
 
 <div x-data="chatFlotante()"
      x-init="init()"
-     class="fixed bottom-6 right-6 z-50"
+     class="fixed bottom-5 right-5 z-50"
      @keydown.escape.window="if(abierto) cerrar()">
 
   <!-- Panel de chat -->
@@ -13,39 +13,40 @@
        x-transition:leave="transition ease-in duration-200"
        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
        x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-       class="absolute bottom-16 right-0 w-[400px] h-[580px]
-              bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-slate-900/20
+       class="absolute bottom-16 right-0
+              w-[min(380px,calc(100vw-2.5rem))] h-[min(540px,calc(100vh-8rem))]
+              bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-black/15
               flex flex-col overflow-hidden
-              border border-slate-200 dark:border-slate-700"
+              border border-slate-200/80 dark:border-white/[0.08]"
        style="display: none;">
 
     <!-- Header -->
-    <div class="h-16 bg-gradient-to-r from-brand-blue to-brand-green
+    <div class="h-14 bg-gradient-to-r from-brand-blue to-blue-600
                 flex items-center justify-between px-4 flex-shrink-0">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+        <div class="w-8 h-8 rounded-lg bg-white/15 backdrop-blur flex items-center justify-center">
           <i class="fas fa-robot text-white text-sm"></i>
         </div>
         <div>
           <p class="text-white font-bold text-sm leading-tight">Asistente IA</p>
           <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span>
-            <p class="text-white/70 text-[11px] leading-tight">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+            <p class="text-white/60 text-[10px] leading-tight">
               {% if request.org %}{{ request.org.name }}{% endif %}
             </p>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-0.5">
         <a href="{% url 'chat_ia:chat' %}"
-           class="w-8 h-8 rounded-lg flex items-center justify-center
-                  text-white/60 hover:text-white hover:bg-white/10 transition-all"
-           title="Abrir en página completa">
-          <i class="fas fa-expand-alt text-xs"></i>
+           class="w-7 h-7 rounded-lg flex items-center justify-center
+                  text-white/50 hover:text-white hover:bg-white/10 transition-all"
+           title="Abrir en pagina completa">
+          <i class="fas fa-expand-alt text-[11px]"></i>
         </a>
         <button @click="cerrar()"
-                class="w-8 h-8 rounded-lg flex items-center justify-center
-                       text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                class="w-7 h-7 rounded-lg flex items-center justify-center
+                       text-white/50 hover:text-white hover:bg-white/10 transition-all">
           <i class="fas fa-times text-sm"></i>
         </button>
       </div>
@@ -53,32 +54,33 @@
 
     <!-- Historial de mensajes -->
     <div id="chat-flotante-historial"
-         class="flex-1 overflow-y-auto p-4 space-y-1
-                bg-slate-50 dark:bg-slate-900/60 scroll-smooth">
+         class="flex-1 overflow-y-auto p-3 space-y-1
+                bg-slate-50 dark:bg-[#0B1120] scroll-smooth">
 
       <!-- Mensaje de bienvenida -->
       <template x-if="!hayMensajes">
         <div class="flex flex-col items-center justify-center h-full text-center py-6">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-blue/10 to-brand-green/10
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-blue/10 to-blue-500/10
+                      dark:from-brand-blue/15 dark:to-blue-500/15
                       flex items-center justify-center mb-4">
-            <i class="fas fa-comments text-2xl text-brand-blue"></i>
+            <i class="fas fa-comments text-xl text-brand-blue"></i>
           </div>
           <p class="text-sm font-bold text-slate-700 dark:text-slate-300">
-            ¿En qué puedo ayudarte?
+            En que puedo ayudarte?
           </p>
-          <p class="text-xs text-slate-400 mt-1 max-w-[280px]">
-            Consulta datos de pedidos, clientes, facturación, flotas y más.
+          <p class="text-xs text-slate-400 mt-1 max-w-[260px]">
+            Consulta datos de pedidos, clientes, facturacion, flotas y mas.
           </p>
-          <div class="mt-5 space-y-2 w-full px-1">
+          <div class="mt-4 space-y-1.5 w-full px-1">
             <template x-for="sug in sugerencias" :key="sug">
               <button @click="enviarSugerencia(sug)"
-                      class="w-full text-left text-xs px-4 py-2.5 rounded-xl
-                             bg-white dark:bg-slate-800
-                             border border-slate-200 dark:border-slate-700
+                      class="w-full text-left text-xs px-3 py-2 rounded-xl
+                             bg-white dark:bg-slate-800/80
+                             border border-slate-200/80 dark:border-white/[0.06]
                              text-slate-600 dark:text-slate-400
-                             hover:border-brand-blue hover:text-brand-blue
-                             hover:shadow-sm transition-all group/s">
-                <i class="fas fa-chevron-right text-[9px] mr-1.5 opacity-30
+                             hover:border-brand-blue/50 hover:text-brand-blue
+                             transition-all group/s">
+                <i class="fas fa-chevron-right text-[8px] mr-1 opacity-30
                           group-hover/s:opacity-100 text-brand-blue transition-opacity"></i>
                 <span x-text="sug"></span>
               </button>
@@ -94,25 +96,25 @@
            hx-swap="innerHTML">
       </div>
 
-      <!-- Indicador "escribiendo..." -->
+      <!-- Indicador escribiendo -->
       <div x-show="cargando" x-transition class="flex justify-start mb-4" id="flotante-typing">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-blue to-brand-green
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-blue to-blue-600
                     flex items-center justify-center flex-shrink-0 mr-2 mt-1 shadow-sm">
-          <i class="fas fa-robot text-white text-xs"></i>
+          <i class="fas fa-robot text-white text-[10px]"></i>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl rounded-tl-sm px-5 py-4
-                    border border-slate-100 dark:border-slate-700 shadow-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl rounded-tl-sm px-4 py-3
+                    border border-slate-100 dark:border-white/[0.06] shadow-sm">
           <div class="flex gap-1.5 items-center">
-            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:0ms"></div>
-            <div class="w-2 h-2 rounded-full bg-brand-green animate-bounce" style="animation-delay:150ms"></div>
-            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay:300ms"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-brand-blue animate-bounce" style="animation-delay:0ms"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay:150ms"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-brand-blue animate-bounce" style="animation-delay:300ms"></div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Input -->
-    <div class="p-3 border-t border-slate-200 dark:border-slate-700 flex-shrink-0
+    <div class="p-3 border-t border-slate-200/80 dark:border-white/[0.06] flex-shrink-0
                 bg-white dark:bg-slate-900">
       <form hx-post="{% url 'chat_ia:ask' %}"
             hx-target="#chat-flotante-mensajes"
@@ -131,21 +133,21 @@
                placeholder="Escribe tu consulta..."
                maxlength="500"
                autocomplete="off"
-               class="flex-1 py-2.5 px-3.5 text-xs rounded-xl
-                      bg-slate-50 dark:bg-slate-800
-                      border border-slate-200 dark:border-slate-700
+               class="flex-1 py-2 px-3 text-xs rounded-xl
+                      bg-slate-50 dark:bg-slate-800/60
+                      border border-slate-200/80 dark:border-white/[0.06]
                       focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20
                       placeholder-slate-400 text-slate-900 dark:text-white
-                      transition-all disabled:opacity-50">
+                      transition-all disabled:opacity-50 outline-none">
         <button type="submit"
                 :disabled="cargando || !pregunta.trim()"
                 data-no-disable="true"
-                class="w-10 h-10 rounded-xl bg-gradient-to-r from-brand-blue to-brand-green
+                class="w-9 h-9 rounded-xl bg-gradient-to-r from-brand-blue to-blue-600
                        text-white flex items-center justify-center flex-shrink-0
-                       shadow-md shadow-brand-blue/20
-                       hover:shadow-lg hover:scale-105 active:scale-95
+                       shadow-sm shadow-brand-blue/20
+                       hover:shadow-md hover:scale-105 active:scale-95
                        transition-all disabled:opacity-40 disabled:shadow-none disabled:scale-100">
-          <i class="fas fa-paper-plane text-xs" x-show="!cargando"></i>
+          <i class="fas fa-paper-plane text-[11px]" x-show="!cargando"></i>
           <div x-show="cargando" class="flex gap-0.5">
             <div class="w-1 h-1 rounded-full bg-white animate-bounce" style="animation-delay:0ms"></div>
             <div class="w-1 h-1 rounded-full bg-white animate-bounce" style="animation-delay:150ms"></div>
@@ -156,20 +158,20 @@
     </div>
   </div>
 
-  <!-- Botón flotante -->
+  <!-- Boton flotante -->
   <button @click="toggle()"
-          class="w-14 h-14 rounded-full bg-gradient-to-br from-brand-blue to-brand-green
-                 text-white shadow-lg shadow-brand-blue/30
-                 hover:shadow-xl hover:shadow-brand-blue/40 hover:scale-110
+          class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-blue to-blue-600
+                 text-white shadow-lg shadow-brand-blue/25
+                 hover:shadow-xl hover:shadow-brand-blue/35 hover:scale-110
                  active:scale-95
-                 transition-all duration-200 flex items-center justify-center relative group">
-    <i class="fas fa-robot text-xl transition-transform group-hover:scale-110"
+                 transition-all duration-200 flex items-center justify-center relative">
+    <i class="fas fa-robot text-lg transition-transform"
        x-show="!abierto" x-transition></i>
-    <i class="fas fa-times text-xl" x-show="abierto" x-transition></i>
+    <i class="fas fa-times text-lg" x-show="abierto" x-transition></i>
 
     <!-- Pulse ring -->
     <span x-show="!abierto"
-          class="absolute inset-0 rounded-full bg-brand-blue/20 animate-ping opacity-30"></span>
+          class="absolute inset-0 rounded-full bg-brand-blue/20 animate-ping opacity-20 pointer-events-none"></span>
   </button>
 
 </div>
@@ -190,16 +192,15 @@ function chatFlotante() {
     hayMensajes: false,
     pregunta: '',
     sugerencias: [
-      '¿Cuántos pedidos están pendientes?',
+      'Cuantos pedidos estan pendientes?',
       'Dame un resumen del negocio',
-      '¿Cómo va el cumplimiento de ventas?',
-      '¿Cuánto falta por facturar?',
-      '¿Qué viajes hay programados hoy?',
+      'Como va el cumplimiento de ventas?',
+      'Cuanto falta por facturar?',
+      'Que viajes hay programados hoy?',
     ],
 
     init() {
       this.abierto = localStorage.getItem('chat_ia_abierto') === 'true';
-      // Detectar si ya hay mensajes cargados
       this.$nextTick(() => {
         const msgs = document.getElementById('chat-flotante-mensajes');
         if (msgs && msgs.children.length > 0) this.hayMensajes = true;

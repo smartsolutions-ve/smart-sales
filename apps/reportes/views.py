@@ -5,7 +5,6 @@ from datetime import date, timedelta
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Q
 from decimal import Decimal
 
@@ -88,9 +87,7 @@ def _get_clientes_qs(request):
 def vendedores(request):
     """Reporte de métricas por vendedor (RN-018)."""
     vendedores_qs, desde, hasta = _get_vendedores_qs(request)
-    paginator = Paginator(vendedores_qs, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    context = {'vendedores': page_obj, 'page_obj': page_obj, 'desde': desde, 'hasta': hasta}
+    context = {'vendedores': vendedores_qs, 'desde': desde, 'hasta': hasta}
     return render(request, 'reportes/vendedores.html', context)
 
 
@@ -126,9 +123,7 @@ def vendedores_csv(request):
 def clientes(request):
     """Reporte de top clientes por monto acumulado (RN-019)."""
     clientes_qs, desde, hasta = _get_clientes_qs(request)
-    paginator = Paginator(clientes_qs, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    context = {'clientes': page_obj, 'page_obj': page_obj, 'desde': desde, 'hasta': hasta}
+    context = {'clientes': clientes_qs, 'desde': desde, 'hasta': hasta}
     return render(request, 'reportes/clientes.html', context)
 
 

@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
-from django.core.paginator import Paginator
 
 from apps.accounts.decorators import role_required
 from .models import Producto, CategoriaProducto
@@ -35,12 +34,8 @@ def lista(request):
 
     categorias = CategoriaProducto.objects.filter(organization=request.org)
 
-    paginator = Paginator(productos, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
-
     context = {
-        'productos': page_obj,
-        'page_obj': page_obj,
+        'productos': productos,
         'categorias': categorias,
         'q': q,
         'categoria_filtro': categoria_id,

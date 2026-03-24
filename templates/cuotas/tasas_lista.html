@@ -18,13 +18,13 @@
 
   <div class="card-glass !p-0 overflow-hidden">
     {% if tasas %}
-    <table class="w-full text-left">
-      <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200">
+    <table data-datatable data-datatable-options='{"perPage":10}' class="w-full text-left">
+      <thead>
         <tr>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Fecha</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Tasa Bs/USD</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase">Fuente</th>
-          <th class="px-5 py-3 text-xs font-bold text-slate-500 uppercase text-right">Acciones</th>
+          <th>Fecha</th>
+          <th>Tasa Bs/USD</th>
+          <th>Fuente</th>
+          <th data-sortable="false">Acciones</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">

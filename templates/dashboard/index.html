@@ -9,10 +9,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-6">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- Encabezado + filtro -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
       <h1 class="text-title">Dashboard</h1>
       {% if request.org %}
@@ -20,19 +20,19 @@
       {% endif %}
     </div>
     <form method="get" class="flex items-center flex-wrap gap-2">
-      <select name="periodo" onchange="this.form.submit()" class="input-base !w-auto">
+      <select name="periodo" onchange="this.form.submit()" class="input-base !w-auto !py-2 text-sm">
         <option value="mes"          {% if periodo == 'mes' %}selected{% endif %}>Este mes</option>
         <option value="mes_anterior" {% if periodo == 'mes_anterior' %}selected{% endif %}>Mes anterior</option>
-        <option value="tres_meses"   {% if periodo == 'tres_meses' %}selected{% endif %}>Últimos 3 meses</option>
-        <option value="anio"         {% if periodo == 'anio' %}selected{% endif %}>Este año</option>
+        <option value="tres_meses"   {% if periodo == 'tres_meses' %}selected{% endif %}>Ultimos 3 meses</option>
+        <option value="anio"         {% if periodo == 'anio' %}selected{% endif %}>Este ano</option>
         <option value="todo"         {% if periodo == 'todo' %}selected{% endif %}>Todo el tiempo</option>
       </select>
-      <span class="text-xs text-slate-400">o</span>
+      <span class="text-xs text-slate-400 hidden sm:inline">o</span>
       <input type="date" name="desde" value="{{ desde }}" placeholder="Desde"
-             class="input-base !w-auto text-sm" title="Desde">
+             class="input-base !w-auto !py-2 text-sm hidden sm:block" title="Desde">
       <input type="date" name="hasta" value="{{ hasta }}" placeholder="Hasta"
-             class="input-base !w-auto text-sm" title="Hasta">
-      <button type="submit" class="btn-primary !py-1.5 !px-3 text-sm">Filtrar</button>
+             class="input-base !w-auto !py-2 text-sm hidden sm:block" title="Hasta">
+      <button type="submit" class="btn-primary !py-2 !px-3 text-sm hidden sm:flex">Filtrar</button>
       {% if desde or hasta %}
       <a href="{% url 'dashboard:index' %}" class="text-xs text-red-500 hover:text-red-400 font-medium">Limpiar</a>
       {% endif %}
@@ -40,42 +40,53 @@
   </div>
 
   <!-- KPIs -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-blue-100 text-brand-blue dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-dollar-sign"></i>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-brand-blue dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center text-base">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Ventas<br>Totales</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Ventas Totales</p>
-      <p class="text-3xl font-bold mt-1">${{ ventas_totales|floatformat:2|intcomma }}</p>
-      <p class="text-xs text-slate-400 mt-1">Pedidos no cancelados</p>
+      <p class="text-2xl md:text-3xl font-bold">${{ ventas_totales|floatformat:2|intcomma }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">Pedidos no cancelados</p>
     </div>
-    <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-clipboard-list"></i>
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center text-base">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Pedidos<br>Activos</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Pedidos Activos</p>
-      <p class="text-3xl font-bold text-brand-blue mt-1">{{ pedidos_activos }}</p>
-      <p class="text-xs text-slate-400 mt-1">Confirmados + En Proceso</p>
+      <p class="text-2xl md:text-3xl font-bold text-brand-blue">{{ pedidos_activos }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">Confirmados + En Proceso</p>
     </div>
-    <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl {% if pendientes_despacho > 0 %}bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400{% else %}bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400{% endif %} flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-truck"></i>
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl {% if pendientes_despacho > 0 %}bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400{% else %}bg-slate-50 text-slate-400 dark:bg-white/5 dark:text-slate-500{% endif %} flex items-center justify-center text-base">
+          <i class="fas fa-truck"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Pend.<br>Despacho</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Pend. Despacho</p>
-      <p class="text-3xl font-bold {% if pendientes_despacho > 0 %}text-red-500{% endif %} mt-1">{{ pendientes_despacho }}</p>
-      <p class="text-xs text-slate-400 mt-1">Esperando ser despachados</p>
+      <p class="text-2xl md:text-3xl font-bold {% if pendientes_despacho > 0 %}text-red-500{% endif %}">{{ pendientes_despacho }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">Esperando despacho</p>
     </div>
-    <div class="card-glass">
-      <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center text-lg mb-3">
-        <i class="fas fa-circle-check"></i>
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center text-base">
+          <i class="fas fa-circle-check"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Cumpli-<br>miento</p>
       </div>
-      <p class="text-subtitle uppercase tracking-wide text-xs font-bold">Cumplimiento</p>
-      <div class="flex items-end gap-1 mt-1">
-        <p class="text-3xl font-bold">{{ tasa_cumplimiento }}</p>
+      <div class="flex items-end gap-1">
+        <p class="text-2xl md:text-3xl font-bold">{{ tasa_cumplimiento }}</p>
         <p class="text-lg text-slate-400 mb-0.5">%</p>
       </div>
-      <div class="mt-2 bg-slate-200 dark:bg-white/10 rounded-full h-1.5">
-        <div class="bg-gradient-to-r from-brand-blue to-brand-green h-1.5 rounded-full transition-all"
+      <div class="mt-2 bg-slate-100 dark:bg-white/[0.06] rounded-full h-1.5">
+        <div class="bg-gradient-to-r from-brand-blue to-brand-green h-1.5 rounded-full transition-all duration-500"
              style="width: {{ tasa_cumplimiento }}%"></div>
       </div>
     </div>
@@ -84,92 +95,88 @@
   <!-- Fila 1: Ventas por mes + Dona estados -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="card-glass lg:col-span-2 flex flex-col">
-      <h2 class="chart-title"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Ventas últimos 6 meses</h2>
-      <div style="height:220px;"><canvas id="chartVentasMes" aria-label="Gráfica de ventas de los últimos 6 meses"></canvas></div>
+      <h2 class="chart-title"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Ventas ultimos 6 meses</h2>
+      <div class="flex-1 min-h-[200px]" style="height:220px;"><canvas id="chartVentasMes" aria-label="Grafica de ventas de los ultimos 6 meses"></canvas></div>
     </div>
     <div class="card-glass flex flex-col">
       <h2 class="chart-title"><i class="fas fa-circle-half-stroke mr-1.5 text-brand-blue"></i> Pedidos por estado</h2>
-      <div class="flex-1 flex items-center justify-center" style="height:220px;">
-        <canvas id="chartEstados" aria-label="Gráfica de pedidos por estado"></canvas>
+      <div class="flex-1 flex items-center justify-center min-h-[200px]" style="height:220px;">
+        <canvas id="chartEstados" aria-label="Grafica de pedidos por estado"></canvas>
       </div>
     </div>
   </div>
 
   <!-- Fila 2: Embudo + Top 10 clientes -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-    <!-- Embudo de estados -->
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-filter mr-1.5 text-brand-blue"></i> Embudo de pipeline</h2>
       <p class="text-xs text-subtitle mb-3">Cantidad de pedidos en cada etapa del proceso</p>
-      <div style="height:200px;"><canvas id="chartEmbudo" aria-label="Gráfica de embudo de pipeline"></canvas></div>
+      <div style="height:200px;"><canvas id="chartEmbudo" aria-label="Grafica de embudo de pipeline"></canvas></div>
     </div>
 
-    <!-- Top 10 clientes -->
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-building mr-1.5 text-brand-blue"></i> Top 10 clientes</h2>
-      <p class="text-xs text-subtitle mb-3">Por volumen de ventas en el período</p>
+      <p class="text-xs text-subtitle mb-3">Por volumen de ventas en el periodo</p>
       {% if chart_clientes_labels != '[]' %}
-      <div style="height:200px;"><canvas id="chartClientes" aria-label="Gráfica de top 10 clientes por ventas"></canvas></div>
+      <div style="height:200px;"><canvas id="chartClientes" aria-label="Grafica de top 10 clientes por ventas"></canvas></div>
       {% else %}
       <div class="flex items-center justify-center h-48 text-slate-300 dark:text-slate-600">
-        <p class="text-sm">Sin datos de clientes en el período</p>
+        <p class="text-sm">Sin datos de clientes en el periodo</p>
       </div>
       {% endif %}
     </div>
-
   </div>
 
-  <!-- Fila 3: Ventas por vendedor por mes (líneas múltiples) -->
+  <!-- Fila 3: Ventas por vendedor por mes -->
   {% if chart_vendedores_mes != '[]' %}
   <div class="card-glass">
-    <h2 class="chart-title"><i class="fas fa-chart-line mr-1.5 text-brand-blue"></i> Ventas por vendedor — últimos 6 meses</h2>
-    <p class="text-xs text-subtitle mb-3">Evolución mensual de cada vendedor activo</p>
-    <div style="height:260px;"><canvas id="chartVendedoresMes" aria-label="Gráfica de ventas por vendedor en los últimos 6 meses"></canvas></div>
+    <h2 class="chart-title"><i class="fas fa-chart-line mr-1.5 text-brand-blue"></i> Ventas por vendedor — ultimos 6 meses</h2>
+    <p class="text-xs text-subtitle mb-3">Evolucion mensual de cada vendedor activo</p>
+    <div style="height:260px;"><canvas id="chartVendedoresMes" aria-label="Grafica de ventas por vendedor"></canvas></div>
   </div>
   {% endif %}
 
-  <!-- Top 5 vendedores (barras horizontales — período seleccionado) -->
+  <!-- Top 5 vendedores -->
   {% if chart_vendedores_labels != '[]' %}
   <div class="card-glass">
-    <h2 class="chart-title"><i class="fas fa-trophy mr-1.5 text-brand-blue"></i> Top vendedores — período seleccionado</h2>
-    <div style="height:180px;"><canvas id="chartVendedores" aria-label="Gráfica de top vendedores en el período seleccionado"></canvas></div>
+    <h2 class="chart-title"><i class="fas fa-trophy mr-1.5 text-brand-blue"></i> Top vendedores — periodo seleccionado</h2>
+    <div style="height:180px;"><canvas id="chartVendedores" aria-label="Grafica de top vendedores"></canvas></div>
   </div>
   {% endif %}
 
   <!-- Pedidos urgentes -->
   {% if pedidos_urgentes %}
   <div class="card-glass !p-0 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-white/5 flex items-center gap-2">
+    <div class="px-5 md:px-6 py-4 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center gap-2">
       <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-      <h2 class="font-bold">Pedidos urgentes (próximos a vencer)</h2>
+      <h2 class="font-bold text-sm">Pedidos urgentes (proximos a vencer)</h2>
     </div>
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead class="bg-slate-50 dark:bg-white/5">
+      <table class="w-full text-left min-w-[600px]">
+        <thead class="bg-slate-50/80 dark:bg-white/[0.03]">
           <tr>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Pedido</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Cliente</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vendedor</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Entrega</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Estado</th>
-            <th class="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase text-right">Total</th>
+            <th class="th-base">Pedido</th>
+            <th class="th-base">Cliente</th>
+            <th class="th-base hidden md:table-cell">Vendedor</th>
+            <th class="th-base">Entrega</th>
+            <th class="th-base">Estado</th>
+            <th class="th-base text-right">Total</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for pedido in pedidos_urgentes %}
-          <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-            <td class="px-5 py-3">
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="td-base">
               <a href="{% url 'pedidos:detalle' pedido.pk %}"
-                 class="text-sm font-semibold text-brand-blue hover:underline">{{ pedido.numero }}</a>
+                 class="font-semibold text-brand-blue hover:underline font-mono">{{ pedido.numero }}</a>
             </td>
-            <td class="px-5 py-3 text-sm">{{ pedido.cliente }}</td>
-            <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+            <td class="td-base">{{ pedido.cliente }}</td>
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden md:table-cell">
               {{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}
             </td>
-            <td class="px-5 py-3 text-sm font-semibold text-red-500">{{ pedido.fecha_entrega }}</td>
-            <td class="px-5 py-3"><span class="badge-warning">{{ pedido.estado }}</span></td>
-            <td class="px-5 py-3 text-sm font-bold text-right">${{ pedido.total|intcomma }}</td>
+            <td class="td-base font-semibold text-red-500">{{ pedido.fecha_entrega }}</td>
+            <td class="td-base"><span class="badge-warning">{{ pedido.estado }}</span></td>
+            <td class="td-base font-bold text-right">${{ pedido.total|intcomma }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -178,16 +185,16 @@
   </div>
   {% else %}
   <div class="card-glass text-center py-8">
-    <i class="fas fa-circle-check text-3xl text-green-400 mb-2"></i>
-    <p class="text-subtitle">No hay pedidos urgentes para los próximos 3 días.</p>
+    <i class="fas fa-circle-check text-3xl text-emerald-400 mb-2"></i>
+    <p class="text-subtitle">No hay pedidos urgentes para los proximos 3 dias.</p>
   </div>
   {% endif %}
 
-  <!-- Accesos rápidos -->
-  <div class="grid grid-cols-3 gap-4">
-    <a href="{% url 'pedidos:crear' %}" class="btn-primary"><i class="fas fa-plus"></i> Nuevo Pedido</a>
-    <a href="{% url 'pedidos:lista' %}" class="btn-secondary"><i class="fas fa-clipboard-list"></i> Ver Pedidos</a>
-    <a href="{% url 'despacho:index' %}" class="btn-secondary"><i class="fas fa-truck"></i> Despacho</a>
+  <!-- Accesos rapidos -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <a href="{% url 'pedidos:crear' %}" class="btn-primary justify-center py-3"><i class="fas fa-plus"></i> Nuevo Pedido</a>
+    <a href="{% url 'pedidos:lista' %}" class="btn-secondary justify-center py-3"><i class="fas fa-clipboard-list"></i> Ver Pedidos</a>
+    <a href="{% url 'despacho:index' %}" class="btn-secondary justify-center py-3"><i class="fas fa-truck"></i> Despacho</a>
   </div>
 
 </div>
@@ -195,7 +202,7 @@
 <style>
   .chart-title {
     font-weight: 700;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #64748b;
@@ -208,7 +215,7 @@
 (function () {
   const isDark       = document.documentElement.classList.contains('dark');
   const textColor    = isDark ? '#94a3b8' : '#64748b';
-  const gridColor    = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+  const gridColor    = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
   const tooltipBg    = isDark ? '#1e293b' : '#ffffff';
   const tooltipBorder= isDark ? '#334155' : '#e2e8f0';
 
@@ -233,7 +240,6 @@
   function moneyLabel(ctx) { return ' $' + ctx.parsed.y.toLocaleString('es-CL'); }
   function moneyLabelX(ctx) { return ' $' + ctx.parsed.x.toLocaleString('es-CL'); }
 
-  // ── 1. Ventas por mes (barras) ────────────────────────────────────────────
   new Chart(document.getElementById('chartVentasMes'), {
     type: 'bar',
     data: {
@@ -241,7 +247,7 @@
       datasets: [{
         label: 'Ventas ($)',
         data: {{ chart_meses_ventas|safe }},
-        backgroundColor: 'rgba(0,102,255,0.15)',
+        backgroundColor: isDark ? 'rgba(0,102,255,0.25)' : 'rgba(0,102,255,0.12)',
         borderColor: '#0066FF',
         borderWidth: 2,
         borderRadius: 8,
@@ -258,7 +264,6 @@
     }
   });
 
-  // ── 2. Pedidos por estado (dona) ──────────────────────────────────────────
   new Chart(document.getElementById('chartEstados'), {
     type: 'doughnut',
     data: {
@@ -280,7 +285,6 @@
     }
   });
 
-  // ── 3. Embudo de pipeline (barras horizontales con colores por estado) ────
   new Chart(document.getElementById('chartEmbudo'), {
     type: 'bar',
     data: {
@@ -307,7 +311,6 @@
     }
   });
 
-  // ── 4. Top 10 clientes (barras horizontales) ──────────────────────────────
   const ctxClientes = document.getElementById('chartClientes');
   if (ctxClientes) {
     new Chart(ctxClientes, {
@@ -317,7 +320,7 @@
         datasets: [{
           label: 'Ventas ($)',
           data: {{ chart_clientes_data|safe }},
-          backgroundColor: 'rgba(34,197,94,0.75)',
+          backgroundColor: isDark ? 'rgba(34,197,94,0.5)' : 'rgba(34,197,94,0.65)',
           borderRadius: 8,
           borderSkipped: false,
         }]
@@ -337,7 +340,6 @@
     });
   }
 
-  // ── 5. Ventas por vendedor por mes (líneas múltiples) ────────────────────
   const ctxVendMes = document.getElementById('chartVendedoresMes');
   if (ctxVendMes) {
     const rawDatasets = {{ chart_vendedores_mes|safe }};
@@ -370,7 +372,6 @@
     });
   }
 
-  // ── 6. Top vendedores período (barras horizontales) ───────────────────────
   const ctxVend = document.getElementById('chartVendedores');
   if (ctxVend) {
     new Chart(ctxVend, {

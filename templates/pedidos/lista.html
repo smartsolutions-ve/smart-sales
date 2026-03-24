@@ -5,26 +5,26 @@
 {% block breadcrumb %}Pedidos{% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-5">
+<div class="p-4 md:p-6 space-y-4">
 
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <h1 class="text-title">Pedidos</h1>
     <div class="flex gap-2">
       <a href="{% url 'pedidos:exportar_csv' %}?q={{ q }}&estado={{ estado_filtro }}&desde={{ desde }}&hasta={{ hasta }}"
-         class="btn-secondary" title="Exportar CSV">
-        <i class="fas fa-file-csv"></i> Exportar
+         class="btn-secondary !py-2 !px-3 text-sm" title="Exportar CSV">
+        <i class="fas fa-file-csv"></i> <span class="hidden sm:inline">Exportar</span>
       </a>
-      <a href="{% url 'pedidos:crear' %}" class="btn-primary">
-        <i class="fas fa-plus"></i> Nuevo Pedido
+      <a href="{% url 'pedidos:crear' %}" class="btn-primary !py-2 !px-4">
+        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Nuevo Pedido</span>
       </a>
     </div>
   </div>
 
   <!-- Filtros -->
-  <form method="get" class="flex gap-3 flex-wrap items-end">
-    <div class="relative flex-1 min-w-48">
+  <form method="get" class="flex gap-2 md:gap-3 flex-wrap items-end">
+    <div class="relative flex-1 min-w-[180px]">
       <input type="text" name="q" value="{{ q }}"
-             placeholder="Buscar por N°, cliente, vendedor..."
+             placeholder="Buscar por N, cliente, vendedor..."
              aria-label="Buscar"
              class="input-base pr-9 !py-2">
       <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
@@ -35,15 +35,15 @@
       <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <div>
-      <label class="text-xs text-slate-500 font-medium">Desde</label>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Desde</label>
       <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
     </div>
-    <div>
-      <label class="text-xs text-slate-500 font-medium">Hasta</label>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Hasta</label>
       <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
     </div>
-    <button type="submit" class="btn-secondary !py-2">
+    <button type="submit" class="btn-secondary !py-2 !px-3">
       <i class="fas fa-filter"></i> Filtrar
     </button>
     {% if q or estado_filtro or desde or hasta %}

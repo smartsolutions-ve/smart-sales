@@ -1,22 +1,3 @@
-System check identified some issues:
-
-WARNINGS:
-?: (staticfiles.W004) The directory '/home/sabh/Documentos/Smart/SmarSales/smart-sales/static' in the STATICFILES_DIRS setting does not exist.
-(0.003) SELECT "auth_group"."id", "auth_group"."name" FROM "auth_group" ORDER BY "auth_group"."id" ASC; args=(); alias=default
-(0.001) SELECT "accounts_organization"."id", "accounts_organization"."name", "accounts_organization"."slug", "accounts_organization"."is_active", "accounts_organization"."plan", "accounts_organization"."created_at", "accounts_organization"."updated_at" FROM "accounts_organization" ORDER BY "accounts_organization"."id" ASC; args=(); alias=default
-(0.001) SELECT "accounts_user"."id", "accounts_user"."password", "accounts_user"."last_login", "accounts_user"."is_superuser", "accounts_user"."username", "accounts_user"."first_name", "accounts_user"."last_name", "accounts_user"."email", "accounts_user"."is_staff", "accounts_user"."is_active", "accounts_user"."date_joined", "accounts_user"."organization_id", "accounts_user"."role" FROM "accounts_user" ORDER BY "accounts_user"."id" ASC; args=(); alias=default
-(0.000) SELECT "auth_group"."id" FROM "auth_group" INNER JOIN "accounts_user_groups" ON ("auth_group"."id" = "accounts_user_groups"."group_id") WHERE "accounts_user_groups"."user_id" = 1; args=(1,); alias=default
-(0.000) SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "accounts_user_user_permissions" ON ("auth_permission"."id" = "accounts_user_user_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "accounts_user_user_permissions"."user_id" = 1 ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(1,); alias=default
-(0.000) SELECT "auth_group"."id" FROM "auth_group" INNER JOIN "accounts_user_groups" ON ("auth_group"."id" = "accounts_user_groups"."group_id") WHERE "accounts_user_groups"."user_id" = 2; args=(2,); alias=default
-(0.000) SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "accounts_user_user_permissions" ON ("auth_permission"."id" = "accounts_user_user_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "accounts_user_user_permissions"."user_id" = 2 ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(2,); alias=default
-(0.000) SELECT "auth_group"."id" FROM "auth_group" INNER JOIN "accounts_user_groups" ON ("auth_group"."id" = "accounts_user_groups"."group_id") WHERE "accounts_user_groups"."user_id" = 3; args=(3,); alias=default
-(0.000) SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "accounts_user_user_permissions" ON ("auth_permission"."id" = "accounts_user_user_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "accounts_user_user_permissions"."user_id" = 3 ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(3,); alias=default
-(0.000) SELECT "auth_group"."id" FROM "auth_group" INNER JOIN "accounts_user_groups" ON ("auth_group"."id" = "accounts_user_groups"."group_id") WHERE "accounts_user_groups"."user_id" = 4; args=(4,); alias=default
-(0.000) SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "accounts_user_user_permissions" ON ("auth_permission"."id" = "accounts_user_user_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "accounts_user_user_permissions"."user_id" = 4 ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(4,); alias=default
-(0.000) SELECT "auth_group"."id" FROM "auth_group" INNER JOIN "accounts_user_groups" ON ("auth_group"."id" = "accounts_user_groups"."group_id") WHERE "accounts_user_groups"."user_id" = 5; args=(5,); alias=default
-(0.000) SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "accounts_user_user_permissions" ON ("auth_permission"."id" = "accounts_user_user_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "accounts_user_user_permissions"."user_id" = 5 ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(5,); alias=default
-(0.000) SELECT "pedidos_cliente"."id", "pedidos_cliente"."organization_id", "pedidos_cliente"."nombre", "pedidos_cliente"."contacto", "pedidos_cliente"."telefono", "pedidos_cliente"."email", "pedidos_cliente"."direccion", "pedidos_cliente"."created_at", "pedidos_cliente"."updated_at" FROM "pedidos_cliente" ORDER BY "pedidos_cliente"."id" ASC; args=(); alias=default
-(0.001) SELECT "pedidos_pedido"."id", "pedidos_pedido"."organization_id", "pedidos_pedido"."numero", "pedidos_pedido"."fecha_pedido", "pedidos_pedido"."fecha_entrega", "pedidos_pedido"."cliente_id", "pedidos_pedido"."vendedor_id", "pedidos_pedido"."estado", "pedidos_pedido"."estado_despacho", "pedidos_pedido"."ref_competencia", "pedidos_pedido"."observaciones", "pedidos_pedido"."total", "pedidos_pedido"."created_by_id", "pedidos_pedido"."created_at", "pedidos_pedido"."updated_at" FROM "pedidos_pedido" ORDER BY "pedidos_pedido"."id" ASC; args=(); alias=default
 [
 {
   "model": "accounts.organization",
@@ -3957,8 +3938,7 @@ WARNINGS:
     "total": "590.64",
     "created_by": 3,
     "created_at": "2026-03-23T21:48:01.700Z",
-    "updated_at": "2026-03-23T21:48:01.700Z"(0.001) SELECT "pedidos_pedidoitem"."id", "pedidos_pedidoitem"."pedido_id", "pedidos_pedidoitem"."producto", "pedidos_pedidoitem"."sku", "pedidos_pedidoitem"."cantidad", "pedidos_pedidoitem"."precio" FROM "pedidos_pedidoitem" ORDER BY "pedidos_pedidoitem"."id" ASC; args=(); alias=default
-
+    "updated_at": "2026-03-23T21:48:01.700Z"
   }
 },
 {
@@ -10188,8 +10168,7 @@ WARNINGS:
     "producto": "Tornillo Gisela Sin Gluten 500g",
     "sku": "GF-003",
     "cantidad": "144.00",
-    "precio"(0.001) SELECT "pedidos_factura"."id", "pedidos_factura"."pedido_id", "pedidos_factura"."numero_factura", "pedidos_factura"."fecha_factura", "pedidos_factura"."monto", "pedidos_factura"."observaciones", "pedidos_factura"."created_by_id", "pedidos_factura"."created_at" FROM "pedidos_factura" ORDER BY "pedidos_factura"."id" ASC; args=(); alias=default
-: "3.79"
+    "precio": "3.79"
   }
 },
 {
@@ -11422,10 +11401,7 @@ WARNINGS:
   "fields": {
     "pedido": 175,
     "numero_factura": "F-60521",
-    "fecha_factura": "2026-03-18"(0.001) SELECT "pedidos_pedidolog"."id", "pedidos_pedidolog"."pedido_id", "pedidos_pedidolog"."usuario_id", "pedidos_pedidolog"."accion", "pedidos_pedidolog"."detalle", "pedidos_pedidolog"."created_at" FROM "pedidos_pedidolog" ORDER BY "pedidos_pedidolog"."id" ASC; args=(); alias=default
-(0.001) SELECT "productos_categoriaproducto"."id", "productos_categoriaproducto"."organization_id", "productos_categoriaproducto"."nombre" FROM "productos_categoriaproducto" ORDER BY "productos_categoriaproducto"."id" ASC; args=(); alias=default
-(0.001) SELECT "productos_producto"."id", "productos_producto"."organization_id", "productos_producto"."nombre", "productos_producto"."sku", "productos_producto"."categoria_id", "productos_producto"."descripcion", "productos_producto"."precio_base", "productos_producto"."unidad", "productos_producto"."peso_kg", "productos_producto"."is_active", "productos_producto"."created_at", "productos_producto"."updated_at" FROM "productos_producto" ORDER BY "productos_producto"."id" ASC; args=(); alias=default
-,
+    "fecha_factura": "2026-03-18",
     "monto": "798.72",
     "observaciones": "",
     "created_by": 2,
@@ -11806,8 +11782,7 @@ WARNINGS:
   "pk": 15,
   "fields": {
     "organization": 1,
-    "nombre": "Harina Todo Uso Faparca 1kg"(0.001) SELECT "competencia_competenciaregistro"."id", "competencia_competenciaregistro"."organization_id", "competencia_competenciaregistro"."fecha", "competencia_competenciaregistro"."cliente_id", "competencia_competenciaregistro"."vendedor_id", "competencia_competenciaregistro"."producto", "competencia_competenciaregistro"."competidor", "competencia_competenciaregistro"."precio_comp", "competencia_competenciaregistro"."precio_nuestro", "competencia_competenciaregistro"."accion_tomada", "competencia_competenciaregistro"."created_at" FROM "competencia_competenciaregistro" ORDER BY "competencia_competenciaregistro"."id" ASC; args=(); alias=default
-,
+    "nombre": "Harina Todo Uso Faparca 1kg",
     "sku": "HA-005",
     "categoria": 3,
     "descripcion": "",
@@ -12131,9 +12106,7 @@ WARNINGS:
 {
   "model": "competencia.competenciaregistro",
   "pk": 15,
-  "fields": (0.000) SELECT "flotas_vehiculo"."id", "flotas_vehiculo"."organization_id", "flotas_vehiculo"."placa", "flotas_vehiculo"."marca", "flotas_vehiculo"."modelo", "flotas_vehiculo"."capacidad_kg", "flotas_vehiculo"."chofer_habitual_id", "flotas_vehiculo"."is_active", "flotas_vehiculo"."created_at", "flotas_vehiculo"."updated_at" FROM "flotas_vehiculo" ORDER BY "flotas_vehiculo"."id" ASC; args=(); alias=default
-(0.000) SELECT "flotas_viaje"."id", "flotas_viaje"."organization_id", "flotas_viaje"."vehiculo_id", "flotas_viaje"."chofer_id", "flotas_viaje"."fecha", "flotas_viaje"."estado", "flotas_viaje"."km_recorridos", "flotas_viaje"."costo_flete", "flotas_viaje"."observaciones", "flotas_viaje"."created_by_id", "flotas_viaje"."created_at", "flotas_viaje"."updated_at" FROM "flotas_viaje" ORDER BY "flotas_viaje"."id" ASC; args=(); alias=default
-{
+  "fields": {
     "organization": 1,
     "fecha": "2026-02-21",
     "cliente": 7,
@@ -12851,8 +12824,7 @@ WARNINGS:
     "estado": "Completado",
     "km_recorridos": "233.00",
     "costo_flete": "152.00",
-    (0.000) SELECT "flotas_viajedetalle"."id", "flotas_viajedetalle"."viaje_id", "flotas_viajedetalle"."pedido_id", "flotas_viajedetalle"."peso_estimado_kg", "flotas_viajedetalle"."orden_entrega" FROM "flotas_viajedetalle" ORDER BY "flotas_viajedetalle"."id" ASC; args=(); alias=default
-"observaciones": "",
+    "observaciones": "",
     "created_by": 2,
     "created_at": "2026-03-23T21:48:02.084Z",
     "updated_at": "2026-03-23T21:48:02.084Z"
@@ -13842,10 +13814,7 @@ WARNINGS:
   "fields": {
     "viaje": 29,
     "pedido": 180,
-    "peso_estimado_kg"(0.001) SELECT "cuotas_zona"."id", "cuotas_zona"."organization_id", "cuotas_zona"."nombre", "cuotas_zona"."codigo" FROM "cuotas_zona" ORDER BY "cuotas_zona"."id" ASC; args=(); alias=default
-(0.000) SELECT "cuotas_tasacambio"."id", "cuotas_tasacambio"."organization_id", "cuotas_tasacambio"."fecha", "cuotas_tasacambio"."tasa_bs_por_usd", "cuotas_tasacambio"."fuente" FROM "cuotas_tasacambio" ORDER BY "cuotas_tasacambio"."id" ASC; args=(); alias=default
-(0.000) SELECT "cuotas_ventamensual"."id", "cuotas_ventamensual"."organization_id", "cuotas_ventamensual"."periodo", "cuotas_ventamensual"."vendedor_id", "cuotas_ventamensual"."vendedor_nombre", "cuotas_ventamensual"."producto_id", "cuotas_ventamensual"."producto_nombre", "cuotas_ventamensual"."codigo_producto", "cuotas_ventamensual"."zona_id", "cuotas_ventamensual"."zona_nombre", "cuotas_ventamensual"."canal", "cuotas_ventamensual"."distribucion", "cuotas_ventamensual"."plan_cantidad", "cuotas_ventamensual"."plan_precio_usd", "cuotas_ventamensual"."plan_venta_usd", "cuotas_ventamensual"."plan_costo_usd", "cuotas_ventamensual"."plan_margen_usd", "cuotas_ventamensual"."plan_flete_usd", "cuotas_ventamensual"."plan_gastos_fin_usd", "cuotas_ventamensual"."plan_impuestos_usd", "cuotas_ventamensual"."plan_logisticos_usd", "cuotas_ventamensual"."plan_gastos_ventas_usd", "cuotas_ventamensual"."plan_margen_neto_usd", "cuotas_ventamensual"."real_cantidad", "cuotas_ventamensual"."real_venta_ves", "cuotas_ventamensual"."real_venta_usd", "cuotas_ventamensual"."real_costo_usd", "cuotas_ventamensual"."real_flete_usd", "cuotas_ventamensual"."real_gastos_fin_usd", "cuotas_ventamensual"."real_impuestos_usd", "cuotas_ventamensual"."real_logisticos_usd", "cuotas_ventamensual"."real_gastos_ventas_usd", "cuotas_ventamensual"."real_margen_neto_usd", "cuotas_ventamensual"."created_at", "cuotas_ventamensual"."updated_at" FROM "cuotas_ventamensual" ORDER BY "cuotas_ventamensual"."id" ASC; args=(); alias=default
-: "480.00",
+    "peso_estimado_kg": "480.00",
     "orden_entrega": 1
   }
 },
@@ -28222,8 +28191,7 @@ WARNINGS:
 {
   "model": "cuotas.ventamensual",
   "pk": 353,
-  "fields"(0.002) SELECT "chat_ia_chatmensaje"."id", "chat_ia_chatmensaje"."organization_id", "chat_ia_chatmensaje"."user_id", "chat_ia_chatmensaje"."rol", "chat_ia_chatmensaje"."contenido", "chat_ia_chatmensaje"."created_at" FROM "chat_ia_chatmensaje" ORDER BY "chat_ia_chatmensaje"."id" ASC; args=(); alias=default
-: {
+  "fields": {
     "organization": 1,
     "periodo": "2025-10-01",
     "vendedor": null,

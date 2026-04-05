@@ -9,6 +9,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.db import transaction
 
 from apps.accounts.decorators import role_required
+from apps.accounts.models import User
 from .models import Pedido, PedidoItem, Cliente
 from .utils import generar_numero_pedido
 
@@ -45,11 +46,18 @@ def _filtrar_pedidos(request):
     if hasta:
         pedidos = pedidos.filter(fecha_pedido__lte=hasta)
 
+    if request.user.is_vendedor:
+        pedidos = pedidos.filter(vendedor=request.user)
+    elif request.user.is_supervisor:
+        pedidos = pedidos.filter(vendedor__supervisor_asignado=request.user)
+    elif request.user.is_facturador:
+        pedidos = pedidos.filter(estado__in=['Despachado', 'Entregado'])
+
     return pedidos, {'q': q, 'estado_filtro': estado, 'desde': desde, 'hasta': hasta, 'estados': Pedido.ESTADOS}
 
 
 @login_required
-@role_required('gerente', 'superadmin')
+@role_required('gerente', 'superadmin', 'supervisor', 'vendedor', 'facturador')
 def lista(request):
     pedidos, filtros = _filtrar_pedidos(request)
 
@@ -60,7 +68,7 @@ def lista(request):
 
 
 @login_required
-@role_required('gerente', 'superadmin')
+@role_required('gerente', 'superadmin', 'supervisor', 'vendedor', 'facturador')
 def exportar_csv(request):
     """Exportar pedidos filtrados a CSV."""
     pedidos, _ = _filtrar_pedidos(request)
@@ -88,8 +96,40 @@ def exportar_csv(request):
 
 
 @login_required
-@role_required('gerente', 'superadmin')
-@require_http_methods(['GET', 'POST'])
+@role_required('gerente', 'superadmin', 'supervisor', 'vendedor', 'facturador')
+def exportar_json(request):
+    """Exportar pedidos filtrados con sus ítems en formato JSON para integración ERP."""
+    from django.http import JsonResponse
+    pedidos, _ = _filtrar_pedidos(request)
+    
+    data = []
+    for p in pedidos:
+        items = [{
+            'producto': item.producto,
+            'sku': item.sku,
+            'cantidad': float(item.cantidad),
+            'precio': float(item.precio),
+            'subtotal': float(item.subtotal),
+        } for item in p.items.all()]
+        
+        data.append({
+            'numero': p.numero,
+            'fecha_pedido': p.fecha_pedido.isoformat() if p.fecha_pedido else None,
+            'fecha_entrega': p.fecha_entrega.isoformat() if p.fecha_entrega else None,
+            'cliente': p.cliente.nombre,
+            'vendedor': p.vendedor.get_full_name() or p.vendedor.username,
+            'estado': p.estado,
+            'estado_despacho': p.estado_despacho,
+            'total': float(p.total),
+            'observaciones': p.observaciones,
+            'items': items,
+        })
+        
+    return JsonResponse(data, safe=False)
+
+
+@login_required
+@role_required('gerente', 'superadmin', 'supervisor')
 def crear(request):
     if request.method == 'POST':
         return _guardar_pedido(request, pedido=None)
@@ -97,8 +137,6 @@ def crear(request):
     # request.org es None para superadmin (sin organización)
     if not request.org:
         clientes = Cliente.objects.none()
-        vendedores = Cliente.objects.none()  # type: ignore
-        from apps.accounts.models import User
         vendedores = User.objects.none()
     else:
         clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
@@ -113,7 +151,7 @@ def crear(request):
 
 
 @login_required
-@role_required('gerente', 'superadmin')
+@role_required('gerente', 'superadmin', 'supervisor', 'vendedor', 'facturador')
 def detalle(request, pk):
     pedido = _get_pedido_or_404(pk, request.org)
     return render(request, 'pedidos/detalle.html', {'pedido': pedido})
@@ -158,7 +196,6 @@ def editar(request, pk):
         return _guardar_pedido(request, pedido=pedido)
 
     if not request.org:
-        from apps.accounts.models import User
         clientes = Cliente.objects.none()
         vendedores = User.objects.none()
     else:
@@ -175,7 +212,7 @@ def editar(request, pk):
 
 
 @login_required
-@role_required('gerente', 'superadmin')
+@role_required('gerente', 'superadmin', 'supervisor')
 @require_POST
 def eliminar(request, pk):
     pedido = _get_pedido_or_404(pk, request.org)
@@ -205,6 +242,11 @@ def cambiar_estado(request, pk):
         # RN-008: Al marcar Entregado, despacho pasa a Despachado
         if nuevo_estado == 'Entregado':
             pedido.estado_despacho = 'Despachado'
+        elif nuevo_estado == 'Cancelado':
+            if pedido.estado_despacho in ['Programado', 'En Tránsito']:
+                pedido.estado_despacho = 'Devuelto'
+            elif pedido.estado_despacho != 'Despachado' and pedido.estado_despacho != 'Devuelto':
+                pedido.estado_despacho = 'Pendiente Despacho'
         pedido.save(update_fields=['estado', 'estado_despacho'])
         messages.success(request, f'Estado actualizado a {nuevo_estado}.')
 
@@ -317,7 +359,6 @@ def _guardar_pedido(request, pedido):
     # Obtener vendedor
     vendedor = None
     if vendedor_id:
-        from apps.accounts.models import User
         vendedor = get_object_or_404(User, pk=vendedor_id, organization=request.org)
     else:
         errores.append('Selecciona un vendedor.')
@@ -347,8 +388,10 @@ def _guardar_pedido(request, pedido):
         try:
             cantidad = float(cantidades[i])
             precio = float(precios[i])
+            if cantidad <= 0 or precio < 0:
+                raise ValueError
         except (ValueError, IndexError):
-            errores.append(f'Item {i+1}: cantidad o precio inválido.')
+            errores.append(f'Item {i+1}: cantidad debe ser > 0 y precio >= 0.')
             continue
         items_data.append({
             'producto': producto,
@@ -363,7 +406,6 @@ def _guardar_pedido(request, pedido):
     if errores:
         if not request.org:
             clientes = Cliente.objects.none()
-            from apps.accounts.models import User
             vendedores = User.objects.none()
         else:
             clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
@@ -377,39 +419,29 @@ def _guardar_pedido(request, pedido):
             'estados': Pedido.ESTADOS,
         })
 
-    es_nuevo = pedido is None
-
-    with transaction.atomic():
-        if es_nuevo:
-            # Crear nuevo pedido
-            pedido = Pedido(
-                organization=request.org,
-                numero=generar_numero_pedido(request.org),
-                created_by=request.user,
-            )
-
-        pedido.cliente = cliente
-        pedido.vendedor = vendedor
-        pedido.fecha_pedido = fecha_pedido
-        pedido.fecha_entrega = fecha_entrega
-        pedido.estado = estado
-        pedido.observaciones = observaciones
-        pedido.ref_competencia = ref_competencia
-        pedido.save()
-
-        # Reemplazar items
-        pedido.items.all().delete()
-        for item_data in items_data:
-            PedidoItem.objects.create(pedido=pedido, **item_data)
-
-        pedido.recalcular_total()
-
-        # Auditoría
-        from .audit import log_pedido
-        if es_nuevo:
-            log_pedido(pedido, request.user, 'creado', f'Cliente: {cliente}, Total: ${pedido.total}')
-        else:
-            log_pedido(pedido, request.user, 'editado', f'Cliente: {cliente}, Total: ${pedido.total}')
+    from .services import PedidoService
+    try:
+        pedido = PedidoService.guardar_pedido(
+            organization=request.org,
+            user=request.user,
+            cliente=cliente,
+            vendedor=vendedor,
+            fecha_pedido=fecha_pedido,
+            items_data=items_data,
+            fecha_entrega=fecha_entrega,
+            estado=estado,
+            observaciones=observaciones,
+            ref_competencia=ref_competencia,
+            pedido_existente=pedido
+        )
+    except Exception as e:
+        messages.error(request, str(e))
+        return render(request, 'pedidos/form.html', {
+            'pedido': pedido,
+            'clientes': Cliente.objects.filter(organization=request.org).order_by('nombre'),
+            'vendedores': request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True),
+            'estados': Pedido.ESTADOS,
+        })
 
     messages.success(request, f'Pedido {pedido.numero} guardado correctamente.')
     return redirect('pedidos:detalle', pk=pedido.pk)

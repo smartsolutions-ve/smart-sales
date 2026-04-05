@@ -15,7 +15,40 @@ class TenantModel(models.Model):
         abstract = True
 
 
-class Cliente(TenantModel):
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+class SoftDeleteModel(models.Model):
+    """Modelo base para soportar borrado lógico / soft delete."""
+    is_deleted = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+
+    def soft_delete(self, user=None):
+        from django.utils import timezone
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        if user:
+            self.deleted_by = user
+        self.save()
+
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.deleted_by = None
+        self.save()
+
+    class Meta:
+        abstract = True
+
+class Cliente(TenantModel, SoftDeleteModel):
     """Cliente de la organización."""
     nombre    = models.CharField('nombre', max_length=200)
     contacto  = models.CharField('persona de contacto', max_length=200, blank=True)
@@ -63,8 +96,8 @@ class Pedido(TenantModel):
     ESTADOS_TERMINALES = ['Entregado', 'Cancelado']
 
     numero          = models.CharField('N° pedido', max_length=20)
-    fecha_pedido    = models.DateField('fecha del pedido')
-    fecha_entrega   = models.DateField('fecha de entrega estimada', null=True, blank=True)
+    fecha_pedido    = models.DateField('fecha del pedido', db_index=True)
+    fecha_entrega   = models.DateField('fecha de entrega estimada', null=True, blank=True, db_index=True)
     cliente         = models.ForeignKey(Cliente, on_delete=models.PROTECT, verbose_name='cliente')
     vendedor        = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -72,10 +105,10 @@ class Pedido(TenantModel):
         related_name='pedidos_vendedor',
         verbose_name='vendedor',
     )
-    estado          = models.CharField('estado', max_length=20, choices=ESTADOS, default='Pendiente')
+    estado          = models.CharField('estado', max_length=20, choices=ESTADOS, default='Pendiente', db_index=True)
     estado_despacho = models.CharField(
         'estado de despacho', max_length=30,
-        choices=ESTADOS_DESPACHO, default='Pendiente Despacho',
+        choices=ESTADOS_DESPACHO, default='Pendiente Despacho', db_index=True
     )
     ref_competencia = models.CharField('referencia competencia', max_length=500, blank=True)
     observaciones   = models.TextField('observaciones', blank=True)
@@ -146,6 +179,16 @@ class PedidoItem(models.Model):
     class Meta:
         verbose_name = 'Ítem del pedido'
         verbose_name_plural = 'Ítems del pedido'
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(cantidad__gt=0),
+                name='cantidad_positiva'
+            ),
+            models.CheckConstraint(
+                condition=models.Q(precio__gte=0),
+                name='precio_positivo'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.producto} x {self.cantidad}'
@@ -196,3 +239,21 @@ class PedidoLog(models.Model):
 
     def __str__(self):
         return f'{self.pedido.numero} — {self.accion}'
+
+
+class PedidoEstadoHistorial(models.Model):
+    """Registro de tiempo exacto y usuario que cambia un estado del pedido."""
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='historial_estados')
+    estado_anterior = models.CharField('estado anterior', max_length=30)
+    estado_nuevo = models.CharField('estado nuevo', max_length=30)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    observaciones = models.TextField('observaciones', blank=True)
+    created_at = models.DateTimeField('fecha de cambio', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Historial de estado'
+        verbose_name_plural = 'Historial de estados'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.pedido.numero}: {self.estado_anterior} -> {self.estado_nuevo}'

@@ -19,4 +19,7 @@ python manage.py createsuperuser --noinput || true
 echo "==> Cargando datos de demo (si existen)..."
 python manage.py loaddata fixtures/demo_data.json || true
 
+echo "==> Cargando datos sintéticos de MegaConfites B2B..."
+python manage.py load_megaconfites || true
+
 echo "==> Build completado!"

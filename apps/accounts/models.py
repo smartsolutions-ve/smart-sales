@@ -37,7 +37,9 @@ class User(AbstractUser):
     ROLES = [
         ('superadmin', 'Super Admin'),
         ('gerente',    'Gerente'),
+        ('supervisor', 'Supervisor'),
         ('vendedor',   'Vendedor'),
+        ('facturador', 'Facturador'),
     ]
 
     organization = models.ForeignKey(
@@ -49,6 +51,17 @@ class User(AbstractUser):
         help_text='Vacío solo para superadmins de SmartSales',
     )
     role = models.CharField('rol', max_length=20, choices=ROLES, default='vendedor')
+    
+    supervisor_asignado = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='vendedores_asignados',
+        limit_choices_to={'role': 'supervisor'},
+        verbose_name='supervisor asignado',
+        help_text='Indica a qué supervisor rinde cuentas este vendedor.'
+    )
 
     # Usar email como campo de login en lugar de username
     EMAIL_FIELD = 'email'
@@ -75,6 +88,14 @@ class User(AbstractUser):
         return self.role == 'vendedor'
 
     @property
+    def is_supervisor(self):
+        return self.role == 'supervisor'
+
+    @property
+    def is_facturador(self):
+        return self.role == 'facturador'
+
+    @property
     def can_access_dashboard(self):
-        """Gerentes y superadmins pueden ver el dashboard gerencial."""
-        return self.role in ('superadmin', 'gerente')
+        """Todos menos el facturador pueden ver algún tipo de dashboard."""
+        return self.role in ('superadmin', 'gerente', 'supervisor', 'vendedor')

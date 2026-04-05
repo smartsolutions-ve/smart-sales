@@ -121,8 +121,12 @@ def _crear_pedido_campo(request):
         try:
             cantidad = float(cantidades[i])
             precio = float(precios[i])
+            if cantidad <= 0 or precio < 0:
+                raise ValueError
         except (ValueError, IndexError):
-            continue
+            messages.error(request, f'El ítem "{producto}" debe tener cantidad > 0 y precio >= 0.')
+            clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
+            return render(request, 'campo/pedido_form.html', {'clientes': clientes})
         items_data.append({'producto': producto, 'cantidad': cantidad, 'precio': precio})
 
     if not items_data:
@@ -130,22 +134,23 @@ def _crear_pedido_campo(request):
         clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
         return render(request, 'campo/pedido_form.html', {'clientes': clientes})
 
-    with transaction.atomic():
-        pedido = Pedido.objects.create(
+    from apps.pedidos.services import PedidoService
+    try:
+        pedido = PedidoService.guardar_pedido(
             organization=request.org,
-            numero=generar_numero_pedido(request.org),
-            fecha_pedido=fecha_pedido,
-            fecha_entrega=fecha_entrega,
+            user=request.user,
             cliente=cliente,
             vendedor=request.user,
-            created_by=request.user,
-            estado='Pendiente',
-            estado_despacho='Pendiente Despacho',
+            fecha_pedido=fecha_pedido,
+            items_data=items_data,
+            fecha_entrega=fecha_entrega,
             observaciones=observaciones,
         )
-        for item_data in items_data:
-            PedidoItem.objects.create(pedido=pedido, **item_data)
-        pedido.recalcular_total()
+    except Exception as e:
+        messages.error(request, str(e))
+        return render(request, 'campo/pedido_form.html', {
+            'clientes': Cliente.objects.filter(organization=request.org).order_by('nombre')
+        })
 
     # Notificar a gerentes por email
     from apps.pedidos.notifications import notificar_pedido_nuevo_campo

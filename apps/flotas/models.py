@@ -108,3 +108,25 @@ class ViajeDetalle(models.Model):
 
     def __str__(self):
         return f'{self.viaje} → {self.pedido.numero}'
+
+    def clean(self):
+        super().clean()
+        if self.viaje and self.peso_estimado_kg:
+            # Calcular peso actual excluyendo este detalle si se está actualizando
+            peso_actual = self.viaje.peso_total_kg
+            if self.pk:
+                from django.db.models import Sum
+                # Restar el peso anterior de este detalle mismo para reemplazarlo con el nuevo
+                detalle_db = ViajeDetalle.objects.get(pk=self.pk)
+                peso_actual -= detalle_db.peso_estimado_kg
+                
+            nuevo_peso_total = peso_actual + self.peso_estimado_kg
+            capacidad_max = self.viaje.vehiculo.capacidad_kg
+            
+            if nuevo_peso_total > capacidad_max:
+                from django.core.exceptions import ValidationError
+                raise ValidationError(f'El vehículo {self.viaje.vehiculo.placa} excede su capacidad máxima de {capacidad_max}kg por {nuevo_peso_total - capacidad_max}kg.')
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

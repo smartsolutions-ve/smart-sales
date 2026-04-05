@@ -6,6 +6,7 @@ app_name = 'pedidos'
 urlpatterns = [
     path('', views_pedidos.lista, name='lista'),
     path('exportar-csv/', views_pedidos.exportar_csv, name='exportar_csv'),
+    path('exportar-json/', views_pedidos.exportar_json, name='exportar_json'),
     path('nuevo/', views_pedidos.crear, name='crear'),
     path('<int:pk>/', views_pedidos.detalle, name='detalle'),
     path('<int:pk>/pdf/', views_pedidos.detalle_pdf, name='detalle_pdf'),

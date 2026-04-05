@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Mi Dashboard — SmartSales{% endblock %}
+{% block breadcrumb %}Mi Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-6">
+
+  <!-- Encabezado -->
+  <div>
+    <h1 class="text-title">Mi Dashboard</h1>
+    <p class="text-subtitle mt-0.5">Hola, {{ request.user.first_name|default:request.user.username }}</p>
+  </div>
+
+  <!-- Meta del Mes -->
+  <div class="card-glass relative overflow-hidden">
+    <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-brand-blue/10 to-transparent"></div>
+    <div class="mb-4">
+      <h2 class="text-base font-bold flex items-center gap-2">
+        <i class="fas fa-bullseye text-brand-blue"></i> Mi Meta del Mes
+      </h2>
+      <p class="text-sm text-slate-500 mt-1">Progreso de cuota definida para el mes en curso.</p>
+    </div>
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+      <div>
+        <p class="text-3xl md:text-4xl font-black text-brand-blue">${{ real_total|floatformat:2|intcomma }}</p>
+        <p class="text-sm font-semibold text-slate-400 mt-1">Vendido de ${{ plan_total|floatformat:2|intcomma }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-3xl font-black {% if porcentaje >= 100 %}text-brand-green{% else %}text-slate-700 dark:text-slate-300{% endif %}">{{ porcentaje }}%</p>
+        <p class="text-xs uppercase tracking-wider font-bold text-slate-400">Cumplimiento</p>
+      </div>
+    </div>
+
+    <!-- Barra de progreso gruesa -->
+    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4 relative overflow-hidden">
+      <div class="h-full rounded-full transition-all duration-1000 ease-out {% if porcentaje >= 100 %}bg-brand-green{% else %}bg-brand-blue{% endif %}"
+           style="width: {% if porcentaje > 100 %}100{% else %}{{ porcentaje }}{% endif %}%;"></div>
+    </div>
+  </div>
+
+  <!-- KPIs Personales -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div class="card-glass hover:shadow-md transition-shadow">
+      <p class="text-xs uppercase tracking-wide font-bold text-slate-400 mb-2">Ventas del Mes</p>
+      <p class="text-2xl font-bold">${{ ventas_mes|floatformat:2|intcomma }}</p>
+      <p class="text-[11px] text-brand-blue mt-1 font-medium"><i class="fas fa-calendar-check"></i> Este mes</p>
+    </div>
+
+    <div class="card-glass hover:shadow-md transition-shadow">
+      <p class="text-xs uppercase tracking-wide font-bold text-slate-400 mb-2">Pedidos Activos</p>
+      <p class="text-2xl font-bold text-brand-blue">{{ mis_activos }}</p>
+      <p class="text-[11px] text-slate-500 mt-1">Confirmados o En proceso</p>
+    </div>
+
+    <div class="card-glass hover:shadow-md transition-shadow">
+      <p class="text-xs uppercase tracking-wide font-bold text-slate-400 mb-2">Mis Entregados</p>
+      <p class="text-2xl font-bold text-emerald-500">{{ mis_entregados }}</p>
+      <p class="text-[11px] text-slate-500 mt-1">Total histórico</p>
+    </div>
+    
+    <div class="flex flex-col gap-2">
+      <a href="{% url 'campo:index' %}" class="flex-1 btn-primary flex flex-col items-center justify-center text-center !py-4 shadow-sm">
+        <i class="fas fa-map-marked-alt text-xl mb-1"></i>
+        <span>Punto de Venta</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Próximas Entregas -->
+  <div class="card-glass !p-0 overflow-hidden">
+    <div class="px-5 md:px-6 py-4 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+      <h2 class="font-bold text-sm">Mis próximas entregas (7 días)</h2>
+      <a href="{% url 'pedidos:lista' %}" class="text-xs text-brand-blue font-semibold hover:underline">Ver todos</a>
+    </div>
+    <div class="overflow-x-auto">
+      {% if proximos %}
+      <table class="w-full text-left min-w-[500px]">
+        <thead class="bg-slate-50/80 dark:bg-white/[0.03]">
+          <tr>
+            <th class="th-base">Pedido</th>
+            <th class="th-base">Cliente</th>
+            <th class="th-base">Entrega</th>
+            <th class="th-base">Monto</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+          {% for p in proximos %}
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="td-base font-mono"><a href="{% url 'pedidos:detalle' p.pk %}" class="text-brand-blue font-bold hover:underline">{{ p.numero }}</a></td>
+            <td class="td-base">{{ p.cliente.nombre }}</td>
+            <td class="td-base font-semibold {% if p.fecha_entrega <= hoy %}text-red-500{% endif %}">{{ p.fecha_entrega }}</td>
+            <td class="td-base font-bold">${{ p.total|intcomma }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="p-8 text-center text-slate-400">
+        <i class="fas fa-check-circle text-2xl mb-2"></i>
+        <p class="text-sm">No tienes entregas pendientes en los próximos 7 días.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -116,6 +116,7 @@ def _guardar_producto(request, producto):
     unidad = data.get('unidad', '').strip()
     categoria_id = data.get('categoria_id', '').strip() or None
     is_active = data.get('is_active') == 'on'
+    exento_iva = data.get('exento_iva') == 'on'
 
     if not nombre:
         messages.error(request, 'El nombre del producto es requerido.')
@@ -147,6 +148,7 @@ def _guardar_producto(request, producto):
     producto.unidad = unidad
     producto.categoria = categoria
     producto.is_active = is_active
+    producto.exento_iva = exento_iva
     producto.save()
 
     messages.success(request, f'Producto "{producto.nombre}" guardado.')

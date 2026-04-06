@@ -7,6 +7,7 @@ from apps.accounts.models import Organization, User
 from apps.productos.models import CategoriaProducto, Producto, Lote, MovimientoInventario
 from apps.pedidos.models import Cliente, Pedido, PedidoItem, Factura, PedidoEstadoHistorial
 from apps.flotas.models import Vehiculo, Viaje, ViajeDetalle
+from apps.cuotas.models import TasaCambio
 
 class Command(BaseCommand):
     help = 'Carga masiva de datos (histórico 6 meses) para MegaConfites Occidente C.A.'
@@ -24,6 +25,14 @@ class Command(BaseCommand):
         Pedido.objects.filter(organization=org).delete()
         Viaje.objects.filter(organization=org).delete()
         Factura.objects.filter(pedido__organization=org).delete()
+
+        # 0. Tasa de Cambio
+        self.stdout.write('Generando Tasa de Cambio referencial...')
+        TasaCambio.objects.get_or_create(
+            organization=org,
+            fecha=timezone.now().date(),
+            defaults={'tasa_bs_por_usd': Decimal('37.0500'), 'fuente': 'BCV - Seed'}
+        )
 
         # 1. Usuarios Bases
         gerente, _ = User.objects.get_or_create(username='gerente_mega', defaults={'email': 'gerente@megaconfites.com', 'first_name': 'Carlos', 'last_name': 'Mendoza', 'role': 'gerente', 'organization': org})

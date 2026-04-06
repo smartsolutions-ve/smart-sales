@@ -237,3 +237,57 @@ def viaje(org, vehiculo, gerente):
         vehiculo=vehiculo,
         chofer=gerente,
     )
+
+
+# ── Factories para Productos e Inventario ──────────────────────────────────────
+
+class CategoriaProductoFactory(DjangoModelFactory):
+    class Meta:
+        model = 'productos.CategoriaProducto'
+
+    organization = factory.SubFactory(OrganizationFactory)
+    nombre       = factory.Sequence(lambda n: f'Categoria {n+1}')
+
+
+class ProductoFactory(DjangoModelFactory):
+    class Meta:
+        model = 'productos.Producto'
+
+    organization   = factory.SubFactory(OrganizationFactory)
+    nombre         = factory.Sequence(lambda n: f'Producto {n+1}')
+    sku            = factory.Sequence(lambda n: f'SKU-{n+1:04d}')
+    categoria      = factory.SubFactory(CategoriaProductoFactory)
+    precio_base    = Decimal('100.00')
+    unidad         = 'unidad'
+    peso_kg        = Decimal('1.50')
+    exento_iva     = True
+    is_active      = True
+
+
+class LoteFactory(DjangoModelFactory):
+    class Meta:
+        model = 'productos.Lote'
+
+    producto            = factory.SubFactory(ProductoFactory)
+    codigo_lote         = factory.Sequence(lambda n: f'LOTE-{n+1:04d}')
+    fecha_elaboracion   = factory.LazyFunction(lambda: timezone.now().date())
+    fecha_caducidad     = factory.LazyFunction(
+        lambda: timezone.now().date() + timezone.timedelta(days=30)
+    )
+    cantidad_inicial    = Decimal('1000.00')
+    cantidad_disponible = Decimal('1000.00')
+    costo_unitario      = Decimal('50.00')
+    is_active           = True
+
+
+# ── Fixtures de Productos ──────────────────────────────────────────────────────
+
+@pytest.fixture
+def producto(org):
+    cat = CategoriaProductoFactory(organization=org)
+    return ProductoFactory(organization=org, categoria=cat)
+
+
+@pytest.fixture
+def lote(producto):
+    return LoteFactory(producto=producto)

@@ -1,4 +1,4 @@
-"""Settings de producción (DigitalOcean)."""
+"""Settings de producción (Render)."""
 from .base import *  # noqa
 
 DEBUG = False
@@ -16,7 +16,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # ── CSRF trusted origins (requerido en Django 4+ con HTTPS) ──────────────────
 CSRF_TRUSTED_ORIGINS = env.list(
     'CSRF_TRUSTED_ORIGINS',
-    default=['https://smartsales.app', 'https://www.smartsales.app'],
+    default=[
+        'https://smartsales-u8dw.onrender.com',
+        'https://smartsales.app',
+        'https://www.smartsales.app',
+    ],
 )
 
 # ── Email con Resend ───────────────────────────────────────────────────────────

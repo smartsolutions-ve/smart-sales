@@ -10,7 +10,7 @@ Instrucciones para Claude Code al trabajar en este proyecto.
 | Base de datos | PostgreSQL 16 |
 | Frontend | Django Templates + HTMX + Alpine.js v3 + Tailwind CSS |
 | Auth | Django Auth integrado (AbstractUser) |
-| Deploy | Docker + Nginx + DigitalOcean Droplet $6/mes |
+| Deploy | Render CI/CD + build.sh |
 | Tests | pytest-django + factory_boy |
 | Email | django-anymail + Resend |
 
@@ -31,6 +31,10 @@ smartsales-django/
 │   ├── despacho/          # Vista de logística (usa modelos de pedidos)
 │   ├── competencia/       # CompetenciaRegistro
 │   ├── campo/             # Formulario móvil para vendedores
+│   ├── flotas/            # Vehiculo, Viaje, ViajeDetalle
+│   ├── cuotas/            # Zona, TasaCambio, VentaMensual
+│   ├── productos/         # Producto, CategoriaProducto, Lote, MovimientoInventario
+│   ├── chat_ia/           # ChatMensaje
 │   └── reportes/          # Vistas de analytics (vendedores, clientes)
 ├── templates/
 │   ├── base.html          # Layout principal con HTMX + Alpine.js

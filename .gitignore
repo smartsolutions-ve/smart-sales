@@ -46,3 +46,13 @@ htmlcov/
 
 # Tailwind
 node_modules/
+
+# Archivos binarios / documentos (no pertenecen al repo)
+*.pptx
+*.ppt
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pdf
+*.pages

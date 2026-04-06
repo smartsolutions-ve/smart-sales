@@ -69,12 +69,6 @@ Ventas del mes actual (no cancelados): ${ventas_mes:,.2f}""")
     )
     monto_sin_facturar = sin_facturar.aggregate(t=Sum('total'))['t'] or 0
 
-    parcial = pedidos_con_fact.filter(
-        total_facturado__gt=0, total_facturado__lt=models_F('total')
-    ) if False else pedidos_con_fact.exclude(
-        Q(total_facturado__isnull=True) | Q(total_facturado=0)
-    ).extra(where=['COALESCE((SELECT SUM(monto) FROM pedidos_factura WHERE pedidos_factura.pedido_id = pedidos_pedido.id), 0) < pedidos_pedido.total'])
-    # Simplificado: contamos directamente
     from django.db.models import F as models_F, DecimalField
     from django.db.models.functions import Coalesce
 

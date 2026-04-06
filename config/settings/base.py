@@ -19,6 +19,10 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# ── Identidad de la aplicación ─────────────────────────────────────────────────
+APP_NAME = env('APP_NAME', default='SmartSales')
+APP_INITIALS = env('APP_INITIALS', default='SS')
+
 # ── Aplicaciones ───────────────────────────────────────────────────────────────
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -80,6 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.accounts.context_processors.app_settings',
             ],
         },
     },

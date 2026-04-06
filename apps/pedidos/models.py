@@ -112,6 +112,8 @@ class Pedido(TenantModel):
     )
     ref_competencia = models.CharField('referencia competencia', max_length=500, blank=True)
     observaciones   = models.TextField('observaciones', blank=True)
+    subtotal        = models.DecimalField('subtotal', max_digits=12, decimal_places=2, default=0)
+    monto_iva       = models.DecimalField('monto IVA', max_digits=12, decimal_places=2, default=0)
     total           = models.DecimalField('total', max_digits=12, decimal_places=2, default=0)
     created_by      = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -133,15 +135,18 @@ class Pedido(TenantModel):
         return f'{self.numero} — {self.cliente}'
 
     def recalcular_total(self):
-        """Recalcula el total sumando los subtotales de todos los items."""
+        """Recalcula subtotal, IVA y total sumando todos los items."""
         from django.db.models import Sum, F, ExpressionWrapper, DecimalField
         resultado = self.items.aggregate(
-            total=Sum(
+            subtotal_calc=Sum(
                 ExpressionWrapper(F('cantidad') * F('precio'), output_field=DecimalField())
-            )
+            ),
+            iva_calc=Sum('monto_iva')
         )
-        self.total = resultado['total'] or 0
-        self.save(update_fields=['total'])
+        self.subtotal = resultado['subtotal_calc'] or 0
+        self.monto_iva = resultado['iva_calc'] or 0
+        self.total = self.subtotal + self.monto_iva
+        self.save(update_fields=['subtotal', 'monto_iva', 'total'])
 
     def puede_cambiar_estado(self):
         """Los pedidos en estado terminal no pueden cambiar."""
@@ -167,6 +172,26 @@ class Pedido(TenantModel):
             return 'parcial'
         return 'facturado'
 
+    @property
+    def tasa_cambio_actual(self):
+        from apps.cuotas.models import TasaCambio
+        tasa = TasaCambio.objects.filter(organization=self.organization).order_by('-fecha').first()
+        return tasa.tasa_bs_por_usd if tasa else 0
+
+    @property
+    def total_bs(self):
+        tasa = self.tasa_cambio_actual
+        if tasa:
+            return self.total * tasa
+        return 0
+
+    @property
+    def monto_facturado_bs(self):
+        tasa = self.tasa_cambio_actual
+        if tasa:
+            return self.monto_facturado * tasa
+        return 0
+
 
 class PedidoItem(models.Model):
     """Ítem / línea de un pedido."""
@@ -175,6 +200,8 @@ class PedidoItem(models.Model):
     sku      = models.CharField('SKU', max_length=50, blank=True)
     cantidad = models.DecimalField('cantidad', max_digits=10, decimal_places=2)
     precio   = models.DecimalField('precio unitario', max_digits=12, decimal_places=2)
+    exento_iva = models.BooleanField('exento de IVA', default=True)
+    monto_iva = models.DecimalField('monto IVA', max_digits=12, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = 'Ítem del pedido'
@@ -220,6 +247,13 @@ class Factura(models.Model):
 
     def __str__(self):
         return f'{self.numero_factura} — ${self.monto}'
+
+    @property
+    def monto_bs(self):
+        tasa = self.pedido.tasa_cambio_actual
+        if tasa:
+            return self.monto * tasa
+        return 0
 
 
 class PedidoLog(models.Model):

@@ -12,7 +12,14 @@
       {% else %}
         <span class="badge-neutral">Sin facturar</span>
       {% endif %}
-      <span class="text-xs text-slate-500">${{ pedido.monto_facturado|intcomma }} / ${{ pedido.total|intcomma }}</span>
+      <span class="text-xs text-slate-500 font-medium whitespace-nowrap">
+        ${{ pedido.monto_facturado|floatformat:2|intcomma }} / ${{ pedido.total|floatformat:2|intcomma }}
+      </span>
+      {% if pedido.total_bs %}
+      <span class="text-xs text-slate-400 font-medium whitespace-nowrap hidden sm:inline">
+        (Bs. {{ pedido.monto_facturado_bs|floatformat:2|intcomma }} / Bs. {{ pedido.total_bs|floatformat:2|intcomma }})
+      </span>
+      {% endif %}
     </div>
   </div>
 
@@ -32,7 +39,14 @@
       <tr>
         <td class="px-4 py-3 text-sm font-mono font-medium text-slate-900 dark:text-white">{{ factura.numero_factura }}</td>
         <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{{ factura.fecha_factura|date:"d/m/Y" }}</td>
-        <td class="px-4 py-3 text-sm text-right font-medium text-slate-900 dark:text-white">${{ factura.monto|intcomma }}</td>
+        <td class="px-4 py-3 text-sm text-right font-medium text-slate-900 dark:text-white">
+          <div class="flex flex-col">
+            <span>${{ factura.monto|floatformat:2|intcomma }}</span>
+            {% if factura.monto_bs %}
+               <span class="text-xs text-slate-400">Bs. {{ factura.monto_bs|floatformat:2|intcomma }}</span>
+            {% endif %}
+          </div>
+        </td>
         <td class="px-4 py-3 text-sm text-slate-500">{{ factura.observaciones|default:"—" }}</td>
         <td class="px-4 py-3 text-center">
           <form method="post" action="{% url 'pedidos:factura_eliminar' factura.pk %}" class="inline">

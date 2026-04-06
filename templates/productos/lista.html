@@ -47,7 +47,7 @@
   {% if productos %}
   <div class="card-glass !p-0 overflow-hidden">
     <div class="overflow-x-auto">
-      <table data-datatable class="w-full text-left min-w-[650px]">
+      <table data-datatable class="w-full text-left min-w-[900px]">
         <thead>
           <tr>
             <th>SKU</th>
@@ -83,7 +83,7 @@
             </td>
             <td class="td-base font-semibold text-right">
               {% if producto.precio_base %}
-                ${{ producto.precio_base|intcomma }}
+                ${{ producto.precio_base|floatformat:2|intcomma }}
               {% else %}
                 <span class="text-slate-300 dark:text-slate-600">—</span>
               {% endif %}
@@ -95,8 +95,8 @@
                 <span class="badge-neutral">Inactivo</span>
               {% endif %}
             </td>
-            <td class="td-base text-right">
-              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-1.5">
+            <td class="td-base text-right pr-4">
+              <div class="flex justify-end gap-1.5 transition-opacity opacity-100 lg:opacity-30 lg:group-hover:opacity-100">
                 <a href="{% url 'productos:editar' producto.pk %}"
                    class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
                    title="Editar">

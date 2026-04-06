@@ -53,10 +53,29 @@ class PedidoService:
             else:
                 estado_anterior = 'Pendiente'
 
-            items_a_crear = [
-                PedidoItem(pedido=pedido, **item_data)
-                for item_data in items_data
-            ]
+            from apps.productos.models import Producto
+            from decimal import Decimal
+            skus = [item['sku'] for item in items_data if item.get('sku')]
+            productos_db = {p.sku: p for p in Producto.objects.filter(sku__in=skus, organization=organization)}
+
+            items_a_crear = []
+            for item_data in items_data:
+                exento = True
+                monto_iva = Decimal('0.00')
+                if item_data.get('sku') in productos_db:
+                    prod = productos_db[item_data['sku']]
+                    exento = prod.exento_iva
+                if not exento:
+                    subtotal_item = Decimal(str(item_data['cantidad'])) * Decimal(str(item_data['precio']))
+                    monto_iva = subtotal_item * Decimal('0.16')
+                    
+                items_a_crear.append(PedidoItem(
+                    pedido=pedido,
+                    exento_iva=exento,
+                    monto_iva=monto_iva,
+                    **item_data
+                ))
+
             PedidoItem.objects.bulk_create(items_a_crear)
 
             pedido.recalcular_total()

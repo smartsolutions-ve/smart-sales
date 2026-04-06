@@ -190,6 +190,25 @@ Cumplimiento global: {cumpl_global}% (Plan: ${plan_t:,.2f} / Real: ${real_t:,.2f
             lines.append(f'{i}. {p["producto"]} — {p["total_cantidad"]} uds — ${p["total_venta"]:,.2f}')
         parts.append('\n'.join(lines))
 
+    # ── Sección 4.5: Top productos pendientes de despacho ──
+    pendientes_despacho = (
+        PedidoItem.objects.filter(
+            pedido__organization=org,
+            pedido__estado_despacho='Pendiente Despacho'
+        )
+        .exclude(pedido__estado='Cancelado')
+        .values('producto')
+        .annotate(
+            total_cantidad=Sum('cantidad'),
+        )
+        .order_by('-total_cantidad')[:10]
+    )
+    if pendientes_despacho:
+        lines = ['\n=== TOP 10 PRODUCTOS PENDIENTES DE DESPACHO ===']
+        for i, p in enumerate(pendientes_despacho, 1):
+            lines.append(f'{i}. {p["producto"]} — {p["total_cantidad"]} uds en espera')
+        parts.append('\n'.join(lines))
+
     # ── Sección 5: Competencia ──
     competencia = (
         CompetenciaRegistro.objects.filter(organization=org)

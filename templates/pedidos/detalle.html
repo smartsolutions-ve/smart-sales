@@ -47,7 +47,12 @@
       </div>
       <div>
         <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Total</p>
-        <p class="text-lg font-bold text-slate-900 dark:text-white">${{ pedido.total|intcomma }}</p>
+        <p class="text-lg font-bold text-slate-900 dark:text-white">
+          ${{ pedido.total|floatformat:2|intcomma }}
+          {% if pedido.total_bs %}
+          <span class="text-sm font-medium text-slate-400"> (Bs. {{ pedido.total_bs|floatformat:2|intcomma }})</span>
+          {% endif %}
+        </p>
       </div>
       {% if pedido.observaciones %}
       <div class="sm:col-span-2">
@@ -80,15 +85,37 @@
             <td class="td-base text-slate-900 dark:text-white">{{ item.producto }}</td>
             <td class="td-base text-slate-500 hidden sm:table-cell">{{ item.sku|default:"—" }}</td>
             <td class="td-base text-right text-slate-700 dark:text-slate-300">{{ item.cantidad }}</td>
-            <td class="td-base text-right text-slate-700 dark:text-slate-300">${{ item.precio }}</td>
-            <td class="td-base text-right font-medium text-slate-900 dark:text-white">${{ item.subtotal }}</td>
+            <td class="td-base text-right text-slate-700 dark:text-slate-300">
+              <div class="flex flex-col">
+                <span>${{ item.precio|floatformat:2|intcomma }}</span>
+                {% if not item.exento_iva %}
+                <span class="text-[10px] text-slate-400">+IVA</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="td-base text-right font-medium text-slate-900 dark:text-white">
+              <div class="flex flex-col">
+                <span>${{ item.subtotal|floatformat:2|intcomma }}</span>
+                {% if item.monto_iva > 0 %}
+                <span class="text-[10px] text-slate-400">+${{ item.monto_iva|floatformat:2|intcomma }}</span>
+                {% endif %}
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot class="border-t-2 border-slate-200 dark:border-white/10">
           <tr>
-            <td colspan="4" class="td-base text-right font-semibold text-slate-700 dark:text-slate-300">Total</td>
-            <td class="td-base text-right text-base font-bold text-slate-900 dark:text-white">${{ pedido.total }}</td>
+            <td colspan="4" class="td-base text-right font-semibold text-slate-700 dark:text-slate-300">Subtotal</td>
+            <td class="td-base text-right font-semibold text-slate-900 dark:text-white">${{ pedido.subtotal|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td colspan="4" class="td-base text-right font-semibold text-slate-700 dark:text-slate-300">IVA (16%)</td>
+            <td class="td-base text-right font-semibold text-slate-900 dark:text-white">${{ pedido.monto_iva|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td colspan="4" class="td-base text-right font-bold text-slate-800 dark:text-slate-200">Total</td>
+            <td class="td-base text-right text-base font-bold text-slate-900 dark:text-white">${{ pedido.total|floatformat:2|intcomma }}</td>
           </tr>
         </tfoot>
       </table>

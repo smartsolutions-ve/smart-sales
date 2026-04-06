@@ -42,6 +42,10 @@ class Producto(TenantModel, SoftDeleteModel):
         'peso por unidad (kg)', max_digits=8, decimal_places=3,
         null=True, blank=True,
     )
+    exento_iva  = models.BooleanField(
+        'exento de IVA', default=True,
+        help_text='Si es falso, se le cobrará el 16% de IVA en la facturación y pedidos.',
+    )
     is_active   = models.BooleanField('activo', default=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)

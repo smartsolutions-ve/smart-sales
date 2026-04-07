@@ -12,7 +12,6 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.db import transaction
 
 from apps.accounts.models import Organization, User
 from apps.pedidos.models import Cliente, Pedido, PedidoItem
@@ -193,13 +192,12 @@ class Command(BaseCommand):
             help='Número de pedidos a crear (default: 45)'
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
         password = options['password']
         n_pedidos = options['pedidos']
         reset = options['reset']
 
-        self.stdout.write('\n🌱 Configurando datos de prueba — El Gran Chaparral 2024 C.A.\n')
+        self.stdout.write('\nConfigurando datos de prueba -- El Gran Chaparral 2024 C.A.\n')
 
         # ── 1. Organización ───────────────────────────────────────────────────
         org, created = Organization.objects.get_or_create(
@@ -411,7 +409,7 @@ class Command(BaseCommand):
         total_comp = CompetenciaRegistro.objects.filter(organization=org).count()
 
         self.stdout.write('\n' + '─' * 55)
-        self.stdout.write(self.style.SUCCESS('  ✓ Setup completado exitosamente\n'))
+        self.stdout.write(self.style.SUCCESS('  Setup completado exitosamente\n'))
         self.stdout.write(f'  Organización : {org.name}')
         self.stdout.write(f'  Clientes     : {total_clientes}')
         self.stdout.write(f'  Productos    : {total_productos}')

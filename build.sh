@@ -23,6 +23,6 @@ echo "==> Cargando datos sintéticos de MegaConfites B2B..."
 python manage.py load_megaconfites || true
 
 echo "==> Cargando datos de El Gran Chaparral 2024 C.A...."
-python manage.py setup_test_data || true
+python manage.py setup_test_data --reset || true
 
 echo "==> Build completado!"

@@ -1,0 +1,76 @@
+{% load humanize %}
+<div class="p-1">
+  <h3 class="font-bold text-base mb-4">
+    <i class="fas fa-ruler mr-2 text-brand-blue"></i>
+    {% if unidad %}Editar{% else %}Nueva{% endif %} Unidad de Medida
+  </h3>
+
+  {% if errores %}
+  <div class="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+    {% for e in errores %}
+    <p class="text-sm text-red-600 dark:text-red-400"><i class="fas fa-circle-exclamation mr-1.5"></i>{{ e }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if unidad %}{% url 'configuracion:unidades_editar' unidad.pk %}{% else %}{% url 'configuracion:unidades_crear' %}{% endif %}"
+        hx-target="#modal-body"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-500 mb-1">Nombre</label>
+        <input type="text" name="nombre"
+               value="{{ post.nombre|default:unidad.nombre|default:'' }}"
+               placeholder="Ej: Kilogramo" autofocus
+               class="input-base w-full">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Símbolo</label>
+        <input type="text" name="simbolo"
+               value="{{ post.simbolo|default:unidad.simbolo|default:'' }}"
+               placeholder="Ej: kg" maxlength="10"
+               class="input-base w-full font-mono">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Tipo</label>
+        <select name="tipo" class="input-base w-full">
+          <option value="">— seleccionar —</option>
+          {% for code, label in tipos %}
+          <option value="{{ code }}"
+            {% if post.tipo == code or unidad.tipo == code %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Factor de conversión</label>
+        <input type="number" name="factor_conversion"
+               value="{{ post.factor_conversion|default:unidad.factor_conversion|default:'1' }}"
+               step="0.000001" min="0.000001"
+               class="input-base w-full font-mono">
+        <p class="text-[10px] text-slate-400 mt-0.5">Relativo a la unidad base del tipo</p>
+      </div>
+      <div class="flex items-center gap-2 pt-5">
+        <input type="checkbox" name="es_base" id="es_base"
+               {% if post.es_base == 'on' or unidad.es_base %}checked{% endif %}
+               class="w-4 h-4 rounded accent-brand-blue">
+        <label for="es_base" class="text-sm text-slate-700 dark:text-slate-300">Es unidad base</label>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button"
+              onclick="document.dispatchEvent(new CustomEvent('close-modal'))"
+              class="btn-secondary !py-2 !px-4 text-sm">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+        <i class="fas fa-save mr-1.5"></i>Guardar
+      </button>
+    </div>
+  </form>
+</div>

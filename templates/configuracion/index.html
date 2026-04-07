@@ -78,6 +78,31 @@
           </button>
         </form>
       </div>
+
+      <!-- Logo -->
+      <div class="card-glass max-w-2xl">
+        <h2 class="font-bold text-sm mb-3 text-slate-700 dark:text-slate-300">
+          <i class="fas fa-image mr-2 text-brand-blue"></i>Logo de la Empresa
+        </h2>
+        <form hx-post="{% url 'configuracion:logo_upload' %}"
+              hx-target="#logo-preview"
+              hx-swap="innerHTML"
+              hx-encoding="multipart/form-data"
+              class="flex items-center gap-4">
+          {% csrf_token %}
+          <div id="logo-preview">
+            {% include "configuracion/_logo_preview.html" %}
+          </div>
+          <label class="cursor-pointer">
+            <span class="btn-secondary !py-2 !px-3 text-sm">
+              <i class="fas fa-upload mr-1.5"></i>Subir logo
+            </span>
+            <input type="file" name="logo" accept="image/*" class="hidden"
+                   onchange="this.form.dispatchEvent(new Event('submit', {bubbles:true})); this.form.requestSubmit()">
+          </label>
+          <p class="text-xs text-slate-400">PNG, JPG · Máx. 2 MB</p>
+        </form>
+      </div>
     </div>
 
     <!-- Tab: Numeración -->
@@ -182,20 +207,17 @@
         <div class="card-glass !p-0 overflow-hidden">
           <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
             <h3 class="font-bold text-sm"><i class="fas fa-ruler mr-1.5 text-brand-blue"></i>Unidades de medida</h3>
-            <span class="text-xs text-slate-400">{{ unidades|length }}</span>
+            <button hx-get="{% url 'configuracion:unidades_crear' %}"
+                    hx-target="#modal-body"
+                    hx-swap="innerHTML"
+                    hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+                    class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
+                    title="Agregar unidad">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
-          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
-            {% for u in unidades %}
-            <div class="flex items-center justify-between px-5 py-2.5">
-              <div>
-                <span class="text-sm font-medium">{{ u.nombre }}</span>
-                <span class="ml-2 font-mono text-xs text-brand-blue bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded">{{ u.simbolo }}</span>
-              </div>
-              <span class="text-xs text-slate-400">{{ u.get_tipo_display }}</span>
-            </div>
-            {% empty %}
-            <p class="px-5 py-4 text-sm text-slate-400">Sin unidades configuradas.</p>
-            {% endfor %}
+          <div id="unidades-lista" class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% include "configuracion/_unidades_items.html" %}
           </div>
         </div>
 
@@ -203,17 +225,17 @@
         <div class="card-glass !p-0 overflow-hidden">
           <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
             <h3 class="font-bold text-sm"><i class="fas fa-credit-card mr-1.5 text-brand-blue"></i>Métodos de pago</h3>
-            <span class="text-xs text-slate-400">{{ metodos|length }}</span>
+            <button hx-get="{% url 'configuracion:metodos_crear' %}"
+                    hx-target="#modal-body"
+                    hx-swap="innerHTML"
+                    hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+                    class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
+                    title="Agregar método">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
-          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
-            {% for m in metodos %}
-            <div class="flex items-center justify-between px-5 py-2.5">
-              <span class="text-sm font-medium">{{ m.nombre }}</span>
-              <span class="badge-neutral capitalize">{{ m.get_tipo_display }}</span>
-            </div>
-            {% empty %}
-            <p class="px-5 py-4 text-sm text-slate-400">Sin métodos de pago.</p>
-            {% endfor %}
+          <div id="metodos-lista" class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% include "configuracion/_metodos_items.html" %}
           </div>
         </div>
 
@@ -221,21 +243,17 @@
         <div class="card-glass !p-0 overflow-hidden">
           <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
             <h3 class="font-bold text-sm"><i class="fas fa-tags mr-1.5 text-brand-blue"></i>Listas de precios</h3>
-            <span class="text-xs text-slate-400">{{ listas|length }}</span>
+            <button hx-get="{% url 'configuracion:listas_crear' %}"
+                    hx-target="#modal-body"
+                    hx-swap="innerHTML"
+                    hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+                    class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
+                    title="Agregar lista">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
-          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
-            {% for l in listas %}
-            <div class="flex items-center justify-between px-5 py-2.5">
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-xs font-bold text-brand-blue bg-blue-50 dark:bg-blue-500/10 w-7 h-7 rounded-lg flex items-center justify-center">{{ l.codigo }}</span>
-                <span class="text-sm font-medium">{{ l.nombre }}</span>
-                {% if l.es_default %}<span class="badge-success text-[10px]">Default</span>{% endif %}
-              </div>
-              <span class="text-sm text-slate-500">-{{ l.descuento_porcentaje }}%</span>
-            </div>
-            {% empty %}
-            <p class="px-5 py-4 text-sm text-slate-400">Sin listas de precios.</p>
-            {% endfor %}
+          <div id="listas-lista" class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% include "configuracion/_listas_items.html" %}
           </div>
         </div>
 
@@ -243,17 +261,17 @@
         <div class="card-glass !p-0 overflow-hidden">
           <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
             <h3 class="font-bold text-sm"><i class="fas fa-map-marker-alt mr-1.5 text-brand-blue"></i>Zonas de despacho</h3>
-            <span class="text-xs text-slate-400">{{ zonas|length }}</span>
+            <button hx-get="{% url 'configuracion:zonas_crear' %}"
+                    hx-target="#modal-body"
+                    hx-swap="innerHTML"
+                    hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+                    class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center text-xs transition-all"
+                    title="Agregar zona">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
-          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
-            {% for z in zonas %}
-            <div class="flex items-center justify-between px-5 py-2.5">
-              <span class="text-sm font-medium">{{ z.nombre }}</span>
-              <span class="text-xs text-slate-400">{{ z.dias_entrega_estimados }}d — ${{ z.costo_base_flete }}</span>
-            </div>
-            {% empty %}
-            <p class="px-5 py-4 text-sm text-slate-400">Sin zonas configuradas.</p>
-            {% endfor %}
+          <div id="zonas-lista" class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% include "configuracion/_zonas_items.html" %}
           </div>
         </div>
 
@@ -261,5 +279,43 @@
     </div>
 
   </div>
+</div>
+
+<!-- Modal HTMX + Alpine.js -->
+<div x-data="{ show: false }"
+     @open-modal.document="show = true"
+     @close-modal.document="show = false"
+     @closeModal.document="show = false"
+     x-show="show"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+     style="display: none;">
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-md relative"
+       @click.stop
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95"
+       x-transition:enter-end="opacity-100 scale-100"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100 scale-100"
+       x-transition:leave-end="opacity-0 scale-95">
+
+    <button @click="show = false"
+            class="absolute top-3 right-3 w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition-colors z-10">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div id="modal-body" class="p-6">
+      <!-- HTMX carga los formularios aquí -->
+    </div>
+  </div>
+
+  <!-- Click fuera cierra -->
+  <div class="absolute inset-0 -z-10" @click="show = false"></div>
 </div>
 {% endblock %}

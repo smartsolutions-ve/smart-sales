@@ -1,0 +1,56 @@
+<div class="p-1">
+  <h3 class="font-bold text-base mb-4">
+    <i class="fas fa-map-marker-alt mr-2 text-brand-blue"></i>
+    {% if zona %}Editar{% else %}Nueva{% endif %} Zona de Despacho
+  </h3>
+
+  {% if errores %}
+  <div class="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+    {% for e in errores %}
+    <p class="text-sm text-red-600 dark:text-red-400"><i class="fas fa-circle-exclamation mr-1.5"></i>{{ e }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if zona %}{% url 'configuracion:zonas_editar' zona.pk %}{% else %}{% url 'configuracion:zonas_crear' %}{% endif %}"
+        hx-target="#modal-body"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Nombre</label>
+      <input type="text" name="nombre"
+             value="{{ post.nombre|default:zona.nombre|default:'' }}"
+             placeholder="Ej: Zona Occidente" autofocus
+             class="input-base w-full">
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Días de entrega</label>
+        <input type="number" name="dias_entrega_estimados"
+               value="{{ post.dias_entrega_estimados|default:zona.dias_entrega_estimados|default:'1' }}"
+               min="1" max="30"
+               class="input-base w-full">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Costo flete base ($)</label>
+        <input type="number" name="costo_base_flete"
+               value="{{ post.costo_base_flete|default:zona.costo_base_flete|default:'0' }}"
+               step="0.01" min="0"
+               class="input-base w-full">
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button"
+              onclick="document.dispatchEvent(new CustomEvent('close-modal'))"
+              class="btn-secondary !py-2 !px-4 text-sm">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+        <i class="fas fa-save mr-1.5"></i>Guardar
+      </button>
+    </div>
+  </form>
+</div>

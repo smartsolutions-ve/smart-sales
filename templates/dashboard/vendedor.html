@@ -14,30 +14,35 @@
   </div>
 
   <!-- Meta del Mes -->
-  <div class="card-glass relative overflow-hidden">
-    <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-brand-blue/10 to-transparent"></div>
-    <div class="mb-4">
-      <h2 class="text-base font-bold flex items-center gap-2">
-        <i class="fas fa-bullseye text-brand-blue"></i> Mi Meta del Mes
-      </h2>
-      <p class="text-sm text-slate-500 mt-1">Progreso de cuota definida para el mes en curso.</p>
-    </div>
-    
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
-      <div>
-        <p class="text-3xl md:text-4xl font-black text-brand-blue">${{ real_total|floatformat:2|intcomma }}</p>
-        <p class="text-sm font-semibold text-slate-400 mt-1">Vendido de ${{ plan_total|floatformat:2|intcomma }}</p>
+  <div class="card-glass">
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+      <!-- Gráfico radial -->
+      <div class="flex-shrink-0 flex justify-center">
+        <div id="chartCuotaVendedor" class="w-48 h-48"></div>
       </div>
-      <div class="text-right">
-        <p class="text-3xl font-black {% if porcentaje >= 100 %}text-brand-green{% else %}text-slate-700 dark:text-slate-300{% endif %}">{{ porcentaje }}%</p>
-        <p class="text-xs uppercase tracking-wider font-bold text-slate-400">Cumplimiento</p>
+      <!-- Datos -->
+      <div class="flex-1">
+        <h2 class="text-base font-bold flex items-center gap-2 mb-3">
+          <i class="fas fa-bullseye text-brand-blue"></i> Mi Meta del Mes
+        </h2>
+        <div class="space-y-2">
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wide">Vendido</p>
+            <p class="text-2xl font-black text-brand-blue">${{ real_total|floatformat:2|intcomma }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wide">Meta</p>
+            <p class="text-base font-semibold text-slate-600 dark:text-slate-300">${{ plan_total|floatformat:2|intcomma }}</p>
+          </div>
+          {% if plan_total > 0 %}
+          <p class="text-[11px] {% if porcentaje >= 100 %}text-brand-green{% else %}text-slate-400{% endif %} font-medium">
+            {% if porcentaje >= 100 %}<i class="fas fa-check-circle mr-1"></i>Meta alcanzada{% else %}<i class="fas fa-clock mr-1"></i>Faltan ${{ plan_total|floatformat:0|intcomma }} - ${{ real_total|floatformat:0|intcomma }}{% endif %}
+          </p>
+          {% else %}
+          <p class="text-[11px] text-slate-400">Sin cuota asignada para este mes.</p>
+          {% endif %}
+        </div>
       </div>
-    </div>
-
-    <!-- Barra de progreso gruesa -->
-    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4 relative overflow-hidden">
-      <div class="h-full rounded-full transition-all duration-1000 ease-out {% if porcentaje >= 100 %}bg-brand-green{% else %}bg-brand-blue{% endif %}"
-           style="width: {% if porcentaje > 100 %}100{% else %}{{ porcentaje }}{% endif %}%;"></div>
     </div>
   </div>
 
@@ -107,4 +112,51 @@
   </div>
 
 </div>
+
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const porcentaje = Math.min({{ porcentaje }}, 100);
+  const color = porcentaje >= 100 ? '#2E9E65' : '#1E7FC8';
+  const el = document.getElementById('chartCuotaVendedor');
+  if (!el) return;
+
+  new ApexCharts(el, {
+    chart: {
+      type: 'radialBar',
+      height: 192,
+      fontFamily: 'Outfit, sans-serif',
+      background: 'transparent',
+      sparkline: { enabled: true },
+    },
+    theme: { mode: isDark ? 'dark' : 'light' },
+    series: [porcentaje],
+    labels: ['Cumplimiento'],
+    colors: [color],
+    plotOptions: {
+      radialBar: {
+        startAngle: -135,
+        endAngle: 135,
+        hollow: { size: '62%' },
+        track: {
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)',
+          strokeWidth: '97%',
+        },
+        dataLabels: {
+          name: { show: true, fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b', offsetY: 20 },
+          value: {
+            show: true,
+            fontSize: '28px',
+            fontWeight: 800,
+            color: color,
+            offsetY: -10,
+            formatter: v => v + '%',
+          },
+        },
+      },
+    },
+    stroke: { lineCap: 'round' },
+  }).render();
+})();
+</script>
 {% endblock %}

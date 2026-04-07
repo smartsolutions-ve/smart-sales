@@ -1,0 +1,30 @@
+{% for u in unidades %}
+<div class="flex items-center justify-between px-5 py-2.5 group">
+  <div class="flex items-center gap-2">
+    <span class="text-sm font-medium">{{ u.nombre }}</span>
+    <span class="font-mono text-xs text-brand-blue bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded">{{ u.simbolo }}</span>
+    {% if u.es_base %}<span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">BASE</span>{% endif %}
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="text-xs text-slate-400">{{ u.get_tipo_display }}</span>
+    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <button hx-get="{% url 'configuracion:unidades_editar' u.pk %}"
+              hx-target="#modal-body"
+              hx-swap="innerHTML"
+              hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+              class="w-6 h-6 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 hover:bg-amber-500 hover:text-white flex items-center justify-center text-[11px] transition-all"
+              title="Editar">
+        <i class="fas fa-pen"></i>
+      </button>
+      <button hx-post="{% url 'configuracion:unidades_eliminar' u.pk %}"
+              hx-confirm="¿Desactivar la unidad '{{ u.nombre }}'?"
+              class="w-6 h-6 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-[11px] transition-all"
+              title="Eliminar">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+</div>
+{% empty %}
+<p class="px-5 py-4 text-sm text-slate-400">Sin unidades configuradas.</p>
+{% endfor %}

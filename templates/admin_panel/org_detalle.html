@@ -33,19 +33,27 @@
     </div>
   </div>
 
-  <!-- Info de la organización -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <!-- KPIs de la organización -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+    {% load humanize %}
     <div class="card-glass">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Plan</p>
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Plan</p>
       <p class="text-xl font-bold capitalize">{{ org.get_plan_display|default:org.plan }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">Desde {{ org.created_at|date:"d/m/Y" }}</p>
     </div>
     <div class="card-glass">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Usuarios activos</p>
-      <p class="text-xl font-bold">{{ usuarios.count }}</p>
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Usuarios activos</p>
+      <p class="text-xl font-bold text-brand-blue">{{ usuarios.count }}</p>
     </div>
     <div class="card-glass">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Creada</p>
-      <p class="text-xl font-bold">{{ org.created_at|date:"d/m/Y" }}</p>
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pedidos este mes</p>
+      <p class="text-xl font-bold {% if pedidos_mes > 0 %}text-brand-blue{% endif %}">{{ pedidos_mes }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">{{ total_pedidos }} total histórico</p>
+    </div>
+    <div class="card-glass">
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ventas del mes</p>
+      <p class="text-xl font-bold {% if ventas_mes > 0 %}text-brand-green{% endif %}">${{ ventas_mes|floatformat:0|intcomma }}</p>
+      <p class="text-[11px] text-slate-400 mt-1">Pedidos no cancelados</p>
     </div>
   </div>
 

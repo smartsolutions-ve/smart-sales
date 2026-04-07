@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.db.models import Count, Sum, Q
+from django.utils import timezone
 
 from apps.accounts.decorators import superadmin_required
 from .models import Organization, User
@@ -28,7 +29,18 @@ def index(request):
 
 @superadmin_required
 def org_lista(request):
-    orgs = Organization.objects.order_by('-created_at')
+    hoy = timezone.now()
+    orgs = Organization.objects.annotate(
+        users_count=Count('user', filter=Q(user__is_active=True), distinct=True),
+        pedidos_mes=Count(
+            'pedido',
+            filter=Q(
+                pedido__fecha_pedido__year=hoy.year,
+                pedido__fecha_pedido__month=hoy.month,
+            ),
+            distinct=True,
+        ),
+    ).order_by('-created_at')
     return render(request, 'admin_panel/org_lista.html', {'orgs': orgs})
 
 
@@ -42,9 +54,29 @@ def org_crear(request):
 
 @superadmin_required
 def org_detalle(request, pk):
+    from apps.pedidos.models import Pedido
     org = get_object_or_404(Organization, pk=pk)
     usuarios = org.user_set.filter(is_active=True).order_by('role', 'first_name')
-    context = {'org': org, 'usuarios': usuarios}
+    hoy = timezone.now()
+
+    pedidos_qs = Pedido.objects.filter(organization=org)
+    pedidos_mes = pedidos_qs.filter(
+        fecha_pedido__year=hoy.year,
+        fecha_pedido__month=hoy.month,
+    )
+    stats = pedidos_mes.aggregate(
+        total_pedidos=Count('id'),
+        total_ventas=Sum('total'),
+    )
+    total_pedidos_historico = pedidos_qs.count()
+
+    context = {
+        'org': org,
+        'usuarios': usuarios,
+        'pedidos_mes': stats['total_pedidos'] or 0,
+        'ventas_mes': stats['total_ventas'] or 0,
+        'total_pedidos': total_pedidos_historico,
+    }
     return render(request, 'admin_panel/org_detalle.html', context)
 
 

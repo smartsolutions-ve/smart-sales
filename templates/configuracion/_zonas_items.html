@@ -1,0 +1,26 @@
+{% for z in zonas %}
+<div class="flex items-center justify-between px-5 py-2.5 group">
+  <span class="text-sm font-medium">{{ z.nombre }}</span>
+  <div class="flex items-center gap-3">
+    <span class="text-xs text-slate-400">{{ z.dias_entrega_estimados }}d entrega · ${{ z.costo_base_flete }}</span>
+    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <button hx-get="{% url 'configuracion:zonas_editar' z.pk %}"
+              hx-target="#modal-body"
+              hx-swap="innerHTML"
+              hx-on:htmx:after-swap="document.dispatchEvent(new CustomEvent('open-modal'))"
+              class="w-6 h-6 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 hover:bg-amber-500 hover:text-white flex items-center justify-center text-[11px] transition-all"
+              title="Editar">
+        <i class="fas fa-pen"></i>
+      </button>
+      <button hx-post="{% url 'configuracion:zonas_eliminar' z.pk %}"
+              hx-confirm="¿Eliminar la zona '{{ z.nombre }}'?"
+              class="w-6 h-6 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 hover:bg-red-500 hover:text-white flex items-center justify-center text-[11px] transition-all"
+              title="Eliminar">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+</div>
+{% empty %}
+<p class="px-5 py-4 text-sm text-slate-400">Sin zonas configuradas.</p>
+{% endfor %}

@@ -1,0 +1,65 @@
+<div class="p-1">
+  <h3 class="font-bold text-base mb-4">
+    <i class="fas fa-tags mr-2 text-brand-blue"></i>
+    {% if lista %}Editar{% else %}Nueva{% endif %} Lista de Precios
+  </h3>
+
+  {% if errores %}
+  <div class="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+    {% for e in errores %}
+    <p class="text-sm text-red-600 dark:text-red-400"><i class="fas fa-circle-exclamation mr-1.5"></i>{{ e }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if lista %}{% url 'configuracion:listas_editar' lista.pk %}{% else %}{% url 'configuracion:listas_crear' %}{% endif %}"
+        hx-target="#modal-body"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-3 gap-3">
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-500 mb-1">Nombre</label>
+        <input type="text" name="nombre"
+               value="{{ post.nombre|default:lista.nombre|default:'' }}"
+               placeholder="Ej: Precio Mayorista" autofocus
+               class="input-base w-full">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Código</label>
+        <input type="text" name="codigo"
+               value="{{ post.codigo|default:lista.codigo|default:'' }}"
+               placeholder="Ej: B" maxlength="5"
+               class="input-base w-full font-mono text-center uppercase">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Descuento (%)</label>
+        <input type="number" name="descuento_porcentaje"
+               value="{{ post.descuento_porcentaje|default:lista.descuento_porcentaje|default:'0' }}"
+               step="0.01" min="0" max="100"
+               class="input-base w-full">
+        <p class="text-[10px] text-slate-400 mt-0.5">Sobre precio base del producto</p>
+      </div>
+      <div class="col-span-2 flex items-center gap-2 pt-4">
+        <input type="checkbox" name="es_default" id="es_default"
+               {% if post.es_default == 'on' or lista.es_default %}checked{% endif %}
+               class="w-4 h-4 rounded accent-brand-blue">
+        <label for="es_default" class="text-sm text-slate-700 dark:text-slate-300">
+          Lista por defecto para clientes nuevos
+        </label>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button"
+              onclick="document.dispatchEvent(new CustomEvent('close-modal'))"
+              class="btn-secondary !py-2 !px-4 text-sm">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+        <i class="fas fa-save mr-1.5"></i>Guardar
+      </button>
+    </div>
+  </form>
+</div>

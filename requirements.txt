@@ -28,6 +28,9 @@ openpyxl==3.1.5                 # Lectura de archivos Excel (.xlsx)
 google-generativeai==0.8.3      # Google Gemini Flash para chat IA
 openai==2.29.0                  # SDK compatible con OpenRouter / OpenAI
 
+# ── Imágenes (logos de empresa) ──────────────────────────────────
+Pillow==11.2.1                  # Requerido por ImageField (logos)
+
 # ── Formularios y validación ──────────────────────────────────────
 django-crispy-forms==2.3
 crispy-tailwind==1.0.3          # Template pack de Tailwind para crispy-forms

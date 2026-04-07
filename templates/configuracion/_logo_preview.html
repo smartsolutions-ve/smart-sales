@@ -1,0 +1,8 @@
+{% if config.logo %}
+<div class="flex items-center gap-3">
+  <img src="{{ config.logo.url }}" alt="Logo" class="h-12 w-auto rounded-lg border border-slate-200 dark:border-white/10 object-contain bg-white p-1">
+  <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium"><i class="fas fa-check-circle mr-1"></i>Logo guardado</span>
+</div>
+{% else %}
+<div class="text-xs text-slate-400"><i class="fas fa-image mr-1"></i>Sin logo configurado</div>
+{% endif %}

@@ -1,0 +1,59 @@
+<div class="p-1" x-data="{ tipo: '{{ post.tipo|default:metodo.tipo|default:'' }}' }">
+  <h3 class="font-bold text-base mb-4">
+    <i class="fas fa-credit-card mr-2 text-brand-blue"></i>
+    {% if metodo %}Editar{% else %}Nuevo{% endif %} Método de Pago
+  </h3>
+
+  {% if errores %}
+  <div class="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+    {% for e in errores %}
+    <p class="text-sm text-red-600 dark:text-red-400"><i class="fas fa-circle-exclamation mr-1.5"></i>{{ e }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if metodo %}{% url 'configuracion:metodos_editar' metodo.pk %}{% else %}{% url 'configuracion:metodos_crear' %}{% endif %}"
+        hx-target="#modal-body"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Nombre</label>
+      <input type="text" name="nombre"
+             value="{{ post.nombre|default:metodo.nombre|default:'' }}"
+             placeholder="Ej: Transferencia BBVA" autofocus
+             class="input-base w-full">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">Tipo</label>
+      <select name="tipo" x-model="tipo" class="input-base w-full">
+        <option value="">— seleccionar —</option>
+        {% for code, label in tipos %}
+        <option value="{{ code }}"
+          {% if post.tipo == code or metodo.tipo == code %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div x-show="tipo === 'CREDITO'">
+      <label class="block text-xs font-medium text-slate-500 mb-1">Días de crédito</label>
+      <input type="number" name="dias_credito"
+             value="{{ post.dias_credito|default:metodo.dias_credito|default:'30' }}"
+             min="1" max="365"
+             class="input-base w-full">
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button"
+              onclick="document.dispatchEvent(new CustomEvent('close-modal'))"
+              class="btn-secondary !py-2 !px-4 text-sm">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+        <i class="fas fa-save mr-1.5"></i>Guardar
+      </button>
+    </div>
+  </form>
+</div>

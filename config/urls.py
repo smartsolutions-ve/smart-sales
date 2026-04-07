@@ -33,6 +33,9 @@ urlpatterns = [
 
     # Panel superadmin de SmartSales
     path('admin-panel/', include('apps.accounts.urls_admin', namespace='admin_panel')),
+
+    # Configuración por empresa
+    path('configuracion/', include('apps.configuracion.urls', namespace='configuracion')),
 ]
 
 # Servir media en desarrollo

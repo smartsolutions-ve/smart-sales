@@ -461,6 +461,15 @@
         <i class="fas fa-robot w-5 text-center text-[15px] flex-shrink-0"></i>
         <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Chat IA</span>
       </a>
+
+      {% if user.role in 'gerente,superadmin' %}
+      <a href="{% url 'configuracion:index' %}"
+         class="sidebar-item {% if request.resolver_match.app_name == 'configuracion' %}active{% endif %}"
+         title="Configuración">
+        <i class="fas fa-sliders w-5 text-center text-[15px] flex-shrink-0"></i>
+        <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Configuración</span>
+      </a>
+      {% endif %}
       {% endif %}
 
     </nav>

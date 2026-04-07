@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Configuración — SmartSales{% endblock %}
+{% block breadcrumb %}Configuración{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-title">Configuración de la Empresa</h1>
+      <p class="text-subtitle mt-0.5">{{ config.organization.name }}</p>
+    </div>
+  </div>
+
+  <!-- Tabs Alpine.js -->
+  <div x-data="{ tab: 'general' }">
+
+    <!-- Nav de tabs -->
+    <div class="flex gap-1 bg-slate-100 dark:bg-white/[0.04] p-1 rounded-xl w-fit flex-wrap">
+      {% for t, label in tabs %}
+      <button @click="tab = '{{ t }}'"
+              :class="tab === '{{ t }}' ? 'bg-white dark:bg-white/[0.08] shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+        {{ label }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Tab: General -->
+    <div x-show="tab === 'general'" class="space-y-4 mt-4">
+      <div class="card-glass max-w-2xl">
+        <h2 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300">
+          <i class="fas fa-building mr-2 text-brand-blue"></i>Datos de la Empresa
+        </h2>
+        <form method="post" action="{% url 'configuracion:index' %}" class="space-y-4">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="general">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Nombre comercial</label>
+              <input type="text" name="nombre_comercial" value="{{ config.nombre_comercial }}"
+                     class="input-base w-full" placeholder="Distribuidora Ejemplo C.A.">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">RIF / NIT</label>
+              <input type="text" name="rif" value="{{ config.rif }}"
+                     class="input-base w-full" placeholder="J-12345678-9">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Moneda principal</label>
+              <select name="moneda_principal" class="input-base w-full">
+                {% for code, label in config.MONEDA_CHOICES %}
+                <option value="{{ code }}" {% if config.moneda_principal == code %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">IVA por defecto (%)</label>
+              <input type="number" name="iva_por_defecto" value="{{ config.iva_por_defecto }}"
+                     step="0.01" min="0" max="100" class="input-base w-full">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Dirección fiscal</label>
+            <textarea name="direccion_fiscal" rows="2"
+                      class="input-base w-full resize-none"
+                      placeholder="Av. Principal...">{{ config.direccion_fiscal }}</textarea>
+          </div>
+
+          <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+            <i class="fas fa-save mr-1.5"></i>Guardar cambios
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab: Numeración -->
+    <div x-show="tab === 'numeracion'" class="space-y-4 mt-4">
+      <div class="card-glass max-w-2xl">
+        <h2 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300">
+          <i class="fas fa-hashtag mr-2 text-brand-blue"></i>Numeración de Documentos
+        </h2>
+        <form method="post" action="{% url 'configuracion:index' %}" class="space-y-4">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="numeracion">
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Prefijo pedido</label>
+              <input type="text" name="prefijo_pedido" value="{{ config.prefijo_pedido }}"
+                     class="input-base w-full font-mono" maxlength="10">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Dígitos</label>
+              <input type="number" name="digitos_pedido" value="{{ config.digitos_pedido }}"
+                     min="3" max="10" class="input-base w-full">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Siguiente # pedido</label>
+              <input type="number" name="siguiente_numero_pedido" value="{{ config.siguiente_numero_pedido }}"
+                     min="1" class="input-base w-full font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Prefijo factura</label>
+              <input type="text" name="prefijo_factura" value="{{ config.prefijo_factura }}"
+                     class="input-base w-full font-mono" maxlength="10">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Siguiente # factura</label>
+              <input type="number" name="siguiente_numero_factura" value="{{ config.siguiente_numero_factura }}"
+                     min="1" class="input-base w-full font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Prefijo cotización</label>
+              <input type="text" name="prefijo_cotizacion" value="{{ config.prefijo_cotizacion }}"
+                     class="input-base w-full font-mono" maxlength="10">
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Ejemplo con los valores actuales:
+            <span class="font-mono font-bold text-brand-blue">
+              {{ config.prefijo_pedido }}-{{ config.siguiente_numero_pedido|stringformat:"06d" }}
+            </span>
+          </p>
+
+          <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+            <i class="fas fa-save mr-1.5"></i>Guardar cambios
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab: Inventario -->
+    <div x-show="tab === 'inventario'" class="space-y-4 mt-4">
+      <div class="card-glass max-w-2xl">
+        <h2 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300">
+          <i class="fas fa-boxes-stacked mr-2 text-brand-blue"></i>Políticas de Inventario
+        </h2>
+        <form method="post" action="{% url 'configuracion:index' %}" class="space-y-4">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="inventario">
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Método de valoración</label>
+            <select name="metodo_valoracion_inventario" class="input-base w-full">
+              {% for code, label in config.METODO_VALORACION_CHOICES %}
+              <option value="{{ code }}" {% if config.metodo_valoracion_inventario == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input type="checkbox" name="permitir_stock_negativo" id="stock_neg"
+                   {% if config.permitir_stock_negativo %}checked{% endif %}
+                   class="w-4 h-4 rounded accent-brand-blue">
+            <label for="stock_neg" class="text-sm text-slate-700 dark:text-slate-300">
+              Permitir ventas con stock negativo
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary !py-2 !px-4 text-sm">
+            <i class="fas fa-save mr-1.5"></i>Guardar cambios
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab: Catálogos -->
+    <div x-show="tab === 'catalogos'" class="space-y-4 mt-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Unidades de medida -->
+        <div class="card-glass !p-0 overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+            <h3 class="font-bold text-sm"><i class="fas fa-ruler mr-1.5 text-brand-blue"></i>Unidades de medida</h3>
+            <span class="text-xs text-slate-400">{{ unidades|length }}</span>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% for u in unidades %}
+            <div class="flex items-center justify-between px-5 py-2.5">
+              <div>
+                <span class="text-sm font-medium">{{ u.nombre }}</span>
+                <span class="ml-2 font-mono text-xs text-brand-blue bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded">{{ u.simbolo }}</span>
+              </div>
+              <span class="text-xs text-slate-400">{{ u.get_tipo_display }}</span>
+            </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">Sin unidades configuradas.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="card-glass !p-0 overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+            <h3 class="font-bold text-sm"><i class="fas fa-credit-card mr-1.5 text-brand-blue"></i>Métodos de pago</h3>
+            <span class="text-xs text-slate-400">{{ metodos|length }}</span>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% for m in metodos %}
+            <div class="flex items-center justify-between px-5 py-2.5">
+              <span class="text-sm font-medium">{{ m.nombre }}</span>
+              <span class="badge-neutral capitalize">{{ m.get_tipo_display }}</span>
+            </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">Sin métodos de pago.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Listas de precios -->
+        <div class="card-glass !p-0 overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+            <h3 class="font-bold text-sm"><i class="fas fa-tags mr-1.5 text-brand-blue"></i>Listas de precios</h3>
+            <span class="text-xs text-slate-400">{{ listas|length }}</span>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% for l in listas %}
+            <div class="flex items-center justify-between px-5 py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-brand-blue bg-blue-50 dark:bg-blue-500/10 w-7 h-7 rounded-lg flex items-center justify-center">{{ l.codigo }}</span>
+                <span class="text-sm font-medium">{{ l.nombre }}</span>
+                {% if l.es_default %}<span class="badge-success text-[10px]">Default</span>{% endif %}
+              </div>
+              <span class="text-sm text-slate-500">-{{ l.descuento_porcentaje }}%</span>
+            </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">Sin listas de precios.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Zonas de despacho -->
+        <div class="card-glass !p-0 overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between">
+            <h3 class="font-bold text-sm"><i class="fas fa-map-marker-alt mr-1.5 text-brand-blue"></i>Zonas de despacho</h3>
+            <span class="text-xs text-slate-400">{{ zonas|length }}</span>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% for z in zonas %}
+            <div class="flex items-center justify-between px-5 py-2.5">
+              <span class="text-sm font-medium">{{ z.nombre }}</span>
+              <span class="text-xs text-slate-400">{{ z.dias_entrega_estimados }}d — ${{ z.costo_base_flete }}</span>
+            </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">Sin zonas configuradas.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

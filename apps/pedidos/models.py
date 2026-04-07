@@ -193,7 +193,7 @@ class Pedido(TenantModel):
         return 0
 
 
-class PedidoItem(models.Model):
+class PedidoItem(TenantModel):
     """Ítem / línea de un pedido."""
     pedido   = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items')
     producto = models.CharField('producto', max_length=200)
@@ -202,6 +202,8 @@ class PedidoItem(models.Model):
     precio   = models.DecimalField('precio unitario', max_digits=12, decimal_places=2)
     exento_iva = models.BooleanField('exento de IVA', default=True)
     monto_iva = models.DecimalField('monto IVA', max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Ítem del pedido'
@@ -224,8 +226,13 @@ class PedidoItem(models.Model):
     def subtotal(self):
         return self.cantidad * self.precio
 
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.pedido_id:
+            self.organization = self.pedido.organization
+        super().save(*args, **kwargs)
 
-class Factura(models.Model):
+
+class Factura(TenantModel):
     """Factura externa asociada a un pedido."""
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='facturas')
     numero_factura = models.CharField('número de factura', max_length=50)
@@ -255,8 +262,13 @@ class Factura(models.Model):
             return self.monto * tasa
         return 0
 
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.pedido_id:
+            self.organization = self.pedido.organization
+        super().save(*args, **kwargs)
 
-class PedidoLog(models.Model):
+
+class PedidoLog(TenantModel):
     """Log de auditoría para cambios en pedidos."""
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='logs')
     usuario = models.ForeignKey(
@@ -274,8 +286,13 @@ class PedidoLog(models.Model):
     def __str__(self):
         return f'{self.pedido.numero} — {self.accion}'
 
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.pedido_id:
+            self.organization = self.pedido.organization
+        super().save(*args, **kwargs)
 
-class PedidoEstadoHistorial(models.Model):
+
+class PedidoEstadoHistorial(TenantModel):
     """Registro de tiempo exacto y usuario que cambia un estado del pedido."""
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='historial_estados')
     estado_anterior = models.CharField('estado anterior', max_length=30)
@@ -291,3 +308,8 @@ class PedidoEstadoHistorial(models.Model):
 
     def __str__(self):
         return f'{self.pedido.numero}: {self.estado_anterior} -> {self.estado_nuevo}'
+
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.pedido_id:
+            self.organization = self.pedido.organization
+        super().save(*args, **kwargs)

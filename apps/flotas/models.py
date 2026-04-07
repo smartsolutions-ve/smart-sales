@@ -93,12 +93,14 @@ class Viaje(TenantModel):
         return self.estado == 'Programado'
 
 
-class ViajeDetalle(models.Model):
+class ViajeDetalle(TenantModel):
     """Relación viaje-pedido con peso y orden de entrega."""
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='detalles')
     pedido = models.ForeignKey('pedidos.Pedido', on_delete=models.PROTECT, related_name='viaje_detalles')
     peso_estimado_kg = models.DecimalField('peso estimado (kg)', max_digits=10, decimal_places=2)
     orden_entrega = models.PositiveSmallIntegerField('orden de entrega', default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Detalle de viaje'
@@ -128,5 +130,7 @@ class ViajeDetalle(models.Model):
                 raise ValidationError(f'El vehículo {self.viaje.vehiculo.placa} excede su capacidad máxima de {capacidad_max}kg por {nuevo_peso_total - capacidad_max}kg.')
 
     def save(self, *args, **kwargs):
+        if not self.organization_id and self.viaje_id:
+            self.organization = self.viaje.organization
         self.clean()
         super().save(*args, **kwargs)

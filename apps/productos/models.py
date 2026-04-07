@@ -67,7 +67,7 @@ class Producto(TenantModel, SoftDeleteModel):
         return self.lotes.aggregate(total=Sum('cantidad_disponible'))['total'] or 0
 
 
-class Lote(models.Model):
+class Lote(TenantModel):
     """Lote de inventario para soportar metodología FEFO."""
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='lotes')
     codigo_lote = models.CharField('código de lote', max_length=50)
@@ -88,7 +88,13 @@ class Lote(models.Model):
     def __str__(self):
         return f'{self.producto.nombre} - Lote: {self.codigo_lote} (Exp: {self.fecha_caducidad})'
 
-class MovimientoInventario(models.Model):
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.producto_id:
+            self.organization = self.producto.organization
+        super().save(*args, **kwargs)
+
+
+class MovimientoInventario(TenantModel):
     """Registro de entradas y salidas de inventario por Lote."""
     TIPO_MOVIMIENTO = [
         ('ENTRADA', 'Entrada / Compra'),
@@ -110,3 +116,8 @@ class MovimientoInventario(models.Model):
 
     def __str__(self):
         return f'{self.tipo} - {self.lote} : {self.cantidad}'
+
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.lote_id:
+            self.organization = self.lote.producto.organization
+        super().save(*args, **kwargs)

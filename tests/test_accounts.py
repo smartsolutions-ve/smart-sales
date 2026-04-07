@@ -137,16 +137,15 @@ class TestMultiTenancyAislamiento:
 class TestPermisosRoles:
     """Tests de control de acceso por rol."""
 
-    def test_vendedor_no_accede_al_dashboard(self, client_vendedor):
-        """Un vendedor redirigido al campo si intenta acceder al dashboard."""
+    def test_vendedor_accede_al_dashboard(self, client_vendedor):
+        """Un vendedor puede acceder al dashboard (rol incluido en @role_required)."""
         resp = client_vendedor.get(reverse('dashboard:index'))
-        # Debe redirigir al campo
-        assert resp.status_code in (302, 403)
+        assert resp.status_code == 200
 
-    def test_vendedor_no_accede_a_pedidos(self, client_vendedor):
-        """Un vendedor no puede ver la lista de pedidos gerencial."""
+    def test_vendedor_accede_a_pedidos(self, client_vendedor):
+        """Un vendedor puede ver la lista de pedidos (rol incluido en @role_required)."""
         resp = client_vendedor.get(reverse('pedidos:lista'))
-        assert resp.status_code in (302, 403)
+        assert resp.status_code == 200
 
     def test_gerente_no_accede_al_panel_admin(self, client_gerente):
         """Un gerente no puede acceder al panel de superadmin."""

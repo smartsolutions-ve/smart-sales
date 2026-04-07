@@ -71,6 +71,7 @@ class PedidoService:
                     
                 items_a_crear.append(PedidoItem(
                     pedido=pedido,
+                    organization=pedido.organization,
                     exento_iva=exento,
                     monto_iva=monto_iva,
                     **item_data

@@ -32,11 +32,4 @@ openai==2.29.0                  # SDK compatible con OpenRouter / OpenAI
 django-crispy-forms==2.3
 crispy-tailwind==1.0.3          # Template pack de Tailwind para crispy-forms
 
-# ── Tests ────────────────────────────────────────────────────────
-pytest==8.3.4
-pytest-django==4.9.0
-factory-boy==3.3.1              # Factories para crear objetos de prueba
-faker==33.3.0                   # Datos falsos realistas
-
-# ── Desarrollo ───────────────────────────────────────────────────
-django-debug-toolbar==4.4.6     # Profiling queries en dev
+# ── Dev/Test → ver requirements-dev.txt ──────────────────────────

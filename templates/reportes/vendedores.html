@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}Reporte de Vendedores — SmartSales{% endblock %}
 {% block breadcrumb %}Reportes{% endblock %}
@@ -73,7 +74,7 @@
             <td class="td-base text-right tabular-nums">{{ v.cantidad_pedidos|default:0 }}</td>
             <td class="td-base text-right text-emerald-500 font-semibold tabular-nums">{{ v.pedidos_entregados|default:0 }}</td>
             <td class="td-base text-right font-bold tabular-nums">
-              ${{ v.total_vendido|default:0|intcomma }}
+              {% with total=v.total_vendido|default:0 %}{% monto_dual total %}{% endwith %}
             </td>
           </tr>
           {% endfor %}

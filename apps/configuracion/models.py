@@ -1,5 +1,7 @@
 import uuid
+from datetime import date
 from decimal import Decimal
+from django.conf import settings
 from django.db import models
 
 
@@ -342,3 +344,48 @@ class ZonaDespacho(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+class TasaCambio(models.Model):
+    """
+    Tasa de cambio manual USD→Bs configurada por el gerente.
+    Solo una activa por organización. Se conserva historial.
+    """
+
+    organization = models.ForeignKey(
+        'accounts.Organization',
+        on_delete=models.CASCADE,
+        related_name='tasas_cambio',
+    )
+    tasa = models.DecimalField(
+        'Tasa USD/Bs',
+        max_digits=12,
+        decimal_places=4,
+        help_text='1 USD = X Bs. Ej: 36.50',
+    )
+    fecha = models.DateField(
+        'Fecha de vigencia',
+        default=date.today,
+    )
+    activa = models.BooleanField(default=True)
+    creado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-created_at']
+        verbose_name = 'Tasa de cambio'
+        verbose_name_plural = 'Tasas de cambio'
+
+    def __str__(self):
+        return f'1 USD = {self.tasa} Bs ({self.fecha})'
+
+    @classmethod
+    def activa_para(cls, organization):
+        """Retorna la tasa vigente más reciente, o None."""
+        return cls.objects.filter(organization=organization, activa=True).first()

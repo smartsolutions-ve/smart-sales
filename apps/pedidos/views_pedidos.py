@@ -91,16 +91,21 @@ def lista(request):
 @role_required('gerente', 'superadmin', 'supervisor', 'vendedor', 'facturador')
 def exportar_csv(request):
     """Exportar pedidos filtrados a CSV."""
+    from decimal import Decimal
+    from apps.configuracion.models import TasaCambio
+
     pedidos, _ = _filtrar_pedidos(request)
+    tasa = TasaCambio.activa_para(request.org) if request.org else None
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="pedidos.csv"'
     response.write('\ufeff')  # BOM para Excel
 
     writer = csv.writer(response)
-    writer.writerow(['N° Pedido', 'Fecha', 'Cliente', 'Vendedor', 'Estado', 'Estado Despacho', 'Total', 'Observaciones'])
+    writer.writerow(['N° Pedido', 'Fecha', 'Cliente', 'Vendedor', 'Estado', 'Estado Despacho', 'Total USD', 'Total Bs', 'Observaciones'])
 
     for p in pedidos:
+        total_bs = (Decimal(str(p.total)) * tasa.tasa).quantize(Decimal('0.01')) if tasa else ''
         writer.writerow([
             p.numero,
             p.fecha_pedido,
@@ -109,6 +114,7 @@ def exportar_csv(request):
             p.estado,
             p.estado_despacho,
             p.total,
+            total_bs,
             p.observaciones,
         ])
 

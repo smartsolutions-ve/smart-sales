@@ -52,7 +52,7 @@
     </div>
     <div class="card-glass">
       <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ventas del mes</p>
-      <p class="text-xl font-bold {% if ventas_mes > 0 %}text-brand-green{% endif %}">${{ ventas_mes|floatformat:0|intcomma }}</p>
+      {% load bs_tags %}{% monto_dual ventas_mes clase="text-xl font-bold" bloque=True %}
       <p class="text-[11px] text-slate-400 mt-1">Pedidos no cancelados</p>
     </div>
   </div>

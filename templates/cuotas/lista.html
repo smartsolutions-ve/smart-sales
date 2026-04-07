@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}Cuotas y Ventas — SmartSales{% endblock %}
 {% block breadcrumb %}Cuotas{% endblock %}
@@ -83,8 +84,8 @@
           <td class="td-base text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ v.zona_nombre|default:"—" }}</td>
           <td class="td-base text-right tabular-nums">{{ v.plan_cantidad|intcomma }}</td>
           <td class="td-base text-right tabular-nums font-medium">{{ v.real_cantidad|intcomma }}</td>
-          <td class="td-base text-right tabular-nums">${{ v.plan_venta_usd|intcomma }}</td>
-          <td class="td-base text-right tabular-nums font-semibold">${{ v.real_venta_usd|intcomma }}</td>
+          <td class="td-base text-right tabular-nums">{% monto_dual v.plan_venta_usd %}</td>
+          <td class="td-base text-right tabular-nums font-semibold">{% monto_dual v.real_venta_usd %}</td>
           <td class="td-base text-center">
             {% if v.cumplimiento_venta >= 100 %}
               <span class="badge-success">{{ v.cumplimiento_venta }}%</span>

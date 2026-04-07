@@ -3,10 +3,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import IntegrityError
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import View
 
-from .models import ConfiguracionEmpresa, ListaPrecio, MetodoPago, UnidadMedida, ZonaDespacho
+from .models import ConfiguracionEmpresa, ListaPrecio, MetodoPago, TasaCambio, UnidadMedida, ZonaDespacho
 
 TABS = [
     ('general',    'General'),
@@ -535,3 +535,45 @@ def zonas_eliminar(request, pk):
     response['HX-Retarget'] = '#zonas-lista'
     response['HX-Reswap'] = 'innerHTML'
     return response
+
+
+# ── Tasa de cambio USD/Bs ─────────────────────────────────────────────────────
+
+@require_http_methods(['GET', 'POST'])
+def tasa_cambio_actualizar(request):
+    """
+    Vista para consultar y actualizar la tasa de cambio USD→Bs.
+    Acceso solo para gerente y superadmin.
+    """
+    if not _puede_configurar(request.user):
+        return HttpResponseForbidden()
+
+    from decimal import Decimal as D
+    from datetime import date as date_type
+
+    tasa_actual = TasaCambio.activa_para(request.org)
+
+    if request.method == 'POST':
+        tasa_val = request.POST.get('tasa', '').strip().replace(',', '.')
+        try:
+            tasa_decimal = D(tasa_val)
+            if tasa_decimal <= 0:
+                raise ValueError
+        except Exception:
+            messages.error(request, 'Ingresa una tasa válida mayor a cero.')
+            return render(request, 'configuracion/_tasa_form.html', {'tasa_actual': tasa_actual})
+
+        TasaCambio.objects.filter(organization=request.org, activa=True).update(activa=False)
+        tasa_actual = TasaCambio.objects.create(
+            organization=request.org,
+            tasa=tasa_decimal,
+            fecha=date_type.today(),
+            activa=True,
+            creado_por=request.user,
+        )
+        messages.success(request, f'Tasa actualizada: 1 USD = Bs {tasa_decimal:,.4f}')
+        response = render(request, 'configuracion/_tasa_form.html', {'tasa_actual': tasa_actual})
+        response['HX-Trigger'] = 'tasaActualizada'
+        return response
+
+    return render(request, 'configuracion/_tasa_form.html', {'tasa_actual': tasa_actual})

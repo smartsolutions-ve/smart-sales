@@ -1,0 +1,38 @@
+{% load humanize %}
+<div class="space-y-4">
+  {% if tasa_actual %}
+  <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 flex items-center gap-3">
+    <i class="fas fa-check-circle text-emerald-500"></i>
+    <div>
+      <p class="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+        1 USD = Bs {{ tasa_actual.tasa|floatformat:4 }}
+      </p>
+      <p class="text-[11px] text-emerald-600 dark:text-emerald-500">
+        Vigente desde {{ tasa_actual.fecha }}
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 flex items-center gap-3">
+    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+    <p class="text-sm text-amber-700 dark:text-amber-400">Sin tasa configurada. Los montos solo se mostrarán en USD.</p>
+  </div>
+  {% endif %}
+
+  <form hx-post="{% url 'configuracion:tasa_cambio' %}"
+        hx-target="#tasa-container"
+        hx-swap="innerHTML"
+        class="flex gap-2 items-end">
+    {% csrf_token %}
+    <div class="flex-1">
+      <label class="block text-xs font-medium text-slate-500 mb-1">Nueva tasa (Bs por 1 USD)</label>
+      <input type="number" name="tasa" step="0.0001" min="0.0001"
+             placeholder="Ej: 36.5000"
+             value="{% if tasa_actual %}{{ tasa_actual.tasa }}{% endif %}"
+             class="input-base w-full" required>
+    </div>
+    <button type="submit" class="btn-primary !py-2.5">
+      <i class="fas fa-sync-alt"></i> Actualizar
+    </button>
+  </form>
+</div>

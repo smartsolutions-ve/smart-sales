@@ -29,4 +29,7 @@ urlpatterns = [
     path('zonas/crear/', views.zonas_crear, name='zonas_crear'),
     path('zonas/<uuid:pk>/editar/', views.zonas_editar, name='zonas_editar'),
     path('zonas/<uuid:pk>/eliminar/', views.zonas_eliminar, name='zonas_eliminar'),
+
+    # Tasa de cambio
+    path('moneda/', views.tasa_cambio_actualizar, name='tasa_cambio'),
 ]

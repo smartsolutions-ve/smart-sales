@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}{{ cliente.nombre }} — SmartSales{% endblock %}
 {% block breadcrumb %}{{ cliente.nombre }}{% endblock %}
@@ -74,14 +75,14 @@
     {% if cliente.limite_credito %}
     <div class="card-glass">
       <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Límite de Crédito</p>
-      <p class="text-sm font-bold">${{ cliente.limite_credito|floatformat:2|intcomma }}</p>
+      {% monto_dual cliente.limite_credito clase="text-sm font-bold" bloque=True %}
       {% if cliente.dias_credito %}<p class="text-[11px] text-slate-400">{{ cliente.dias_credito }} días</p>{% endif %}
     </div>
     <div class="card-glass">
       <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Deuda Activa</p>
       {% with deuda=deuda_activa %}
       <p class="text-sm font-bold {% if deuda > cliente.limite_credito %}text-red-500{% else %}text-emerald-500{% endif %}">
-        ${{ deuda|floatformat:2|intcomma }}
+        {% monto_dual deuda bloque=True %}
       </p>
       <p class="text-[11px] text-slate-400">de ${{ cliente.limite_credito|floatformat:2|intcomma }}</p>
       {% endwith %}
@@ -130,7 +131,7 @@
                 {{ pedido.estado }}
               </span>
             </td>
-            <td class="td-base font-bold text-right">${{ pedido.total|intcomma }}</td>
+            <td class="td-base font-bold text-right">{% monto_dual pedido.total %}</td>
           </tr>
           {% endfor %}
         </tbody>

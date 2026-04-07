@@ -1,0 +1,4 @@
+{% load humanize %}
+<span class="{{ clase }}">
+  ${{ valor_usd|floatformat:2|intcomma }}{% if valor_bs %}{% if bloque %}<span class="block text-[11px] text-slate-400 font-normal leading-tight mt-0.5">Bs {{ valor_bs|floatformat:2|intcomma }}</span>{% else %} <span class="text-[10px] text-slate-400 font-normal">/ Bs {{ valor_bs|floatformat:0|intcomma }}</span>{% endif %}{% endif %}
+</span>

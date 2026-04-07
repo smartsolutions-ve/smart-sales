@@ -86,6 +86,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.accounts.context_processors.app_settings',
+                'apps.configuracion.context_processors.tasa_cambio',
             ],
         },
     },

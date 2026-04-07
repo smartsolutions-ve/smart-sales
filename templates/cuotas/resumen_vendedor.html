@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}Cuotas por Vendedor — SmartSales{% endblock %}
 {% block breadcrumb %}
@@ -44,8 +45,8 @@
         <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
           <td class="td-base text-slate-400 font-mono">{{ forloop.counter }}</td>
           <td class="td-base font-semibold">{{ d.vendedor_nombre }}</td>
-          <td class="td-base text-right tabular-nums">${{ d.plan_total|intcomma }}</td>
-          <td class="td-base text-right font-bold tabular-nums">${{ d.real_total|intcomma }}</td>
+          <td class="td-base text-right tabular-nums">{% monto_dual d.plan_total %}</td>
+          <td class="td-base text-right font-bold tabular-nums">{% monto_dual d.real_total %}</td>
           <td class="td-base text-center">
             {% if d.cumplimiento >= 100 %}<span class="badge-success">{{ d.cumplimiento }}%</span>
             {% elif d.cumplimiento >= 70 %}<span class="badge-warning">{{ d.cumplimiento }}%</span>

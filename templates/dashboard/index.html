@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}Dashboard — SmartSales{% endblock %}
 {% block breadcrumb %}Dashboard{% endblock %}
@@ -46,7 +47,7 @@
         </div>
         <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Ventas<br>Totales</p>
       </div>
-      <p class="text-2xl md:text-3xl font-bold">${{ ventas_totales|floatformat:2|intcomma }}</p>
+      {% monto_dual ventas_totales clase="text-2xl md:text-3xl font-bold" bloque=True %}
       <p class="text-[11px] text-slate-400 mt-1">Pedidos no cancelados</p>
     </div>
 
@@ -172,7 +173,7 @@
             </td>
             <td class="td-base font-semibold text-red-500">{{ pedido.fecha_entrega }}</td>
             <td class="td-base"><span class="badge-warning">{{ pedido.estado }}</span></td>
-            <td class="td-base font-bold text-right">${{ pedido.total|intcomma }}</td>
+            <td class="td-base font-bold text-right">{% monto_dual pedido.total %}</td>
           </tr>
           {% endfor %}
         </tbody>

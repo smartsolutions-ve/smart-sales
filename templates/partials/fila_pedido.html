@@ -32,7 +32,8 @@
       <span class="badge-neutral text-[10px]">Sin fact.</span>
     {% endif %}
   </td>
-  <td class="td-base font-bold text-right">${{ pedido.total }}</td>
+  {% load bs_tags %}
+  <td class="td-base font-bold text-right">{% monto_dual pedido.total %}</td>
   <td class="td-base text-right">
     <a href="{% url 'pedidos:detalle' pedido.pk %}"
        class="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-blue hover:underline font-medium">

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load bs_tags %}
 
 {% block title %}Mi Dashboard — SmartSales{% endblock %}
 {% block breadcrumb %}Mi Dashboard{% endblock %}
@@ -28,15 +29,15 @@
         <div class="space-y-2">
           <div>
             <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wide">Vendido</p>
-            <p class="text-2xl font-black text-brand-blue">${{ real_total|floatformat:2|intcomma }}</p>
+            {% monto_dual real_total clase="text-2xl font-black text-brand-blue" bloque=True %}
           </div>
           <div>
             <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wide">Meta</p>
-            <p class="text-base font-semibold text-slate-600 dark:text-slate-300">${{ plan_total|floatformat:2|intcomma }}</p>
+            {% monto_dual plan_total clase="text-base font-semibold text-slate-600 dark:text-slate-300" bloque=True %}
           </div>
           {% if plan_total > 0 %}
           <p class="text-[11px] {% if porcentaje >= 100 %}text-brand-green{% else %}text-slate-400{% endif %} font-medium">
-            {% if porcentaje >= 100 %}<i class="fas fa-check-circle mr-1"></i>Meta alcanzada{% else %}<i class="fas fa-clock mr-1"></i>Faltan ${{ plan_total|floatformat:0|intcomma }} - ${{ real_total|floatformat:0|intcomma }}{% endif %}
+            {% if porcentaje >= 100 %}<i class="fas fa-check-circle mr-1"></i>Meta alcanzada{% else %}{% en_bs plan_total as plan_bs %}{% en_bs real_total as real_bs %}<i class="fas fa-clock mr-1"></i>Faltan ${{ plan_total|floatformat:0|intcomma }} - ${{ real_total|floatformat:0|intcomma }}{% if plan_bs %} (Bs {{ plan_bs|floatformat:0|intcomma }} - Bs {{ real_bs|floatformat:0|intcomma }}){% endif %}{% endif %}
           </p>
           {% else %}
           <p class="text-[11px] text-slate-400">Sin cuota asignada para este mes.</p>
@@ -50,7 +51,7 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
     <div class="card-glass hover:shadow-md transition-shadow">
       <p class="text-xs uppercase tracking-wide font-bold text-slate-400 mb-2">Ventas del Mes</p>
-      <p class="text-2xl font-bold">${{ ventas_mes|floatformat:2|intcomma }}</p>
+      {% monto_dual ventas_mes clase="text-2xl font-bold" bloque=True %}
       <p class="text-[11px] text-brand-blue mt-1 font-medium"><i class="fas fa-calendar-check"></i> Este mes</p>
     </div>
 
@@ -97,7 +98,7 @@
             <td class="td-base font-mono"><a href="{% url 'pedidos:detalle' p.pk %}" class="text-brand-blue font-bold hover:underline">{{ p.numero }}</a></td>
             <td class="td-base">{{ p.cliente.nombre }}</td>
             <td class="td-base font-semibold {% if p.fecha_entrega <= hoy %}text-red-500{% endif %}">{{ p.fecha_entrega }}</td>
-            <td class="td-base font-bold">${{ p.total|intcomma }}</td>
+            <td class="td-base font-bold">{% monto_dual p.total %}</td>
           </tr>
           {% endfor %}
         </tbody>

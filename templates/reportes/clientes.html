@@ -49,17 +49,17 @@
       <table data-datatable class="w-full text-left min-w-[450px]">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Cliente</th>
-            <th>Pedidos</th>
-            <th>Total Acumulado</th>
-            <th data-sortable="false"></th>
+            <th class="th-base w-10">#</th>
+            <th class="th-base">Cliente</th>
+            <th class="th-base text-right">Pedidos</th>
+            <th class="th-base text-right">Total Acumulado</th>
+            <th class="th-base" data-sortable="false"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for cliente in clientes %}
           <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
-            <td class="td-base text-slate-400 dark:text-slate-500">{{ forloop.counter }}</td>
+            <td class="td-base text-slate-400 dark:text-slate-500 font-mono">{{ forloop.counter }}</td>
             <td class="td-base">
               <a href="{% url 'clientes:detalle' cliente.pk %}"
                  class="font-semibold text-brand-blue hover:underline">{{ cliente.nombre }}</a>
@@ -84,29 +84,16 @@
     </div>
   </div>
 
-  <!-- Distribucion visual -->
-  {% with max_total=clientes.0.total_compras %}
-  {% if max_total %}
+  <!-- Gráfico ApexCharts -->
+  {% if clientes %}
   <div class="card-glass">
-    <h2 class="font-bold text-sm mb-5">Distribucion de compras</h2>
-    <div class="space-y-3">
-      {% for cliente in clientes %}
-      {% if cliente.total_compras %}
-      <div class="flex items-center gap-3 md:gap-4">
-        <a href="{% url 'clientes:detalle' cliente.pk %}"
-           class="text-sm w-28 md:w-36 truncate text-slate-600 dark:text-slate-300 hover:text-brand-blue flex-shrink-0">{{ cliente.nombre }}</a>
-        <div class="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-full h-2.5">
-          <div class="bg-gradient-to-r from-brand-blue to-brand-green h-2.5 rounded-full transition-all duration-500"
-               style="width: {% widthratio cliente.total_compras max_total 100 %}%"></div>
-        </div>
-        <span class="text-sm font-bold w-24 text-right tabular-nums flex-shrink-0">${{ cliente.total_compras|intcomma }}</span>
-      </div>
-      {% endif %}
-      {% endfor %}
-    </div>
+    <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-1">
+      <i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Distribución de compras por cliente
+    </h2>
+    <p class="text-xs text-slate-400 mb-3">Monto acumulado — pedidos no cancelados</p>
+    <div id="chartClientesReporte"></div>
   </div>
   {% endif %}
-  {% endwith %}
 
   {% else %}
   <div class="card-glass text-center py-12">
@@ -116,4 +103,33 @@
   {% endif %}
 
 </div>
+
+{% if clientes %}
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const UKARO_COLORS = ['#1E7FC8','#0B3D91','#5BB8E8','#2E9E65','#1A5C3A','#F59E0B','#EF4444'];
+
+  const labels = [{% for c in clientes %}{% if c.total_compras %}"{{ c.nombre|truncatechars:25 }}",{% endif %}{% endfor %}];
+  const values = [{% for c in clientes %}{% if c.total_compras %}{{ c.total_compras }},{% endif %}{% endfor %}];
+
+  if (labels.length && document.getElementById('chartClientesReporte')) {
+    new ApexCharts(document.getElementById('chartClientesReporte'), {
+      chart: { type: 'bar', height: Math.max(200, labels.length * 44), fontFamily: 'Outfit, sans-serif', background: 'transparent', toolbar: { show: false } },
+      theme: { mode: isDark ? 'dark' : 'light' },
+      series: [{ name: 'Total compras', data: values }],
+      xaxis: { categories: labels, labels: { style: { colors: textColor, fontSize: '11px' } } },
+      yaxis: { labels: { formatter: v => v >= 1000000 ? '$' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v, style: { colors: textColor } } },
+      colors: UKARO_COLORS,
+      plotOptions: { bar: { horizontal: true, borderRadius: 6, distributed: true, barHeight: '60%' } },
+      dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString('es-CL'), style: { fontSize: '11px' } },
+      legend: { show: false },
+      grid: { borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)', strokeDashArray: 4 },
+      tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+    }).render();
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}

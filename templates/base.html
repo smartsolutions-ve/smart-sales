@@ -329,6 +329,9 @@
     });
   </script>
 
+  <!-- ApexCharts — debe cargarse en <head> antes de cualquier script que lo use -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@4"></script>
+
   {% block extra_head %}{% endblock %}
 </head>
 
@@ -697,9 +700,6 @@
 {% if user.is_authenticated and user.can_access_dashboard %}
   {% include 'partials/chat_flotante.html' %}
 {% endif %}
-
-<!-- ApexCharts — gráficos profesionales -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@4"></script>
 
 <!-- Simple-DataTables: inicializacion global -->
 <script>

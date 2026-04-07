@@ -36,6 +36,9 @@ urlpatterns = [
 
     # Configuración por empresa
     path('configuracion/', include('apps.configuracion.urls', namespace='configuracion')),
+
+    # Cotizaciones
+    path('cotizaciones/', include('apps.cotizaciones.urls', namespace='cotizaciones')),
 ]
 
 # Servir media en desarrollo

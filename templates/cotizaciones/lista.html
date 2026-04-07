@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cotizaciones — SmartSales{% endblock %}
+{% block breadcrumb %}Cotizaciones{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-4">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <h1 class="text-title">Cotizaciones</h1>
+    <a href="{% url 'cotizaciones:crear' %}" class="btn-primary !py-2 !px-4">
+      <i class="fas fa-plus"></i> <span class="hidden sm:inline">Nueva Cotización</span>
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get"
+        hx-get="{% url 'cotizaciones:lista' %}"
+        hx-target="#tabla-cotizaciones"
+        hx-trigger="input delay:350ms from:[name='q'], change from:select, change from:[type='date']"
+        hx-indicator="#htmx-spinner-cot"
+        class="flex gap-2 md:gap-3 flex-wrap items-end">
+    <div class="relative flex-1 min-w-[180px]">
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="Buscar por N°, cliente, vendedor..."
+             aria-label="Buscar"
+             autocomplete="off"
+             class="input-base pr-9 !py-2">
+      <span id="htmx-spinner-cot" class="htmx-indicator absolute right-3 top-1/2 -translate-y-1/2">
+        <svg class="animate-spin h-4 w-4 text-brand-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+      </span>
+      <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none htmx-indicator-hide"></i>
+    </div>
+    <select name="estado" class="input-base !w-auto !py-2">
+      <option value="">Todos los estados</option>
+      {% for valor, label in estados %}
+      <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Desde</label>
+      <input type="date" name="desde" value="{{ desde }}" class="input-base !py-2">
+    </div>
+    <div class="hidden md:block">
+      <label class="text-[11px] text-slate-500 font-medium">Hasta</label>
+      <input type="date" name="hasta" value="{{ hasta }}" class="input-base !py-2">
+    </div>
+    <button type="submit" class="btn-secondary !py-2 !px-3">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
+    {% if q or estado_filtro or desde or hasta %}
+    <a href="{% url 'cotizaciones:lista' %}" class="text-xs text-slate-400 hover:text-red-500 self-center">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Tabla -->
+  <div id="tabla-cotizaciones" class="card-glass !p-0 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px]">
+        <thead class="bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-100 dark:border-white/[0.06]">
+          <tr>
+            <th class="th-base text-left">N° Cotización</th>
+            <th class="th-base text-left">Cliente</th>
+            <th class="th-base text-left hidden sm:table-cell">Fecha</th>
+            <th class="th-base text-left hidden md:table-cell">Válida hasta</th>
+            <th class="th-base text-center">Estado</th>
+            <th class="th-base text-right">Total</th>
+            <th class="th-base text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+          {% for cot in cotizaciones %}
+          <tr class="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="td-base">
+              <a href="{% url 'cotizaciones:detalle' cot.pk %}"
+                 class="font-mono font-semibold text-brand-blue hover:underline text-sm">
+                {{ cot.numero }}
+              </a>
+            </td>
+            <td class="td-base text-slate-800 dark:text-slate-200 text-sm">{{ cot.cliente }}</td>
+            <td class="td-base text-slate-500 text-sm hidden sm:table-cell">{{ cot.fecha }}</td>
+            <td class="td-base hidden md:table-cell">
+              {% if cot.fecha_vencimiento %}
+              <span class="text-sm text-slate-500">{{ cot.fecha_vencimiento }}</span>
+              {% else %}
+              <span class="text-slate-400 text-xs">—</span>
+              {% endif %}
+            </td>
+            <td class="td-base text-center">
+              {% if cot.estado == 'Aceptada' %}
+              <span class="badge-success">{{ cot.estado }}</span>
+              {% elif cot.estado == 'Enviada' %}
+              <span class="badge-info">{{ cot.estado }}</span>
+              {% elif cot.estado == 'Rechazada' %}
+              <span class="badge-danger">{{ cot.estado }}</span>
+              {% elif cot.estado == 'Vencida' %}
+              <span class="badge-danger opacity-60">{{ cot.estado }}</span>
+              {% elif cot.estado == 'Convertida' %}
+              <span class="badge-success"><i class="fas fa-check-double mr-1"></i>{{ cot.estado }}</span>
+              {% else %}
+              <span class="badge-neutral">{{ cot.estado }}</span>
+              {% endif %}
+            </td>
+            <td class="td-base text-right font-semibold text-slate-900 dark:text-white text-sm">
+              ${{ cot.total|floatformat:2|intcomma }}
+            </td>
+            <td class="td-base text-center">
+              <div class="flex items-center justify-center gap-1">
+                <a href="{% url 'cotizaciones:detalle' cot.pk %}"
+                   class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-brand-blue hover:bg-blue-50 dark:hover:bg-white/[0.06] transition-all text-xs"
+                   title="Ver detalle">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if cot.puede_editarse %}
+                <a href="{% url 'cotizaciones:editar' cot.pk %}"
+                   class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all text-xs"
+                   title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'cotizaciones:pdf' cot.pk %}" target="_blank"
+                   class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all text-xs"
+                   title="PDF">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="td-base text-center text-slate-400 py-12">
+              <i class="fas fa-file-invoice text-3xl mb-3 block opacity-40"></i>
+              No hay cotizaciones registradas.
+              <a href="{% url 'cotizaciones:crear' %}" class="text-brand-blue hover:underline ml-1 font-medium">Crear una</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if cotizaciones %}
+    <div class="px-5 py-3 border-t border-slate-100 dark:border-white/[0.06] text-xs text-slate-400">
+      {{ cotizaciones|length }} cotización{{ cotizaciones|length|pluralize:"es" }} encontrada{{ cotizaciones|length|pluralize:"s" }}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

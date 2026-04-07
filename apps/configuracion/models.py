@@ -160,6 +160,17 @@ class ConfiguracionEmpresa(models.Model):
         self.save(update_fields=['siguiente_numero_pedido'])
         return f'{self.prefijo_pedido}-{numero}'
 
+    def get_numero_cotizacion(self) -> str:
+        """
+        Genera el próximo número de cotización formateado y actualiza el contador.
+        Reutiliza digitos_pedido para consistencia de formato.
+        Llamar siempre dentro de una transacción atómica (select_for_update).
+        """
+        numero = str(self.siguiente_numero_cotizacion).zfill(self.digitos_pedido)
+        self.siguiente_numero_cotizacion += 1
+        self.save(update_fields=['siguiente_numero_cotizacion'])
+        return f'{self.prefijo_cotizacion}-{numero}'
+
 
 class UnidadMedida(models.Model):
     """

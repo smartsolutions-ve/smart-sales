@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}{% if cotizacion %}Editar {{ cotizacion.numero }}{% else %}Nueva Cotización{% endif %} — SmartSales{% endblock %}
+{% block breadcrumb %}{% if cotizacion %}Editar Cotización{% else %}Nueva Cotización{% endif %}{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 max-w-4xl">
+
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'cotizaciones:lista' %}"
+       class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all"
+       aria-label="Volver">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-title">
+      {% if cotizacion %}Editar {{ cotizacion.numero }}{% else %}Nueva Cotización{% endif %}
+    </h1>
+  </div>
+
+  <form method="post"
+        action="{% if cotizacion %}{% url 'cotizaciones:editar' cotizacion.pk %}{% else %}{% url 'cotizaciones:crear' %}{% endif %}"
+        x-data="pedidoForm({{ cotizacion.items.all|length|default:0 }})"
+        data-warn-unsaved>
+    {% csrf_token %}
+
+    <!-- Datos generales -->
+    <div class="card-glass space-y-4">
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Datos de la cotización</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <!-- Cliente -->
+        <div class="sm:col-span-2">
+          <label class="label-base">Cliente</label>
+          <select name="cliente_id" class="input-base"
+                  @change="onClienteChange($event.target.value)">
+            <option value="">-- Seleccionar cliente --</option>
+            {% for c in clientes %}
+            <option value="{{ c.pk }}" {% if cotizacion and cotizacion.cliente_id == c.pk %}selected{% endif %}>
+              {{ c.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+          <!-- Alerta crédito inline -->
+          <div x-show="alertaCredito" x-transition
+               class="mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1">
+            <i class="fas fa-exclamation-triangle mt-0.5 flex-shrink-0"></i>
+            <span x-text="alertaCredito"></span>
+          </div>
+        </div>
+
+        <!-- Vendedor -->
+        <div>
+          <label class="label-base">Vendedor</label>
+          <select name="vendedor_id" required class="input-base">
+            <option value="">-- Seleccionar --</option>
+            {% for v in vendedores %}
+            <option value="{{ v.pk }}" {% if cotizacion and cotizacion.vendedor_id == v.pk %}selected{% endif %}>
+              {{ v.get_full_name|default:v.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Fecha -->
+        <div>
+          <label class="label-base">Fecha</label>
+          <input type="date" name="fecha" required
+                 value="{{ cotizacion.fecha|default:'' }}"
+                 class="input-base">
+        </div>
+
+        <!-- Fecha de vencimiento -->
+        <div>
+          <label class="label-base">Válida hasta <span class="font-normal text-slate-400">(opcional)</span></label>
+          <input type="date" name="fecha_vencimiento"
+                 value="{{ cotizacion.fecha_vencimiento|default:'' }}"
+                 class="input-base">
+        </div>
+
+        <!-- Método de pago -->
+        {% if metodos_pago %}
+        <div>
+          <label class="label-base">Método de Pago</label>
+          <select name="metodo_pago_id" class="input-base">
+            <option value="">— Sin especificar —</option>
+            {% for mp in metodos_pago %}
+            <option value="{{ mp.pk }}" {% if cotizacion and cotizacion.metodo_pago_id == mp.pk %}selected{% endif %}>
+              {{ mp.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Zona de despacho -->
+        {% if zonas_despacho %}
+        <div>
+          <label class="label-base">Zona de Despacho</label>
+          <select name="zona_despacho_id" class="input-base">
+            <option value="">— Sin especificar —</option>
+            {% for zd in zonas_despacho %}
+            <option value="{{ zd.pk }}" {% if cotizacion and cotizacion.zona_despacho_id == zd.pk %}selected{% endif %}>
+              {{ zd.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Observaciones -->
+        <div class="sm:col-span-2">
+          <label class="label-base">Observaciones</label>
+          <textarea name="observaciones" rows="2"
+                    class="input-base">{{ cotizacion.observaciones|default:'' }}</textarea>
+        </div>
+
+        <!-- Términos y condiciones -->
+        <div class="sm:col-span-2">
+          <label class="label-base">
+            Términos y condiciones
+            <span class="font-normal text-slate-400">(si vacío, usa los de la empresa)</span>
+          </label>
+          <textarea name="condiciones" rows="3"
+                    class="input-base">{{ cotizacion.condiciones|default:'' }}</textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Items — reutiliza misma lógica Alpine que pedidos -->
+    <div class="card-glass mt-4 space-y-4">
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Items</h2>
+
+      <div class="space-y-3">
+        <template x-for="(item, index) in items" :key="index">
+          <div class="grid grid-cols-12 gap-2 items-end">
+            <div class="col-span-12 sm:col-span-5 relative">
+              <label class="text-[11px] text-slate-500 font-medium">Producto</label>
+              <input type="text" x-model="item.producto" :name="'items[][producto]'"
+                     @input.debounce.300ms="buscarProducto(index, $event.target.value)"
+                     @focus="buscarProducto(index, item.producto)"
+                     @keydown.escape="item._sugerencias = []"
+                     autocomplete="off"
+                     class="input-base !py-2"
+                     placeholder="Buscar producto...">
+              <!-- Dropdown sugerencias -->
+              <div x-show="item._sugerencias && item._sugerencias.length > 0"
+                   @click.outside="item._sugerencias = []"
+                   class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                <template x-for="(sug, si) in item._sugerencias" :key="si">
+                  <button type="button"
+                          @click="seleccionarProducto(index, sug)"
+                          class="w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.04] last:border-0 transition-colors">
+                    <span class="font-medium" x-text="sug.nombre"></span>
+                    <span class="text-xs text-slate-400 ml-1" x-show="sug.sku" x-text="'[' + sug.sku + ']'"></span>
+                    <span class="text-xs text-emerald-600 float-right" x-show="sug.precio_base" x-text="'$' + sug.precio_base"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <div class="col-span-4 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">SKU</label>
+              <input type="text" x-model="item.sku" :name="'items[][sku]'"
+                     class="input-base !py-2 bg-slate-50 dark:bg-slate-800/30"
+                     placeholder="Auto" readonly>
+            </div>
+            <div class="col-span-3 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">Cantidad</label>
+              <input type="number" x-model.number="item.cantidad" :name="'items[][cantidad]'"
+                     min="0.01" step="0.01"
+                     class="input-base !py-2">
+            </div>
+            <div class="col-span-4 sm:col-span-2">
+              <label class="text-[11px] text-slate-500 font-medium">Precio</label>
+              <input type="number" x-model.number="item.precio" :name="'items[][precio]'"
+                     min="0" step="0.01"
+                     class="input-base !py-2">
+            </div>
+            <div class="col-span-1 flex justify-center items-end pb-1">
+              <button @click="quitarItem(index)" x-show="items.length > 1"
+                      type="button"
+                      class="w-8 h-8 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all">
+                <i class="fas fa-times text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-3">
+        <button @click="agregarItem()" type="button"
+                class="text-sm text-brand-blue hover:text-blue-700 font-semibold transition-colors">
+          <i class="fas fa-plus mr-1"></i> Agregar item
+        </button>
+        <div class="text-right">
+          <span class="text-slate-500 text-sm">Total estimado:</span>
+          <span class="text-xl font-bold text-slate-900 dark:text-white ml-2"
+                x-text="'$' + total().toFixed(2)">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 mt-4">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-save"></i> Guardar Cotización
+      </button>
+      <a href="{% url 'cotizaciones:lista' %}" class="btn-secondary">
+        Cancelar
+      </a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+function pedidoForm(itemCount) {
+  const itemsIniciales = []
+  {% if cotizacion %}
+  {% for item in cotizacion.items.all %}
+  itemsIniciales.push({ producto: '{{ item.producto|escapejs }}', sku: '{{ item.sku|escapejs }}', cantidad: {{ item.cantidad }}, precio: {{ item.precio }}, _sugerencias: [] })
+  {% endfor %}
+  {% endif %}
+
+  return {
+    items: itemsIniciales.length > 0 ? itemsIniciales : [{ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] }],
+    listaPrecioId: '{{ cotizacion.lista_precio_id|default:"" }}',
+    alertaCredito: '',
+
+    async onClienteChange(clienteId) {
+      this.listaPrecioId = ''
+      this.alertaCredito = ''
+      if (!clienteId) return
+      try {
+        const resp = await fetch(`/clientes/${clienteId}/info-json/`)
+        const data = await resp.json()
+        this.listaPrecioId = data.lista_precio_id || ''
+        const limite = parseFloat(data.limite_credito) || 0
+        const deuda = parseFloat(data.deuda_actual) || 0
+        if (limite > 0) {
+          const totalActual = this.total()
+          if (deuda + totalActual > limite) {
+            this.alertaCredito = `Deuda actual $${deuda.toLocaleString('es-VE', {minimumFractionDigits:2})} + esta cotización $${totalActual.toLocaleString('es-VE', {minimumFractionDigits:2})} supera límite de $${limite.toLocaleString('es-VE', {minimumFractionDigits:2})}`
+          }
+        }
+      } catch(e) {}
+    },
+
+    agregarItem() {
+      this.items.push({ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] })
+    },
+
+    quitarItem(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1)
+      }
+    },
+
+    total() {
+      return this.items.reduce((sum, item) => {
+        return sum + (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio) || 0)
+      }, 0)
+    },
+
+    async buscarProducto(index, query) {
+      if (!query || query.length < 2) {
+        this.items[index]._sugerencias = []
+        return
+      }
+      try {
+        let url = `/productos/buscar/?q=${encodeURIComponent(query)}`
+        if (this.listaPrecioId) url += `&lista_precio_id=${encodeURIComponent(this.listaPrecioId)}`
+        const resp = await fetch(url)
+        const data = await resp.json()
+        this.items[index]._sugerencias = data.results || []
+      } catch (e) {
+        this.items[index]._sugerencias = []
+      }
+    },
+
+    seleccionarProducto(index, sug) {
+      this.items[index].producto = sug.nombre
+      this.items[index].sku = sug.sku || ''
+      if (sug.precio_base && !this.items[index].precio) {
+        this.items[index].precio = parseFloat(sug.precio_base)
+      }
+      this.items[index]._sugerencias = []
+    },
+  }
+}
+</script>
+{% endblock %}

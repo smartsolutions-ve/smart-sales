@@ -415,6 +415,12 @@
         <i class="fas fa-clipboard-list w-5 text-center text-[15px] flex-shrink-0"></i>
         <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Pedidos</span>
       </a>
+      <a href="{% url 'cotizaciones:lista' %}"
+         class="sidebar-item {% if request.resolver_match.app_name == 'cotizaciones' %}active{% endif %}"
+         title="Cotizaciones">
+        <i class="fas fa-file-invoice w-5 text-center text-[15px] flex-shrink-0"></i>
+        <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Cotizaciones</span>
+      </a>
       <a href="{% url 'clientes:lista' %}"
          class="sidebar-item {% if request.resolver_match.app_name == 'clientes' %}active{% endif %}"
          title="Clientes">

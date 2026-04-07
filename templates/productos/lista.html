@@ -79,7 +79,7 @@
               {{ producto.categoria.nombre|default:"—" }}
             </td>
             <td class="td-base text-slate-500 dark:text-slate-400 hidden lg:table-cell">
-              {{ producto.unidad|default:"—" }}
+              {{ producto.unidad_medida.simbolo|default:producto.unidad|default:"—" }}
             </td>
             <td class="td-base font-semibold text-right">
               {% if producto.precio_base %}

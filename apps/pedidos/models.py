@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -55,6 +57,21 @@ class Cliente(TenantModel, SoftDeleteModel):
     telefono  = models.CharField('teléfono', max_length=50, blank=True)
     email     = models.EmailField('email', blank=True)
     direccion = models.TextField('dirección', blank=True)
+    lista_precio = models.ForeignKey(
+        'configuracion.ListaPrecio',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='lista de precios',
+        related_name='clientes',
+    )
+    limite_credito = models.DecimalField(
+        'límite de crédito', max_digits=12, decimal_places=2, default=Decimal('0.00'),
+        help_text='0 = sin límite',
+    )
+    dias_credito = models.PositiveSmallIntegerField(
+        'días de crédito', default=0,
+        help_text='0 = pago contado',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,6 +129,27 @@ class Pedido(TenantModel):
     )
     ref_competencia = models.CharField('referencia competencia', max_length=500, blank=True)
     observaciones   = models.TextField('observaciones', blank=True)
+    metodo_pago     = models.ForeignKey(
+        'configuracion.MetodoPago',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='método de pago',
+        related_name='pedidos',
+    )
+    zona_despacho   = models.ForeignKey(
+        'configuracion.ZonaDespacho',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='zona de despacho',
+        related_name='pedidos',
+    )
+    lista_precio    = models.ForeignKey(
+        'configuracion.ListaPrecio',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='lista de precios aplicada',
+        related_name='pedidos',
+    )
     subtotal        = models.DecimalField('subtotal', max_digits=12, decimal_places=2, default=0)
     monto_iva       = models.DecimalField('monto IVA', max_digits=12, decimal_places=2, default=0)
     total           = models.DecimalField('total', max_digits=12, decimal_places=2, default=0)

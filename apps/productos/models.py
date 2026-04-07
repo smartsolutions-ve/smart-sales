@@ -35,8 +35,15 @@ class Producto(TenantModel, SoftDeleteModel):
         help_text='Precio sugerido de venta. Puede modificarse en cada pedido.',
     )
     unidad      = models.CharField(
-        'unidad de medida', max_length=30, blank=True,
-        help_text='Ej: unidad, kg, litro, caja',
+        'unidad de medida (texto)', max_length=30, blank=True,
+        help_text='Campo heredado. Usar unidad_medida (FK) cuando esté configurado.',
+    )
+    unidad_medida = models.ForeignKey(
+        'configuracion.UnidadMedida',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='unidad de medida',
+        related_name='productos',
     )
     peso_kg     = models.DecimalField(
         'peso por unidad (kg)', max_digits=8, decimal_places=3,

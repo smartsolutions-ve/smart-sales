@@ -37,8 +37,19 @@
 
         <div>
           <label class="label-base">Unidad de medida</label>
+          {% if unidades_medida %}
+          <select name="unidad_medida_id" class="input-base">
+            <option value="">— Sin asignar —</option>
+            {% for um in unidades_medida %}
+            <option value="{{ um.pk }}" {% if producto.unidad_medida_id == um.pk %}selected{% endif %}>
+              {{ um.nombre }} ({{ um.simbolo }})
+            </option>
+            {% endfor %}
+          </select>
+          {% else %}
           <input type="text" name="unidad" value="{{ producto.unidad|default:'' }}"
                  class="input-base" placeholder="Ej: unidad, kg, litro, caja">
+          {% endif %}
         </div>
 
         <div>

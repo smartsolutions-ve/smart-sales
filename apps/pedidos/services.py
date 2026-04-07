@@ -6,17 +6,19 @@ from .utils import generar_numero_pedido
 class PedidoService:
     @staticmethod
     def guardar_pedido(
-        organization, 
-        user, 
-        cliente, 
-        vendedor, 
-        fecha_pedido, 
-        items_data, 
-        fecha_entrega=None, 
-        estado='Pendiente', 
-        observaciones='', 
-        ref_competencia='', 
-        pedido_existente=None
+        organization,
+        user,
+        cliente,
+        vendedor,
+        fecha_pedido,
+        items_data,
+        fecha_entrega=None,
+        estado='Pendiente',
+        observaciones='',
+        ref_competencia='',
+        pedido_existente=None,
+        metodo_pago=None,
+        zona_despacho=None,
     ):
         """
         Crea o actualiza un pedido con sus items de forma atómica.
@@ -45,6 +47,8 @@ class PedidoService:
             pedido.estado = estado
             pedido.observaciones = observaciones
             pedido.ref_competencia = ref_competencia
+            pedido.metodo_pago = metodo_pago
+            pedido.zona_despacho = zona_despacho
             pedido.save()
 
             if not es_nuevo:

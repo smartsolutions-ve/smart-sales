@@ -18,6 +18,26 @@ def _get_pedido_or_404(pk, org):
     return get_object_or_404(Pedido, pk=pk, organization=org)
 
 
+def _pedido_form_ctx(request):
+    """Contexto base para el formulario de pedido."""
+    from apps.configuracion.models import MetodoPago, ZonaDespacho
+    if not request.org:
+        return {
+            'clientes': Cliente.objects.none(),
+            'vendedores': User.objects.none(),
+            'estados': Pedido.ESTADOS,
+            'metodos_pago': MetodoPago.objects.none(),
+            'zonas_despacho': ZonaDespacho.objects.none(),
+        }
+    return {
+        'clientes': Cliente.objects.filter(organization=request.org).order_by('nombre'),
+        'vendedores': request.org.user_set.filter(role__in=['gerente', 'vendedor'], is_active=True),
+        'estados': Pedido.ESTADOS,
+        'metodos_pago': MetodoPago.objects.filter(organization=request.org, activa=True).order_by('nombre'),
+        'zonas_despacho': ZonaDespacho.objects.filter(organization=request.org, activa=True).order_by('nombre'),
+    }
+
+
 def _filtrar_pedidos(request):
     """Aplica filtros comunes a la lista de pedidos y retorna queryset + contexto."""
     from django.db.models import Q as DQ
@@ -133,21 +153,7 @@ def exportar_json(request):
 def crear(request):
     if request.method == 'POST':
         return _guardar_pedido(request, pedido=None)
-
-    # request.org es None para superadmin (sin organización)
-    if not request.org:
-        clientes = Cliente.objects.none()
-        vendedores = User.objects.none()
-    else:
-        clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
-
-    context = {
-        'clientes': clientes,
-        'vendedores': vendedores,
-        'estados': Pedido.ESTADOS,
-    }
-    return render(request, 'pedidos/form.html', context)
+    return render(request, 'pedidos/form.html', _pedido_form_ctx(request))
 
 
 @login_required
@@ -195,20 +201,7 @@ def editar(request, pk):
     if request.method == 'POST':
         return _guardar_pedido(request, pedido=pedido)
 
-    if not request.org:
-        clientes = Cliente.objects.none()
-        vendedores = User.objects.none()
-    else:
-        clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-        vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
-
-    context = {
-        'pedido': pedido,
-        'clientes': clientes,
-        'vendedores': vendedores,
-        'estados': Pedido.ESTADOS,
-    }
-    return render(request, 'pedidos/form.html', context)
+    return render(request, 'pedidos/form.html', {**_pedido_form_ctx(request), 'pedido': pedido})
 
 
 @login_required
@@ -343,6 +336,8 @@ def _guardar_pedido(request, pedido):
     estado = data.get('estado', 'Pendiente')
     observaciones = data.get('observaciones', '')
     ref_competencia = data.get('ref_competencia', '')
+    metodo_pago_id = data.get('metodo_pago_id', '').strip()
+    zona_despacho_id = data.get('zona_despacho_id', '').strip()
 
     # Obtener o crear cliente
     cliente = None
@@ -404,20 +399,17 @@ def _guardar_pedido(request, pedido):
         errores.append('El pedido debe tener al menos un ítem.')
 
     if errores:
-        if not request.org:
-            clientes = Cliente.objects.none()
-            vendedores = User.objects.none()
-        else:
-            clientes = Cliente.objects.filter(organization=request.org).order_by('nombre')
-            vendedores = request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True)
         for e in errores:
             messages.error(request, e)
-        return render(request, 'pedidos/form.html', {
-            'pedido': pedido,
-            'clientes': clientes,
-            'vendedores': vendedores,
-            'estados': Pedido.ESTADOS,
-        })
+        return render(request, 'pedidos/form.html', {**_pedido_form_ctx(request), 'pedido': pedido})
+
+    from apps.configuracion.models import MetodoPago, ZonaDespacho
+    metodo_pago = None
+    zona_despacho = None
+    if metodo_pago_id and request.org:
+        metodo_pago = MetodoPago.objects.filter(pk=metodo_pago_id, organization=request.org).first()
+    if zona_despacho_id and request.org:
+        zona_despacho = ZonaDespacho.objects.filter(pk=zona_despacho_id, organization=request.org).first()
 
     from .services import PedidoService
     try:
@@ -432,16 +424,13 @@ def _guardar_pedido(request, pedido):
             estado=estado,
             observaciones=observaciones,
             ref_competencia=ref_competencia,
-            pedido_existente=pedido
+            pedido_existente=pedido,
+            metodo_pago=metodo_pago,
+            zona_despacho=zona_despacho,
         )
     except Exception as e:
         messages.error(request, str(e))
-        return render(request, 'pedidos/form.html', {
-            'pedido': pedido,
-            'clientes': Cliente.objects.filter(organization=request.org).order_by('nombre'),
-            'vendedores': request.org.user_set.filter(role__in=["gerente", "vendedor"], is_active=True),
-            'estados': Pedido.ESTADOS,
-        })
+        return render(request, 'pedidos/form.html', {**_pedido_form_ctx(request), 'pedido': pedido})
 
     messages.success(request, f'Pedido {pedido.numero} guardado correctamente.')
     return redirect('pedidos:detalle', pk=pedido.pk)

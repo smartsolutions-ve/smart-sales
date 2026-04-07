@@ -59,6 +59,36 @@
                   class="input-base"
                   placeholder="Direccion del cliente">{{ cliente.direccion|default:'' }}</textarea>
       </div>
+
+      {% if listas_precio %}
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-white/[0.04]">
+        <div>
+          <label class="label-base">Lista de Precios</label>
+          <select name="lista_precio_id" class="input-base">
+            <option value="">— Sin asignar —</option>
+            {% for lp in listas_precio %}
+            <option value="{{ lp.pk }}" {% if cliente.lista_precio_id == lp.pk %}selected{% endif %}>
+              {{ lp.nombre }} ({{ lp.codigo }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label-base">Límite de Crédito</label>
+          <input type="number" name="limite_credito" min="0" step="0.01"
+                 value="{{ cliente.limite_credito|default:'0' }}"
+                 class="input-base"
+                 placeholder="0 = sin límite">
+        </div>
+        <div>
+          <label class="label-base">Días de Crédito</label>
+          <input type="number" name="dias_credito" min="0"
+                 value="{{ cliente.dias_credito|default:'0' }}"
+                 class="input-base"
+                 placeholder="0 = contado">
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 mt-5">

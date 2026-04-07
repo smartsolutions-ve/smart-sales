@@ -61,31 +61,33 @@ class TestTotalPedido:
 class TestNumeracionPedidos:
     """Tests de la numeración correlativa PED-XXXX por organización."""
 
-    def test_primer_pedido_es_ped_0001(self, org):
+    def test_primer_pedido_es_ped_000001(self, org):
         numero = generar_numero_pedido(org)
-        assert numero == 'PED-0001'
+        assert numero == 'PED-000001'
 
-    def test_segundo_pedido_es_ped_0002(self, org):
-        PedidoFactory(organization=org, numero='PED-0001')
+    def test_segundo_pedido_es_ped_000002(self, org):
+        # Consumir el primer número via ConfiguracionEmpresa
+        generar_numero_pedido(org)
         numero = generar_numero_pedido(org)
-        assert numero == 'PED-0002'
+        assert numero == 'PED-000002'
 
     def test_numeracion_independiente_por_org(self, org):
         """Dos organizaciones distintas tienen numeración independiente."""
         otra_org = OrganizationFactory()
-        PedidoFactory(organization=otra_org, numero='PED-0001')
-        PedidoFactory(organization=otra_org, numero='PED-0002')
+        # Consumir algunos números en la otra org
+        generar_numero_pedido(otra_org)
+        generar_numero_pedido(otra_org)
 
         # La organización `org` empieza desde cero
         numero = generar_numero_pedido(org)
-        assert numero == 'PED-0001'
+        assert numero == 'PED-000001'
 
-    def test_formato_cuatro_digitos(self, org):
-        """El número siempre tiene 4 dígitos con ceros a la izquierda."""
-        for i in range(1, 10):
-            PedidoFactory(organization=org, numero=f'PED-{i:04d}')
+    def test_formato_seis_digitos(self, org):
+        """El número siempre tiene 6 dígitos con ceros a la izquierda (default ConfiguracionEmpresa)."""
+        for _ in range(9):
+            generar_numero_pedido(org)
         numero = generar_numero_pedido(org)
-        assert numero == 'PED-0010'
+        assert numero == 'PED-000010'
 
 
 @pytest.mark.django_db

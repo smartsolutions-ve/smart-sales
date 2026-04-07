@@ -368,9 +368,15 @@
 
     <!-- Logo -->
     <div class="h-16 flex items-center px-4 border-b border-slate-200/80 dark:border-white/[0.06] flex-shrink-0 gap-3">
+      {% if request.org and request.org.configuracion.logo %}
+      <img src="{{ request.org.configuracion.logo.url }}"
+           alt="{{ request.org.name }}"
+           class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-lg">
+      {% else %}
       <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-blue to-blue-600 flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-brand-blue/25 flex-shrink-0">
         {{ APP_INITIALS }}
       </div>
+      {% endif %}
       <div x-show="sidebarOpen" x-transition.opacity.duration.200ms class="min-w-0">
         <h1 class="font-bold text-[15px] leading-tight text-slate-900 dark:text-white">{{ APP_NAME }}</h1>
         {% if request.org %}

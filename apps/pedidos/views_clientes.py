@@ -36,7 +36,7 @@ def lista(request):
 def crear(request):
     if request.method == 'POST':
         return _guardar_cliente(request, cliente=None)
-    return render(request, 'clientes/form.html', {})
+    return render(request, 'clientes/form.html', _form_ctx(request))
 
 
 @login_required
@@ -54,7 +54,7 @@ def editar(request, pk):
     cliente = _get_cliente_or_404(pk, request.org)
     if request.method == 'POST':
         return _guardar_cliente(request, cliente=cliente)
-    return render(request, 'clientes/form.html', {'cliente': cliente})
+    return render(request, 'clientes/form.html', {**_form_ctx(request), 'cliente': cliente})
 
 
 @login_required
@@ -70,7 +70,17 @@ def eliminar(request, pk):
     return redirect('clientes:lista')
 
 
+def _form_ctx(request):
+    """Contexto base para formulario de cliente: listas de precio disponibles."""
+    from apps.configuracion.models import ListaPrecio
+    listas = ListaPrecio.objects.filter(organization=request.org, activa=True).order_by('codigo')
+    return {'listas_precio': listas}
+
+
 def _guardar_cliente(request, cliente):
+    from decimal import Decimal
+    from apps.configuracion.models import ListaPrecio
+
     data = request.POST
     nombre = data.get('nombre', '').strip()
     contacto = data.get('contacto', '').strip()
@@ -80,7 +90,7 @@ def _guardar_cliente(request, cliente):
 
     if not nombre:
         messages.error(request, 'El nombre del cliente es requerido.')
-        return render(request, 'clientes/form.html', {'cliente': cliente})
+        return render(request, 'clientes/form.html', {**_form_ctx(request), 'cliente': cliente})
 
     if cliente is None:
         cliente = Cliente(organization=request.org)
@@ -90,6 +100,27 @@ def _guardar_cliente(request, cliente):
     cliente.telefono = telefono
     cliente.email = email
     cliente.direccion = direccion
+
+    # Crédito y lista de precios (opcionales)
+    lista_precio_id = data.get('lista_precio_id', '').strip()
+    if lista_precio_id:
+        try:
+            cliente.lista_precio = ListaPrecio.objects.get(pk=lista_precio_id, organization=request.org)
+        except ListaPrecio.DoesNotExist:
+            cliente.lista_precio = None
+    else:
+        cliente.lista_precio = None
+
+    try:
+        cliente.limite_credito = Decimal(data.get('limite_credito', '0') or '0')
+    except Exception:
+        cliente.limite_credito = Decimal('0')
+
+    try:
+        cliente.dias_credito = int(data.get('dias_credito', '0') or '0')
+    except (ValueError, TypeError):
+        cliente.dias_credito = 0
+
     cliente.save()
 
     messages.success(request, f'Cliente "{cliente.nombre}" guardado.')

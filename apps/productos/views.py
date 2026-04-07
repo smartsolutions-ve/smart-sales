@@ -9,6 +9,14 @@ from apps.accounts.decorators import role_required
 from .models import Producto, CategoriaProducto
 
 
+def _producto_form_ctx(request):
+    from apps.configuracion.models import UnidadMedida
+    return {
+        'categorias': CategoriaProducto.objects.filter(organization=request.org),
+        'unidades_medida': UnidadMedida.objects.filter(organization=request.org, activa=True).order_by('tipo', 'nombre'),
+    }
+
+
 @login_required
 @role_required('gerente', 'superadmin')
 def lista(request):
@@ -50,8 +58,7 @@ def lista(request):
 def crear(request):
     if request.method == 'POST':
         return _guardar_producto(request, producto=None)
-    categorias = CategoriaProducto.objects.filter(organization=request.org)
-    return render(request, 'productos/form.html', {'categorias': categorias})
+    return render(request, 'productos/form.html', _producto_form_ctx(request))
 
 
 @login_required
@@ -61,8 +68,7 @@ def editar(request, pk):
     producto = get_object_or_404(Producto, pk=pk, organization=request.org)
     if request.method == 'POST':
         return _guardar_producto(request, producto=producto)
-    categorias = CategoriaProducto.objects.filter(organization=request.org)
-    return render(request, 'productos/form.html', {'producto': producto, 'categorias': categorias})
+    return render(request, 'productos/form.html', {**_producto_form_ctx(request), 'producto': producto})
 
 
 @login_required
@@ -114,14 +120,14 @@ def _guardar_producto(request, producto):
     precio_base = data.get('precio_base', '').strip() or None
     peso_kg = data.get('peso_kg', '').strip() or None
     unidad = data.get('unidad', '').strip()
+    unidad_medida_id = data.get('unidad_medida_id', '').strip() or None
     categoria_id = data.get('categoria_id', '').strip() or None
     is_active = data.get('is_active') == 'on'
     exento_iva = data.get('exento_iva') == 'on'
 
     if not nombre:
         messages.error(request, 'El nombre del producto es requerido.')
-        categorias = CategoriaProducto.objects.filter(organization=request.org)
-        return render(request, 'productos/form.html', {'producto': producto, 'categorias': categorias})
+        return render(request, 'productos/form.html', {**_producto_form_ctx(request), 'producto': producto})
 
     # Verificar SKU único (por org), ignorando el producto actual en edición
     if sku:
@@ -130,8 +136,7 @@ def _guardar_producto(request, producto):
             qs = qs.exclude(pk=producto.pk)
         if qs.exists():
             messages.error(request, f'Ya existe un producto con el SKU "{sku}".')
-            categorias = CategoriaProducto.objects.filter(organization=request.org)
-            return render(request, 'productos/form.html', {'producto': producto, 'categorias': categorias})
+            return render(request, 'productos/form.html', {**_producto_form_ctx(request), 'producto': producto})
 
     categoria = None
     if categoria_id:
@@ -146,6 +151,11 @@ def _guardar_producto(request, producto):
     producto.precio_base = precio_base
     producto.peso_kg = peso_kg
     producto.unidad = unidad
+    if unidad_medida_id:
+        from apps.configuracion.models import UnidadMedida
+        producto.unidad_medida = UnidadMedida.objects.filter(pk=unidad_medida_id, organization=request.org).first()
+    else:
+        producto.unidad_medida = None
     producto.categoria = categoria
     producto.is_active = is_active
     producto.exento_iva = exento_iva

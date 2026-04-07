@@ -86,6 +86,34 @@
           <textarea name="observaciones" rows="2"
                     class="input-base">{{ pedido.observaciones|default:'' }}</textarea>
         </div>
+
+        {% if metodos_pago %}
+        <div>
+          <label class="label-base">Método de Pago</label>
+          <select name="metodo_pago_id" class="input-base">
+            <option value="">— Sin especificar —</option>
+            {% for mp in metodos_pago %}
+            <option value="{{ mp.pk }}" {% if pedido.metodo_pago_id == mp.pk %}selected{% endif %}>
+              {{ mp.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        {% if zonas_despacho %}
+        <div>
+          <label class="label-base">Zona de Despacho</label>
+          <select name="zona_despacho_id" class="input-base">
+            <option value="">— Sin especificar —</option>
+            {% for zd in zonas_despacho %}
+            <option value="{{ zd.pk }}" {% if pedido.zona_despacho_id == zd.pk %}selected{% endif %}>
+              {{ zd.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
       </div>
     </div>
 

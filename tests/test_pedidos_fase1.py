@@ -49,7 +49,7 @@ class TestGuardarPedido:
         assert pedido.items.count() == 1
 
     def test_numeracion_independiente_por_org(self):
-        """Cada org comienza su numeración en PED-0001."""
+        """Cada org comienza su numeración en PED-000001 (formato ConfiguracionEmpresa)."""
         from apps.pedidos.services import PedidoService
         org1, org2 = OrganizationFactory(), OrganizationFactory()
         items = [{'producto': 'X', 'sku': '', 'cantidad': Decimal('1'), 'precio': Decimal('10')}]
@@ -65,8 +65,8 @@ class TestGuardarPedido:
             timezone.now().date(), items,
         )
 
-        assert ped1.numero == 'PED-0001'
-        assert ped2.numero == 'PED-0001'
+        assert ped1.numero == 'PED-000001'
+        assert ped2.numero == 'PED-000001'
 
     def test_rechaza_items_vacios(self):
         from apps.pedidos.services import PedidoService

@@ -8,7 +8,12 @@
 <div class="p-4 md:p-6 space-y-4">
 
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <h1 class="text-title">Clientes</h1>
+    <div>
+      <h1 class="text-title">Clientes</h1>
+      {% if clientes %}
+      <p class="text-subtitle mt-0.5">{{ clientes|length }} cliente{{ clientes|length|pluralize }} registrado{{ clientes|length|pluralize }}</p>
+      {% endif %}
+    </div>
     <a href="{% url 'clientes:crear' %}" class="btn-primary !py-2 !px-4 self-start sm:self-auto">
       <i class="fas fa-plus"></i> Nuevo Cliente
     </a>
@@ -20,28 +25,31 @@
       <table data-datatable class="w-full text-left min-w-[500px]">
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Contacto</th>
-            <th>Telefono</th>
-            <th>Email</th>
-            <th data-sortable="false"></th>
+            <th class="th-base">Nombre</th>
+            <th class="th-base hidden sm:table-cell">Contacto</th>
+            <th class="th-base hidden md:table-cell">Teléfono</th>
+            <th class="th-base hidden lg:table-cell">Email</th>
+            <th class="th-base" data-sortable="false"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
           {% for cliente in clientes %}
-          <tr>
-            <td>
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
+            <td class="td-base">
               <a href="{% url 'clientes:detalle' cliente.pk %}"
                  class="font-semibold text-brand-blue hover:underline">{{ cliente.nombre }}</a>
             </td>
-            <td class="text-slate-500 dark:text-slate-400">{{ cliente.contacto|default:"—" }}</td>
-            <td class="text-slate-500 dark:text-slate-400">{{ cliente.telefono|default:"—" }}</td>
-            <td class="text-slate-500 dark:text-slate-400">{{ cliente.email|default:"—" }}</td>
-            <td class="text-right">
-              <a href="{% url 'clientes:editar' cliente.pk %}"
-                 class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-brand-blue hover:text-white inline-flex items-center justify-center text-xs transition-all">
-                <i class="fas fa-edit"></i>
-              </a>
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden sm:table-cell">{{ cliente.contacto|default:"—" }}</td>
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ cliente.telefono|default:"—" }}</td>
+            <td class="td-base text-slate-500 dark:text-slate-400 hidden lg:table-cell">{{ cliente.email|default:"—" }}</td>
+            <td class="td-base text-right pr-4">
+              <div class="flex justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                <a href="{% url 'clientes:editar' cliente.pk %}"
+                   class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-brand-blue hover:text-white inline-flex items-center justify-center text-xs transition-all"
+                   title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </div>
             </td>
           </tr>
           {% endfor %}

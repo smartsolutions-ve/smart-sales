@@ -118,9 +118,18 @@
   </style>
 
   <style>
-    /* HTMX loading bar */
+    /* HTMX indicators */
     .htmx-indicator { opacity: 0; transition: opacity 200ms; }
     .htmx-request .htmx-indicator { opacity: 1; }
+    .htmx-request .htmx-indicator-hide { opacity: 0; }
+
+    /* Skeleton loading */
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .skeleton { animation: skeleton-pulse 1.5s ease-in-out infinite; background: rgba(148,163,184,0.15); border-radius: 0.5rem; }
+    .dark .skeleton { background: rgba(255,255,255,0.06); }
 
     /* Scrollbar styling */
     ::-webkit-scrollbar { width: 6px; height: 6px; }

@@ -94,11 +94,15 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="card-glass lg:col-span-2 flex flex-col">
       <h2 class="chart-title"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Ventas ultimos 6 meses</h2>
-      <div class="flex-1 min-h-[200px]" id="chartVentasMes"></div>
+      <div class="flex-1 min-h-[200px]" id="chartVentasMes">
+        <div class="skeleton h-full w-full min-h-[200px] rounded-xl"></div>
+      </div>
     </div>
     <div class="card-glass flex flex-col">
       <h2 class="chart-title"><i class="fas fa-circle-half-stroke mr-1.5 text-brand-blue"></i> Pedidos por estado</h2>
-      <div class="flex-1 flex items-center justify-center min-h-[200px]" id="chartEstados"></div>
+      <div class="flex-1 flex items-center justify-center min-h-[200px]" id="chartEstados">
+        <div class="skeleton h-[200px] w-[200px] rounded-full"></div>
+      </div>
     </div>
   </div>
 
@@ -107,14 +111,14 @@
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-filter mr-1.5 text-brand-blue"></i> Embudo de pipeline</h2>
       <p class="text-xs text-subtitle mb-3">Cantidad de pedidos en cada etapa del proceso</p>
-      <div id="chartEmbudo"></div>
+      <div id="chartEmbudo"><div class="skeleton h-[200px] w-full rounded-xl"></div></div>
     </div>
 
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-building mr-1.5 text-brand-blue"></i> Top 10 clientes</h2>
       <p class="text-xs text-subtitle mb-3">Por volumen de ventas en el periodo</p>
       {% if chart_clientes_labels != '[]' %}
-      <div id="chartClientes"></div>
+      <div id="chartClientes"><div class="skeleton h-[220px] w-full rounded-xl"></div></div>
       {% else %}
       <div class="flex items-center justify-center h-48 text-slate-300 dark:text-slate-600">
         <p class="text-sm">Sin datos de clientes en el periodo</p>

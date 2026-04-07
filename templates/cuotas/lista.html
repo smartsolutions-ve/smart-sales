@@ -60,32 +60,32 @@
   <!-- Tabla -->
   <div class="card-glass !p-0 overflow-x-auto">
     {% if ventas %}
-    <table data-datatable data-datatable-options='{"perPage":25}' class="w-full text-left text-sm">
+    <table data-datatable data-datatable-options='{"perPage":25}' class="w-full text-left min-w-[800px]">
       <thead>
         <tr>
-          <th>Periodo</th>
-          <th>Vendedor</th>
-          <th>Producto</th>
-          <th>Zona</th>
-          <th>Plan Cant.</th>
-          <th>Real Cant.</th>
-          <th>Plan USD</th>
-          <th>Real USD</th>
-          <th>% Cumpl.</th>
+          <th class="th-base">Periodo</th>
+          <th class="th-base">Vendedor</th>
+          <th class="th-base">Producto</th>
+          <th class="th-base hidden md:table-cell">Zona</th>
+          <th class="th-base text-right">Plan Cant.</th>
+          <th class="th-base text-right">Real Cant.</th>
+          <th class="th-base text-right">Plan USD</th>
+          <th class="th-base text-right">Real USD</th>
+          <th class="th-base text-center">% Cumpl.</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+      <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
         {% for v in ventas %}
-        <tr class="hover:bg-slate-50 dark:hover:bg-white/5">
-          <td class="px-3 py-2 font-mono text-xs">{{ v.periodo|date:"Y-m" }}</td>
-          <td class="px-3 py-2 whitespace-nowrap">{{ v.vendedor_nombre }}</td>
-          <td class="px-3 py-2 whitespace-nowrap">{{ v.producto_nombre }}</td>
-          <td class="px-3 py-2 text-slate-500">{{ v.zona_nombre|default:"—" }}</td>
-          <td class="px-3 py-2 text-right">{{ v.plan_cantidad|intcomma }}</td>
-          <td class="px-3 py-2 text-right">{{ v.real_cantidad|intcomma }}</td>
-          <td class="px-3 py-2 text-right">${{ v.plan_venta_usd|intcomma }}</td>
-          <td class="px-3 py-2 text-right">${{ v.real_venta_usd|intcomma }}</td>
-          <td class="px-3 py-2 text-center">
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
+          <td class="td-base font-mono text-xs">{{ v.periodo|date:"Y-m" }}</td>
+          <td class="td-base font-semibold whitespace-nowrap">{{ v.vendedor_nombre }}</td>
+          <td class="td-base whitespace-nowrap">{{ v.producto_nombre }}</td>
+          <td class="td-base text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ v.zona_nombre|default:"—" }}</td>
+          <td class="td-base text-right tabular-nums">{{ v.plan_cantidad|intcomma }}</td>
+          <td class="td-base text-right tabular-nums font-medium">{{ v.real_cantidad|intcomma }}</td>
+          <td class="td-base text-right tabular-nums">${{ v.plan_venta_usd|intcomma }}</td>
+          <td class="td-base text-right tabular-nums font-semibold">${{ v.real_venta_usd|intcomma }}</td>
+          <td class="td-base text-center">
             {% if v.cumplimiento_venta >= 100 %}
               <span class="badge-success">{{ v.cumplimiento_venta }}%</span>
             {% elif v.cumplimiento_venta >= 70 %}

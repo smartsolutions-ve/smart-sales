@@ -4,51 +4,57 @@
 {% block title %}Cuotas por Vendedor — SmartSales{% endblock %}
 {% block breadcrumb %}
   <a href="{% url 'cuotas:lista' %}" class="hover:text-brand-blue">Cuotas</a>
-  <i class="fas fa-chevron-right text-xs mx-2"></i> Por Vendedor
+  <i class="fas fa-chevron-right text-[8px] mx-2 opacity-40"></i> Por Vendedor
 {% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
-  <div class="flex items-center justify-between">
-    <h1 class="text-title">Ranking de Vendedores</h1>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-title">Ranking de Vendedores</h1>
+      <p class="text-subtitle mt-0.5">Cumplimiento de cuota por periodo</p>
+    </div>
     <form method="get" class="flex gap-3 items-end">
       <div>
-        <label class="text-xs text-slate-500 font-medium">Periodo</label>
+        <label class="text-[11px] text-slate-500 font-medium">Periodo</label>
         <input type="month" name="periodo" value="{{ periodo_filtro }}" class="input-base !py-2">
       </div>
-      <button type="submit" class="btn-secondary !py-2"><i class="fas fa-filter"></i></button>
+      <button type="submit" class="btn-secondary !py-2"><i class="fas fa-filter"></i> Filtrar</button>
     </form>
   </div>
 
   {% if datos %}
+
+  <!-- Tabla ranking -->
   <div class="card-glass !p-0 overflow-hidden">
-    <table data-datatable data-datatable-options='{"perPage":10}' class="w-full text-left">
+    <table data-datatable data-datatable-options='{"perPage":10}' class="w-full text-left text-sm">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Vendedor</th>
-          <th>Plan USD</th>
-          <th>Real USD</th>
-          <th>% Cumpl.</th>
-          <th data-sortable="false">Barra</th>
+          <th class="th-base w-10">#</th>
+          <th class="th-base">Vendedor</th>
+          <th class="th-base text-right">Plan USD</th>
+          <th class="th-base text-right">Real USD</th>
+          <th class="th-base text-center">% Cumpl.</th>
+          <th class="th-base" data-sortable="false">Progreso</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100">
+      <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
         {% for d in datos %}
-        <tr class="hover:bg-slate-50 dark:hover:bg-white/5">
-          <td class="px-5 py-3 text-sm text-slate-400 font-mono">{{ forloop.counter }}</td>
-          <td class="px-5 py-3 text-sm font-medium">{{ d.vendedor_nombre }}</td>
-          <td class="px-5 py-3 text-sm text-right">${{ d.plan_total|intcomma }}</td>
-          <td class="px-5 py-3 text-sm text-right font-medium">${{ d.real_total|intcomma }}</td>
-          <td class="px-5 py-3 text-center">
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
+          <td class="td-base text-slate-400 font-mono">{{ forloop.counter }}</td>
+          <td class="td-base font-semibold">{{ d.vendedor_nombre }}</td>
+          <td class="td-base text-right tabular-nums">${{ d.plan_total|intcomma }}</td>
+          <td class="td-base text-right font-bold tabular-nums">${{ d.real_total|intcomma }}</td>
+          <td class="td-base text-center">
             {% if d.cumplimiento >= 100 %}<span class="badge-success">{{ d.cumplimiento }}%</span>
             {% elif d.cumplimiento >= 70 %}<span class="badge-warning">{{ d.cumplimiento }}%</span>
             {% else %}<span class="badge-danger">{{ d.cumplimiento }}%</span>{% endif %}
           </td>
-          <td class="px-5 py-3 w-40">
-            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-              <div class="h-2.5 rounded-full {% if d.cumplimiento >= 100 %}bg-green-500{% elif d.cumplimiento >= 70 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+          <td class="td-base w-36">
+            <div class="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2">
+              <div class="h-2 rounded-full transition-all
+                {% if d.cumplimiento >= 100 %}bg-emerald-500{% elif d.cumplimiento >= 70 %}bg-amber-400{% else %}bg-red-500{% endif %}"
                    style="width: {% if d.cumplimiento > 100 %}100{% else %}{{ d.cumplimiento }}{% endif %}%"></div>
             </div>
           </td>
@@ -57,9 +63,54 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Gráfico ApexCharts — cumplimiento por vendedor -->
+  <div class="card-glass">
+    <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-1">
+      <i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Cumplimiento visual
+    </h2>
+    <p class="text-xs text-slate-400 mb-3">Real vs Plan en USD</p>
+    <div id="chartCuotasVendedor"></div>
+  </div>
+
   {% else %}
-  <p class="text-slate-400 text-center py-10">No hay datos para el periodo seleccionado.</p>
+  <div class="card-glass text-center py-16 text-slate-400">
+    <i class="fas fa-bullseye text-4xl opacity-30 mb-3"></i>
+    <p class="text-lg font-medium">No hay datos para el periodo seleccionado.</p>
+    <a href="{% url 'cuotas:importar' %}" class="mt-3 inline-block text-brand-blue hover:underline text-sm font-medium">
+      Importar desde Excel →
+    </a>
+  </div>
   {% endif %}
 
 </div>
+
+{% if datos %}
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const labels = [{% for d in datos %}"{{ d.vendedor_nombre }}",{% endfor %}];
+  const plan = [{% for d in datos %}{{ d.plan_total }},{% endfor %}];
+  const real = [{% for d in datos %}{{ d.real_total }},{% endfor %}];
+
+  new ApexCharts(document.getElementById('chartCuotasVendedor'), {
+    chart: { type: 'bar', height: Math.max(200, labels.length * 54), fontFamily: 'Outfit, sans-serif', background: 'transparent', toolbar: { show: false } },
+    theme: { mode: isDark ? 'dark' : 'light' },
+    series: [
+      { name: 'Plan', data: plan },
+      { name: 'Real', data: real },
+    ],
+    xaxis: { categories: labels, labels: { style: { colors: textColor, fontSize: '12px' } } },
+    yaxis: { labels: { formatter: v => v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v, style: { colors: textColor } } },
+    colors: ['#5BB8E8', '#1E7FC8'],
+    plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '70%', dataLabels: { position: 'top' } } },
+    dataLabels: { enabled: false },
+    legend: { position: 'top', labels: { colors: textColor } },
+    grid: { borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)', strokeDashArray: 4 },
+    tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+  }).render();
+})();
+</script>
+{% endif %}
 {% endblock %}

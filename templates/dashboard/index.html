@@ -4,9 +4,7 @@
 {% block title %}Dashboard — SmartSales{% endblock %}
 {% block breadcrumb %}Dashboard{% endblock %}
 
-{% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block content %}
 <div class="p-4 md:p-6 space-y-5">
@@ -96,13 +94,11 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="card-glass lg:col-span-2 flex flex-col">
       <h2 class="chart-title"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Ventas ultimos 6 meses</h2>
-      <div class="flex-1 min-h-[200px]" style="height:220px;"><canvas id="chartVentasMes" aria-label="Grafica de ventas de los ultimos 6 meses"></canvas></div>
+      <div class="flex-1 min-h-[200px]" id="chartVentasMes"></div>
     </div>
     <div class="card-glass flex flex-col">
       <h2 class="chart-title"><i class="fas fa-circle-half-stroke mr-1.5 text-brand-blue"></i> Pedidos por estado</h2>
-      <div class="flex-1 flex items-center justify-center min-h-[200px]" style="height:220px;">
-        <canvas id="chartEstados" aria-label="Grafica de pedidos por estado"></canvas>
-      </div>
+      <div class="flex-1 flex items-center justify-center min-h-[200px]" id="chartEstados"></div>
     </div>
   </div>
 
@@ -111,14 +107,14 @@
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-filter mr-1.5 text-brand-blue"></i> Embudo de pipeline</h2>
       <p class="text-xs text-subtitle mb-3">Cantidad de pedidos en cada etapa del proceso</p>
-      <div style="height:200px;"><canvas id="chartEmbudo" aria-label="Grafica de embudo de pipeline"></canvas></div>
+      <div id="chartEmbudo"></div>
     </div>
 
     <div class="card-glass">
       <h2 class="chart-title"><i class="fas fa-building mr-1.5 text-brand-blue"></i> Top 10 clientes</h2>
       <p class="text-xs text-subtitle mb-3">Por volumen de ventas en el periodo</p>
       {% if chart_clientes_labels != '[]' %}
-      <div style="height:200px;"><canvas id="chartClientes" aria-label="Grafica de top 10 clientes por ventas"></canvas></div>
+      <div id="chartClientes"></div>
       {% else %}
       <div class="flex items-center justify-center h-48 text-slate-300 dark:text-slate-600">
         <p class="text-sm">Sin datos de clientes en el periodo</p>
@@ -132,7 +128,7 @@
   <div class="card-glass">
     <h2 class="chart-title"><i class="fas fa-chart-line mr-1.5 text-brand-blue"></i> Ventas por vendedor — ultimos 6 meses</h2>
     <p class="text-xs text-subtitle mb-3">Evolucion mensual de cada vendedor activo</p>
-    <div style="height:260px;"><canvas id="chartVendedoresMes" aria-label="Grafica de ventas por vendedor"></canvas></div>
+    <div id="chartVendedoresMes"></div>
   </div>
   {% endif %}
 
@@ -140,7 +136,7 @@
   {% if chart_vendedores_labels != '[]' %}
   <div class="card-glass">
     <h2 class="chart-title"><i class="fas fa-trophy mr-1.5 text-brand-blue"></i> Top vendedores — periodo seleccionado</h2>
-    <div style="height:180px;"><canvas id="chartVendedores" aria-label="Grafica de top vendedores"></canvas></div>
+    <div id="chartVendedores"></div>
   </div>
   {% endif %}
 
@@ -213,192 +209,116 @@
 
 <script>
 (function () {
-  const isDark       = document.documentElement.classList.contains('dark');
-  const textColor    = isDark ? '#94a3b8' : '#64748b';
-  const gridColor    = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
-  const tooltipBg    = isDark ? '#1e293b' : '#ffffff';
-  const tooltipBorder= isDark ? '#334155' : '#e2e8f0';
+  const UKARO_COLORS = ['#1E7FC8','#0B3D91','#5BB8E8','#2E9E65','#1A5C3A','#F59E0B','#EF4444'];
+  const isDark = document.documentElement.classList.contains('dark');
+  const UKARO_THEME = { mode: isDark ? 'dark' : 'light' };
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+  const bg = isDark ? '#0f172a' : '#ffffff';
 
-  Chart.defaults.font.family = 'Outfit, sans-serif';
-  Chart.defaults.color = textColor;
-
-  const baseTooltip = {
-    backgroundColor: tooltipBg,
-    borderColor: tooltipBorder,
-    borderWidth: 1,
-    titleColor: isDark ? '#f1f5f9' : '#1e293b',
-    bodyColor: textColor,
-    padding: 12,
-    cornerRadius: 10,
-  };
-
-  function moneyTick(v) {
+  function moneyFmt(v) {
     if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
-    if (v >= 1000)    return '$' + (v / 1000).toFixed(0) + 'k';
+    if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'k';
     return '$' + v;
   }
-  function moneyLabel(ctx) { return ' $' + ctx.parsed.y.toLocaleString('es-CL'); }
-  function moneyLabelX(ctx) { return ' $' + ctx.parsed.x.toLocaleString('es-CL'); }
 
-  new Chart(document.getElementById('chartVentasMes'), {
-    type: 'bar',
-    data: {
-      labels: {{ chart_meses_labels|safe }},
-      datasets: [{
-        label: 'Ventas ($)',
-        data: {{ chart_meses_ventas|safe }},
-        backgroundColor: isDark ? 'rgba(0,102,255,0.25)' : 'rgba(0,102,255,0.12)',
-        borderColor: '#0066FF',
-        borderWidth: 2,
-        borderRadius: 8,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { ...baseTooltip, callbacks: { label: moneyLabel } } },
-      scales: {
-        x: { grid: { color: gridColor }, border: { dash: [4,4] } },
-        y: { grid: { color: gridColor }, border: { dash: [4,4] }, ticks: { callback: moneyTick } }
-      }
-    }
-  });
+  const baseOpts = {
+    chart: { fontFamily: 'Outfit, sans-serif', background: 'transparent', toolbar: { show: false } },
+    theme: UKARO_THEME,
+    grid: { borderColor: gridBorder, strokeDashArray: 4 },
+    tooltip: { theme: isDark ? 'dark' : 'light' },
+  };
 
-  new Chart(document.getElementById('chartEstados'), {
-    type: 'doughnut',
-    data: {
-      labels: {{ chart_estados_labels|safe }},
-      datasets: [{
-        data: {{ chart_estados_data|safe }},
-        backgroundColor: {{ chart_estados_colores|safe }},
-        borderWidth: 2,
-        borderColor: isDark ? '#0f172a' : '#ffffff',
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } },
-        tooltip: { ...baseTooltip, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} pedidos` } }
-      }
-    }
-  });
+  /* 1. Ventas últimos 6 meses — Bar */
+  new ApexCharts(document.getElementById('chartVentasMes'), {
+    ...baseOpts,
+    chart: { ...baseOpts.chart, type: 'bar', height: 220 },
+    series: [{ name: 'Ventas', data: {{ chart_meses_ventas|safe }} }],
+    xaxis: { categories: {{ chart_meses_labels|safe }}, labels: { style: { colors: textColor, fontSize: '11px' } } },
+    yaxis: { labels: { formatter: moneyFmt, style: { colors: textColor } } },
+    colors: ['#1E7FC8'],
+    plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+    dataLabels: { enabled: false },
+    tooltip: { y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+  }).render();
 
-  new Chart(document.getElementById('chartEmbudo'), {
-    type: 'bar',
-    data: {
-      labels: {{ chart_embudo_labels|safe }},
-      datasets: [{
-        label: 'Pedidos',
-        data: {{ chart_embudo_data|safe }},
-        backgroundColor: {{ chart_embudo_colores|safe }},
-        borderRadius: 8,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { ...baseTooltip, callbacks: { label: ctx => ` ${ctx.parsed.x} pedidos` } }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, border: { dash: [4,4] }, ticks: { stepSize: 1 } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
+  /* 2. Pedidos por estado — Donut */
+  new ApexCharts(document.getElementById('chartEstados'), {
+    ...baseOpts,
+    chart: { ...baseOpts.chart, type: 'donut', height: 250 },
+    series: {{ chart_estados_data|safe }},
+    labels: {{ chart_estados_labels|safe }},
+    colors: {{ chart_estados_colores|safe }},
+    plotOptions: { pie: { donut: { size: '68%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '13px', color: textColor, formatter: w => w.globals.seriesTotals.reduce((a,b) => a+b, 0) } } } } },
+    legend: { position: 'bottom', fontSize: '11px', labels: { colors: textColor } },
+    dataLabels: { enabled: false },
+    tooltip: { y: { formatter: v => v + ' pedidos' } },
+    stroke: { width: 2, colors: [bg] },
+  }).render();
 
-  const ctxClientes = document.getElementById('chartClientes');
-  if (ctxClientes) {
-    new Chart(ctxClientes, {
-      type: 'bar',
-      data: {
-        labels: {{ chart_clientes_labels|safe }},
-        datasets: [{
-          label: 'Ventas ($)',
-          data: {{ chart_clientes_data|safe }},
-          backgroundColor: isDark ? 'rgba(34,197,94,0.5)' : 'rgba(34,197,94,0.65)',
-          borderRadius: 8,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { ...baseTooltip, callbacks: { label: moneyLabelX } }
-        },
-        scales: {
-          x: { grid: { color: gridColor }, border: { dash: [4,4] }, ticks: { callback: moneyTick } },
-          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
-        }
-      }
-    });
+  /* 3. Embudo de pipeline — Horizontal Bar */
+  new ApexCharts(document.getElementById('chartEmbudo'), {
+    ...baseOpts,
+    chart: { ...baseOpts.chart, type: 'bar', height: 200 },
+    series: [{ name: 'Pedidos', data: {{ chart_embudo_data|safe }} }],
+    xaxis: { categories: {{ chart_embudo_labels|safe }}, labels: { style: { colors: textColor } } },
+    yaxis: { labels: { style: { colors: textColor, fontSize: '11px' } } },
+    colors: {{ chart_embudo_colores|safe }},
+    plotOptions: { bar: { horizontal: true, borderRadius: 6, distributed: true, barHeight: '65%' } },
+    dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 600 }, formatter: v => v + ' pedidos' },
+    legend: { show: false },
+    tooltip: { y: { formatter: v => v + ' pedidos' } },
+  }).render();
+
+  /* 4. Top 10 clientes — Horizontal Bar */
+  if (document.getElementById('chartClientes')) {
+    new ApexCharts(document.getElementById('chartClientes'), {
+      ...baseOpts,
+      chart: { ...baseOpts.chart, type: 'bar', height: 220 },
+      series: [{ name: 'Ventas', data: {{ chart_clientes_data|safe }} }],
+      xaxis: { categories: {{ chart_clientes_labels|safe }}, labels: { style: { colors: textColor, fontSize: '11px' } } },
+      yaxis: { labels: { formatter: moneyFmt, style: { colors: textColor } } },
+      colors: ['#2E9E65'],
+      plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%' } },
+      dataLabels: { enabled: false },
+      tooltip: { y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+    }).render();
   }
 
-  const ctxVendMes = document.getElementById('chartVendedoresMes');
-  if (ctxVendMes) {
+  /* 5. Ventas por vendedor — últimos 6 meses — Line */
+  if (document.getElementById('chartVendedoresMes')) {
     const rawDatasets = {{ chart_vendedores_mes|safe }};
-    const datasets = rawDatasets.map(d => ({
-      label: d.label,
-      data: d.data,
-      borderColor: d.color,
-      backgroundColor: d.color + '22',
-      borderWidth: 2.5,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.35,
-      fill: false,
-    }));
-    new Chart(ctxVendMes, {
-      type: 'line',
-      data: { labels: {{ chart_meses_labels_vm|safe }}, datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } },
-          tooltip: { ...baseTooltip, callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString('es-CL')}` } }
-        },
-        scales: {
-          x: { grid: { color: gridColor }, border: { dash: [4,4] } },
-          y: { grid: { color: gridColor }, border: { dash: [4,4] }, ticks: { callback: moneyTick } }
-        }
-      }
-    });
+    const series = rawDatasets.map(d => ({ name: d.label, data: d.data }));
+    const colors = rawDatasets.map(d => d.color);
+
+    new ApexCharts(document.getElementById('chartVendedoresMes'), {
+      ...baseOpts,
+      chart: { ...baseOpts.chart, type: 'line', height: 280 },
+      series: series,
+      xaxis: { categories: {{ chart_meses_labels_vm|safe }}, labels: { style: { colors: textColor } } },
+      yaxis: { labels: { formatter: moneyFmt, style: { colors: textColor } } },
+      colors: colors,
+      stroke: { width: 2.5, curve: 'smooth' },
+      markers: { size: 4, hover: { size: 6 } },
+      legend: { position: 'bottom', fontSize: '11px', labels: { colors: textColor } },
+      tooltip: { y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+    }).render();
   }
 
-  const ctxVend = document.getElementById('chartVendedores');
-  if (ctxVend) {
-    new Chart(ctxVend, {
-      type: 'bar',
-      data: {
-        labels: {{ chart_vendedores_labels|safe }},
-        datasets: [{
-          label: 'Ventas ($)',
-          data: {{ chart_vendedores_data|safe }},
-          backgroundColor: ['rgba(0,102,255,0.8)','rgba(34,197,94,0.8)','rgba(245,158,11,0.8)','rgba(139,92,246,0.8)','rgba(239,68,68,0.8)'],
-          borderRadius: 8,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { ...baseTooltip, callbacks: { label: moneyLabelX } }
-        },
-        scales: {
-          x: { grid: { color: gridColor }, border: { dash: [4,4] }, ticks: { callback: moneyTick } },
-          y: { grid: { display: false } }
-        }
-      }
-    });
+  /* 6. Top vendedores — Horizontal Bar */
+  if (document.getElementById('chartVendedores')) {
+    new ApexCharts(document.getElementById('chartVendedores'), {
+      ...baseOpts,
+      chart: { ...baseOpts.chart, type: 'bar', height: 200 },
+      series: [{ name: 'Ventas', data: {{ chart_vendedores_data|safe }} }],
+      xaxis: { categories: {{ chart_vendedores_labels|safe }}, labels: { style: { colors: textColor, fontSize: '11px' } } },
+      yaxis: { labels: { formatter: moneyFmt, style: { colors: textColor } } },
+      colors: UKARO_COLORS,
+      plotOptions: { bar: { horizontal: true, borderRadius: 6, distributed: true, barHeight: '65%' } },
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      tooltip: { y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+    }).render();
   }
 
 })();

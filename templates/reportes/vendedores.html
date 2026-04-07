@@ -82,28 +82,14 @@
     </div>
   </div>
 
-  <!-- Grafico de barras -->
-  {% with max_total=vendedores.0.total_vendido %}
-  {% if max_total %}
+  <!-- Gráfico ApexCharts -->
+  {% if vendedores %}
   <div class="card-glass">
-    <h2 class="font-bold text-sm mb-5">Total vendido por vendedor</h2>
-    <div class="space-y-3">
-      {% for v in vendedores %}
-      {% if v.total_vendido %}
-      <div class="flex items-center gap-3 md:gap-4">
-        <span class="text-sm w-28 md:w-36 truncate text-slate-600 dark:text-slate-300 flex-shrink-0">{{ v.get_full_name|default:v.username }}</span>
-        <div class="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-full h-2.5">
-          <div class="bg-gradient-to-r from-brand-blue to-brand-green h-2.5 rounded-full transition-all duration-500"
-               style="width: {% widthratio v.total_vendido max_total 100 %}%"></div>
-        </div>
-        <span class="text-sm font-bold w-24 text-right tabular-nums flex-shrink-0">${{ v.total_vendido|intcomma }}</span>
-      </div>
-      {% endif %}
-      {% endfor %}
-    </div>
+    <h2 class="font-bold text-sm mb-1"><i class="fas fa-chart-bar mr-1.5 text-brand-blue"></i> Total vendido por vendedor</h2>
+    <p class="text-xs text-slate-400 mb-3">Periodo seleccionado — pedidos no cancelados</p>
+    <div id="chartVendedoresReporte"></div>
   </div>
   {% endif %}
-  {% endwith %}
 
   {% else %}
   <div class="card-glass text-center py-12">
@@ -113,4 +99,30 @@
   {% endif %}
 
 </div>
+
+{% if vendedores %}
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const labels = [{% for v in vendedores %}{% if v.total_vendido %}"{{ v.get_full_name|default:v.username }}",{% endif %}{% endfor %}];
+  const values = [{% for v in vendedores %}{% if v.total_vendido %}{{ v.total_vendido }},{% endif %}{% endfor %}];
+
+  if (labels.length && document.getElementById('chartVendedoresReporte')) {
+    new ApexCharts(document.getElementById('chartVendedoresReporte'), {
+      chart: { type: 'bar', height: Math.max(180, labels.length * 44), fontFamily: 'Outfit, sans-serif', background: 'transparent', toolbar: { show: false } },
+      theme: { mode: isDark ? 'dark' : 'light' },
+      series: [{ name: 'Total vendido', data: values }],
+      xaxis: { categories: labels, labels: { style: { colors: textColor, fontSize: '12px' } } },
+      yaxis: { labels: { formatter: v => v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v, style: { colors: textColor } } },
+      colors: ['#1E7FC8'],
+      plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%' } },
+      dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString('es-CL'), style: { fontSize: '11px' } },
+      grid: { borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)', strokeDashArray: 4 },
+      tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: v => '$' + v.toLocaleString('es-CL') } },
+    }).render();
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}

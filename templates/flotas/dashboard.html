@@ -13,31 +13,115 @@
   <h1 class="text-title">Dashboard de Flotas</h1>
 
   <!-- KPIs -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-    <div class="card-glass text-center">
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-brand-blue dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center text-base">
+          <i class="fas fa-truck"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Vehículos<br>Activos</p>
+      </div>
       <p class="text-2xl md:text-3xl font-bold text-brand-blue">{{ total_vehiculos }}</p>
-      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Vehiculos activos</p>
     </div>
-    <div class="card-glass text-center">
-      <p class="text-2xl md:text-3xl font-bold text-brand-blue">{{ total_viajes }}</p>
-      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Total viajes</p>
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 dark:bg-white/5 dark:text-slate-400 flex items-center justify-center text-base">
+          <i class="fas fa-route"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Total<br>Viajes</p>
+      </div>
+      <p class="text-2xl md:text-3xl font-bold">{{ total_viajes }}</p>
     </div>
-    <div class="card-glass text-center">
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center text-base">
+          <i class="fas fa-circle-check"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Completados</p>
+      </div>
       <p class="text-2xl md:text-3xl font-bold text-emerald-500">{{ viajes_completados }}</p>
-      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Completados</p>
+      {% if total_viajes %}
+      <p class="text-[11px] text-slate-400 mt-1">{{ viajes_completados|floatformat:0 }} de {{ total_viajes }}</p>
+      {% endif %}
     </div>
-    <div class="card-glass text-center">
-      <p class="text-2xl md:text-3xl font-bold {% if utilizacion_promedio > 80 %}text-emerald-500{% elif utilizacion_promedio > 50 %}text-amber-500{% else %}text-red-500{% endif %}">
-        {{ utilizacion_promedio }}%
-      </p>
-      <p class="text-[11px] text-slate-500 font-semibold uppercase mt-1.5">Utilizacion promedio</p>
+
+    <div class="card-glass group hover:shadow-md hover:shadow-brand-blue/5 dark:hover:border-white/10 lg:col-span-2">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400 flex items-center justify-center text-base">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <p class="text-subtitle uppercase tracking-wide text-[11px] font-bold leading-tight">Costo total<br>de fletes</p>
+      </div>
+      <p class="text-2xl md:text-3xl font-bold">${{ costo_total|intcomma }}</p>
+      {% if total_viajes and costo_total %}
+      <p class="text-[11px] text-slate-400 mt-1">Promedio por viaje: ${{ costo_total|floatformat:0|intcomma }}</p>
+      {% endif %}
     </div>
   </div>
 
-  <div class="card-glass text-center">
-    <p class="text-[11px] text-slate-500 font-semibold uppercase mb-1.5">Costo total de fletes</p>
-    <p class="text-2xl font-bold text-slate-900 dark:text-white">${{ costo_total|intcomma }}</p>
+  <!-- Gauge utilización + accesos rápidos -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Gauge utilización -->
+    <div class="card-glass flex flex-col items-center">
+      <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-1 self-start">Utilización promedio</h2>
+      <div id="gaugeUtilizacion" class="w-full"></div>
+    </div>
+
+    <!-- Estado viajes -->
+    <div class="card-glass lg:col-span-2">
+      <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-4">Estado de viajes</h2>
+      <div class="space-y-3">
+        {% if total_viajes %}
+        <div class="flex items-center gap-3">
+          <span class="text-sm w-32 flex-shrink-0 text-slate-600 dark:text-slate-300">Completados</span>
+          <div class="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-full h-2.5">
+            <div class="bg-emerald-500 h-2.5 rounded-full transition-all"
+                 style="width: {% widthratio viajes_completados total_viajes 100 %}%"></div>
+          </div>
+          <span class="text-sm font-bold tabular-nums w-8 text-right text-emerald-500">{{ viajes_completados }}</span>
+        </div>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+          <a href="{% url 'flotas:lista' %}" class="btn-secondary justify-center">
+            <i class="fas fa-route"></i> Ver Viajes
+          </a>
+          <a href="{% url 'flotas:vehiculos' %}" class="btn-secondary justify-center">
+            <i class="fas fa-truck"></i> Ver Vehículos
+          </a>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
+
+<script>
+(function() {
+  const util = {{ utilizacion_promedio|default:0 }};
+  const isDark = document.documentElement.classList.contains('dark');
+  const color = util >= 80 ? '#2E9E65' : util >= 50 ? '#F59E0B' : '#EF4444';
+
+  new ApexCharts(document.getElementById('gaugeUtilizacion'), {
+    chart: { type: 'radialBar', height: 220, fontFamily: 'Outfit, sans-serif', background: 'transparent', toolbar: { show: false } },
+    theme: { mode: isDark ? 'dark' : 'light' },
+    series: [util],
+    labels: ['Utilización'],
+    colors: [color],
+    plotOptions: {
+      radialBar: {
+        hollow: { size: '62%' },
+        track: { background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+        dataLabels: {
+          name: { fontSize: '13px', color: isDark ? '#94a3b8' : '#64748b', offsetY: -10 },
+          value: { fontSize: '28px', fontWeight: 700, color: color, formatter: v => v + '%' },
+        }
+      }
+    },
+  }).render();
+})();
+</script>
 {% endblock %}

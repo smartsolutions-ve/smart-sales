@@ -28,7 +28,8 @@
         <!-- Cliente -->
         <div class="sm:col-span-2">
           <label class="label-base">Cliente</label>
-          <select name="cliente_id" class="input-base">
+          <select name="cliente_id" class="input-base"
+                  @change="onClienteChange($event.target.value)">
             <option value="">-- Seleccionar cliente existente --</option>
             {% for c in clientes %}
             <option value="{{ c.pk }}" {% if pedido and pedido.cliente_id == c.pk %}selected{% endif %}>{{ c.nombre }}</option>
@@ -37,6 +38,12 @@
           <p class="text-xs text-slate-500 mt-1.5">O escribe el nombre de un cliente nuevo:</p>
           <input type="text" name="cliente_nuevo_nombre" placeholder="Nombre del cliente nuevo"
                  class="mt-1 input-base">
+          <!-- Alerta crédito inline -->
+          <div x-show="alertaCredito" x-transition
+               class="mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1">
+            <i class="fas fa-exclamation-triangle mt-0.5 flex-shrink-0"></i>
+            <span x-text="alertaCredito"></span>
+          </div>
         </div>
 
         <!-- Vendedor -->
@@ -212,6 +219,31 @@ function pedidoForm(itemCount) {
 
   return {
     items: itemsIniciales.length > 0 ? itemsIniciales : [{ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] }],
+    listaPrecioId: '{{ pedido.lista_precio_id|default:"" }}',
+    alertaCredito: '',
+
+    async onClienteChange(clienteId) {
+      this.listaPrecioId = ''
+      this.alertaCredito = ''
+      if (!clienteId) return
+      try {
+        const resp = await fetch(`/clientes/${clienteId}/info-json/`)
+        const data = await resp.json()
+        this.listaPrecioId = data.lista_precio_id || ''
+        // Alerta crédito: mostrar si tiene límite configurado
+        const limite = parseFloat(data.limite_credito) || 0
+        const deuda = parseFloat(data.deuda_actual) || 0
+        if (limite > 0) {
+          const totalActual = this.total()
+          if (deuda + totalActual > limite) {
+            this.alertaCredito = `Deuda actual $${deuda.toLocaleString('es-VE', {minimumFractionDigits:2})} + este pedido $${totalActual.toLocaleString('es-VE', {minimumFractionDigits:2})} supera límite de $${limite.toLocaleString('es-VE', {minimumFractionDigits:2})}`
+          }
+          if (data.lista_precio_nombre) {
+            this.alertaCredito = this.alertaCredito ? this.alertaCredito : ''
+          }
+        }
+      } catch(e) {}
+    },
 
     agregarItem() {
       this.items.push({ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] })
@@ -235,7 +267,9 @@ function pedidoForm(itemCount) {
         return
       }
       try {
-        const resp = await fetch(`/productos/buscar/?q=${encodeURIComponent(query)}`)
+        let url = `/productos/buscar/?q=${encodeURIComponent(query)}`
+        if (this.listaPrecioId) url += `&lista_precio_id=${encodeURIComponent(this.listaPrecioId)}`
+        const resp = await fetch(url)
         const data = await resp.json()
         this.items[index]._sugerencias = data.results || []
       } catch (e) {

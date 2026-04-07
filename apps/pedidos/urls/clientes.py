@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/', views_clientes.detalle, name='detalle'),
     path('<int:pk>/editar/', views_clientes.editar, name='editar'),
     path('<int:pk>/eliminar/', views_clientes.eliminar, name='eliminar'),
+    path('<int:pk>/info-json/', views_clientes.info_json, name='info_json'),
 ]

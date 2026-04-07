@@ -85,12 +85,27 @@ def eliminar(request, pk):
 
 @login_required
 def buscar_json(request):
-    """Endpoint JSON para autocompletar productos en el formulario de pedido."""
+    """
+    Endpoint JSON para autocompletar productos en el formulario de pedido.
+    Acepta ?lista_precio_id=UUID para devolver precio ajustado según lista.
+    """
+    from decimal import Decimal
     from django.db.models import Q
 
     q = request.GET.get('q', '').strip()
     if len(q) < 2:
         return JsonResponse({'results': []})
+
+    # Lista de precios opcional para ajustar precio_base
+    lista_precio_id = request.GET.get('lista_precio_id', '').strip()
+    descuento = Decimal('0')
+    if lista_precio_id:
+        from apps.configuracion.models import ListaPrecio
+        try:
+            lp = ListaPrecio.objects.get(pk=lista_precio_id, organization=request.org, activa=True)
+            descuento = lp.descuento_porcentaje
+        except ListaPrecio.DoesNotExist:
+            pass
 
     productos = (
         Producto.objects
@@ -99,16 +114,20 @@ def buscar_json(request):
         .values('id', 'nombre', 'sku', 'precio_base', 'unidad')[:10]
     )
 
-    results = [
-        {
+    results = []
+    for p in productos:
+        precio = p['precio_base']
+        if precio and descuento:
+            precio = (Decimal(str(precio)) * (1 - descuento / 100)).quantize(Decimal('0.01'))
+
+        results.append({
             'id': p['id'],
             'nombre': p['nombre'],
             'sku': p['sku'] or '',
-            'precio_base': str(p['precio_base']) if p['precio_base'] else '',
+            'precio_base': str(precio) if precio else '',
             'unidad': p['unidad'] or '',
-        }
-        for p in productos
-    ]
+        })
+
     return JsonResponse({'results': results})
 
 

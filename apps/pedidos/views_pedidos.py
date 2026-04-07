@@ -432,5 +432,9 @@ def _guardar_pedido(request, pedido):
         messages.error(request, str(e))
         return render(request, 'pedidos/form.html', {**_pedido_form_ctx(request), 'pedido': pedido})
 
+    alerta = getattr(pedido, '_alerta_credito', None)
+    if alerta:
+        messages.warning(request, alerta)
+
     messages.success(request, f'Pedido {pedido.numero} guardado correctamente.')
     return redirect('pedidos:detalle', pk=pedido.pk)

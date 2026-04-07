@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from .models import Pedido, PedidoItem
@@ -49,6 +51,9 @@ class PedidoService:
             pedido.ref_competencia = ref_competencia
             pedido.metodo_pago = metodo_pago
             pedido.zona_despacho = zona_despacho
+            # Auto-asignar lista de precios desde el cliente si no se especificó
+            if pedido.lista_precio is None and cliente and cliente.lista_precio_id:
+                pedido.lista_precio = cliente.lista_precio
             pedido.save()
 
             if not es_nuevo:
@@ -85,6 +90,11 @@ class PedidoService:
 
             pedido.recalcular_total()
 
+            # Verificar límite de crédito del cliente (no bloquea, retorna advertencia)
+            alerta_credito = PedidoService._verificar_credito(pedido, es_nuevo)
+            if alerta_credito:
+                pedido._alerta_credito = alerta_credito
+
             # Descontar stock si transiciona a Confirmado/En Proceso/Entregado desde Pendiente / Cancelado
             estados_con_stock_descontado = ['Confirmado', 'En Proceso', 'Entregado']
             if estado in estados_con_stock_descontado and estado_anterior not in estados_con_stock_descontado:
@@ -96,6 +106,35 @@ class PedidoService:
             log_pedido(pedido, user, accion, f'Cliente: {cliente}, Total: ${pedido.total}')
 
         return pedido
+
+    @staticmethod
+    def _verificar_credito(pedido, es_nuevo):
+        """
+        Verifica si el pedido supera el límite de crédito del cliente.
+        Retorna string con mensaje de advertencia, o None si está dentro del límite.
+        """
+        from django.db.models import Sum
+        cliente = pedido.cliente
+        if not cliente or not cliente.limite_credito or cliente.limite_credito <= 0:
+            return None
+
+        deuda_qs = cliente.pedido_set.filter(
+            estado__in=['Pendiente', 'Confirmado', 'En Proceso']
+        )
+        if not es_nuevo:
+            # Al editar, excluir el pedido actual del cálculo de deuda previa
+            deuda_qs = deuda_qs.exclude(pk=pedido.pk)
+
+        deuda_previa = deuda_qs.aggregate(t=Sum('total'))['t'] or Decimal('0')
+        deuda_con_pedido = deuda_previa + pedido.total
+
+        if deuda_con_pedido > cliente.limite_credito:
+            return (
+                f'⚠️ {cliente.nombre} supera su límite de crédito: '
+                f'deuda actual ${deuda_previa:,.2f} + este pedido ${pedido.total:,.2f} '
+                f'= ${deuda_con_pedido:,.2f} (límite: ${cliente.limite_credito:,.2f})'
+            )
+        return None
 
     @staticmethod
     def procesar_descuento_stock(pedido, user=None):

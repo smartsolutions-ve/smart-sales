@@ -2,6 +2,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from apps.accounts.decorators import role_required
@@ -42,9 +43,17 @@ def crear(request):
 @login_required
 @role_required('gerente', 'superadmin')
 def detalle(request, pk):
+    from django.db.models import Sum
     cliente = _get_cliente_or_404(pk, request.org)
     pedidos = cliente.pedido_set.select_related('vendedor').order_by('-fecha_pedido')
-    return render(request, 'clientes/detalle.html', {'cliente': cliente, 'pedidos': pedidos})
+    deuda_activa = cliente.pedido_set.filter(
+        estado__in=['Pendiente', 'Confirmado', 'En Proceso']
+    ).aggregate(t=Sum('total'))['t'] or 0
+    return render(request, 'clientes/detalle.html', {
+        'cliente': cliente,
+        'pedidos': pedidos,
+        'deuda_activa': deuda_activa,
+    })
 
 
 @login_required
@@ -68,6 +77,27 @@ def eliminar(request, pk):
     cliente.delete()
     messages.success(request, f'Cliente "{cliente.nombre}" eliminado.')
     return redirect('clientes:lista')
+
+
+@login_required
+def info_json(request, pk):
+    """
+    Retorna JSON con lista_precio_id y deuda_actual del cliente.
+    Usado por el form de pedidos para ajustar precios y mostrar alerta de crédito.
+    """
+    cliente = get_object_or_404(Cliente, pk=pk, organization=request.org)
+    from django.db.models import Sum
+    deuda = cliente.pedido_set.filter(
+        estado__in=['Pendiente', 'Confirmado', 'En Proceso']
+    ).aggregate(total=Sum('total'))['total'] or 0
+
+    return JsonResponse({
+        'lista_precio_id': str(cliente.lista_precio_id) if cliente.lista_precio_id else '',
+        'lista_precio_nombre': str(cliente.lista_precio) if cliente.lista_precio_id else '',
+        'limite_credito': str(cliente.limite_credito),
+        'dias_credito': cliente.dias_credito,
+        'deuda_actual': str(deuda),
+    })
 
 
 def _form_ctx(request):

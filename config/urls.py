@@ -42,6 +42,9 @@ urlpatterns = [
 
     # Cuentas por Cobrar
     path('cxc/', include('apps.cxc.urls', namespace='cxc')),
+
+    # Devoluciones y Notas de Crédito
+    path('devoluciones/', include('apps.devoluciones.urls', namespace='devoluciones')),
 ]
 
 # Servir media en desarrollo

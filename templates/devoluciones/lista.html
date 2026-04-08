@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load bs_tags %}
+
+{% block title %}Devoluciones — SmartSales{% endblock %}
+{% block breadcrumb %}Devoluciones{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-4">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <h1 class="text-title">Devoluciones y Notas de Crédito</h1>
+    <a href="{% url 'devoluciones:crear' %}" class="btn-primary !py-2 !px-4">
+      <i class="fas fa-plus"></i>
+      <span class="hidden sm:inline">Nueva Devolución</span>
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex gap-2 md:gap-3 flex-wrap items-end">
+    <select name="estado" class="input-base !w-auto !py-2">
+      <option value="">Todos los estados</option>
+      {% for valor, label in estados %}
+      <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="cliente" class="input-base !w-auto !py-2">
+      <option value="">Todos los clientes</option>
+      {% for c in clientes %}
+      <option value="{{ c.pk }}" {% if filtro_cliente == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+      {% endfor %}
+    </select>
+
+    <div>
+      <label class="text-[11px] text-slate-500 font-medium">Desde</label>
+      <input type="date" name="desde" value="{{ filtro_desde }}" class="input-base !py-2">
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 font-medium">Hasta</label>
+      <input type="date" name="hasta" value="{{ filtro_hasta }}" class="input-base !py-2">
+    </div>
+
+    <button type="submit" class="btn-secondary !py-2 !px-3">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
+    {% if filtro_estado or filtro_cliente or filtro_desde or filtro_hasta %}
+    <a href="{% url 'devoluciones:lista' %}" class="text-xs text-slate-400 hover:text-red-500 self-center">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Tabla -->
+  <div class="card-glass overflow-hidden !p-0">
+    {% if devoluciones %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-200/80 dark:border-white/[0.06]">
+          <tr>
+            <th class="th-base text-left">N° Devolución</th>
+            <th class="th-base text-left">Pedido Origen</th>
+            <th class="th-base text-left">Cliente</th>
+            <th class="th-base text-left">Fecha</th>
+            <th class="th-base text-left">Motivo</th>
+            <th class="th-base text-left">Estado</th>
+            <th class="th-base text-right">Monto Crédito</th>
+            <th class="th-base text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+          {% for dev in devoluciones %}
+          <tr class="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="td-base font-mono font-semibold text-brand-blue">
+              <a href="{% url 'devoluciones:detalle' dev.pk %}" class="hover:underline">
+                DEV-{{ dev.pk }}
+              </a>
+            </td>
+            <td class="td-base">
+              <a href="{% url 'pedidos:detalle' dev.pedido.pk %}"
+                 class="text-slate-700 dark:text-slate-300 hover:text-brand-blue transition-colors text-xs font-mono">
+                {{ dev.pedido.numero }}
+              </a>
+            </td>
+            <td class="td-base font-medium">{{ dev.cliente.nombre }}</td>
+            <td class="td-base text-slate-500 dark:text-slate-400 text-xs">{{ dev.fecha }}</td>
+            <td class="td-base text-xs">{{ dev.get_motivo_display }}</td>
+            <td class="td-base">
+              {% if dev.estado == 'Pendiente' %}
+                <span class="badge-warning">Pendiente</span>
+              {% elif dev.estado == 'Aprobada' %}
+                <span class="badge-info">Aprobada</span>
+              {% elif dev.estado == 'Rechazada' %}
+                <span class="badge-danger">Rechazada</span>
+              {% elif dev.estado == 'Completada' %}
+                <span class="badge-success">Completada</span>
+              {% endif %}
+            </td>
+            <td class="td-base text-right font-semibold">
+              {% monto_dual dev.monto_credito %}
+            </td>
+            <td class="td-base text-center">
+              <a href="{% url 'devoluciones:detalle' dev.pk %}"
+                 class="text-brand-blue hover:text-brand-blue-dark text-xs font-medium">
+                <i class="fas fa-eye"></i> Ver
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="py-16 text-center">
+      <i class="fas fa-rotate-left text-4xl text-slate-300 dark:text-slate-600 mb-4"></i>
+      <p class="text-slate-500 dark:text-slate-400 font-medium">No hay devoluciones registradas</p>
+      <a href="{% url 'devoluciones:crear' %}" class="inline-flex items-center gap-2 mt-4 btn-primary !py-2 !px-4">
+        <i class="fas fa-plus"></i> Registrar primera devolución
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

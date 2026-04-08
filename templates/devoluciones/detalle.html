@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load bs_tags %}
+
+{% block title %}DEV-{{ devolucion.pk }} — SmartSales{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'devoluciones:lista' %}" class="hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Devoluciones</a>
+  <i class="fas fa-chevron-right text-[8px] mx-2 opacity-40"></i>
+  DEV-{{ devolucion.pk }}
+{% endblock %}
+
+{% block content %}
+<div class="p-4 md:p-6 space-y-4" x-data="{ modalRechazar: false }">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-title">DEV-{{ devolucion.pk }}</h1>
+      <p class="text-subtitle mt-0.5">
+        {{ devolucion.cliente.nombre }} &mdash;
+        Pedido <a href="{% url 'pedidos:detalle' devolucion.pedido.pk %}"
+                   class="text-brand-blue hover:underline font-mono">{{ devolucion.pedido.numero }}</a>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      {% if devolucion.estado == 'Pendiente' %}
+        <span class="badge-warning text-sm px-3 py-1">Pendiente</span>
+      {% elif devolucion.estado == 'Aprobada' %}
+        <span class="badge-info text-sm px-3 py-1">Aprobada</span>
+      {% elif devolucion.estado == 'Rechazada' %}
+        <span class="badge-danger text-sm px-3 py-1">Rechazada</span>
+      {% elif devolucion.estado == 'Completada' %}
+        <span class="badge-success text-sm px-3 py-1">Completada</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Banners de estado -->
+  {% if devolucion.estado == 'Completada' %}
+  <div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-4 flex items-start gap-3">
+    <i class="fas fa-circle-check text-emerald-600 dark:text-emerald-400 text-lg mt-0.5"></i>
+    <div>
+      <p class="font-semibold text-emerald-800 dark:text-emerald-300">Devolución completada</p>
+      <p class="text-sm text-emerald-700 dark:text-emerald-400 mt-0.5">
+        Nota de crédito generada por {% monto_dual devolucion.monto_credito %}.
+        {% if devolucion.reingresar_inventario %} El inventario fue reingresado.{% endif %}
+      </p>
+    </div>
+  </div>
+  {% elif devolucion.estado == 'Rechazada' %}
+  <div class="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-4 flex items-start gap-3">
+    <i class="fas fa-circle-xmark text-red-600 dark:text-red-400 text-lg mt-0.5"></i>
+    <div>
+      <p class="font-semibold text-red-800 dark:text-red-300">Devolución rechazada</p>
+      {% if devolucion.observaciones %}
+      <p class="text-sm text-red-700 dark:text-red-400 mt-0.5">{{ devolucion.observaciones }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Info de la devolución -->
+    <div class="card-glass space-y-3 lg:col-span-2">
+      <h2 class="font-semibold text-slate-800 dark:text-slate-100 text-sm uppercase tracking-wide">Información</h2>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Fecha</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium">{{ devolucion.fecha }}</p>
+        </div>
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Motivo</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium">{{ devolucion.get_motivo_display }}</p>
+        </div>
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Registrado por</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium">{{ devolucion.registrado_por.get_full_name }}</p>
+        </div>
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Aprobado por</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium">
+            {{ devolucion.aprobado_por.get_full_name|default:"—" }}
+          </p>
+        </div>
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Reingresar inventario</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium">
+            {% if devolucion.reingresar_inventario %}
+              <span class="badge-success">Sí</span>
+            {% else %}
+              <span class="badge-neutral">No</span>
+            {% endif %}
+          </p>
+        </div>
+        <div>
+          <span class="label-base !text-xs !mb-0.5">Registrada el</span>
+          <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ devolucion.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+      </div>
+      {% if devolucion.observaciones and devolucion.estado != 'Rechazada' %}
+      <div class="pt-2 border-t border-slate-100 dark:border-white/[0.05]">
+        <span class="label-base !text-xs !mb-0.5">Observaciones</span>
+        <p class="text-sm text-slate-700 dark:text-slate-300">{{ devolucion.observaciones }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Nota de crédito -->
+    <div class="card-glass flex flex-col items-center justify-center text-center gap-2">
+      <i class="fas fa-file-invoice-dollar text-3xl text-brand-blue opacity-70"></i>
+      <p class="text-subtitle text-xs uppercase tracking-wider">Monto Nota de Crédito</p>
+      {% monto_dual devolucion.monto_credito bloque=True %}
+      <p class="text-xs text-slate-400 mt-1">{{ items|length }} ítem{{ items|length|pluralize:",s" }} devuelto{{ items|length|pluralize:",s" }}</p>
+    </div>
+
+  </div>
+
+  <!-- Tabla de ítems -->
+  <div class="card-glass overflow-hidden !p-0">
+    <div class="px-5 py-3.5 border-b border-slate-100 dark:border-white/[0.05]">
+      <h2 class="font-semibold text-slate-800 dark:text-slate-100 text-sm">Ítems devueltos</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50/80 dark:bg-white/[0.03]">
+          <tr>
+            <th class="th-base text-left">Producto</th>
+            <th class="th-base text-left">SKU</th>
+            <th class="th-base text-right">Cantidad</th>
+            <th class="th-base text-right">Precio Unit.</th>
+            <th class="th-base text-right">Subtotal</th>
+            {% if devolucion.estado == 'Completada' and devolucion.reingresar_inventario %}
+            <th class="th-base text-left">Lote Creado</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+          {% for item in items %}
+          <tr class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+            <td class="td-base font-medium">{{ item.producto }}</td>
+            <td class="td-base font-mono text-xs text-slate-500">{{ item.sku|default:"—" }}</td>
+            <td class="td-base text-right tabular-nums">{{ item.cantidad }}</td>
+            <td class="td-base text-right tabular-nums">{% monto_dual item.precio_unitario %}</td>
+            <td class="td-base text-right font-semibold tabular-nums">{% monto_dual item.subtotal %}</td>
+            {% if devolucion.estado == 'Completada' and devolucion.reingresar_inventario %}
+            <td class="td-base text-xs">
+              {% if item.lote_reingreso %}
+                <span class="badge-success">{{ item.lote_reingreso.codigo_lote }}</span>
+              {% else %}
+                <span class="badge-neutral">No reingresado</span>
+              {% endif %}
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-slate-50/80 dark:bg-white/[0.03] border-t border-slate-200/80 dark:border-white/[0.06]">
+          <tr>
+            <td colspan="{% if devolucion.estado == 'Completada' and devolucion.reingresar_inventario %}5{% else %}4{% endif %}"
+                class="td-base text-right font-bold text-slate-700 dark:text-slate-300">Total Nota de Crédito:</td>
+            <td class="td-base text-right font-bold text-brand-blue">{% monto_dual devolucion.monto_credito %}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Acciones por estado -->
+  {% if devolucion.estado == 'Pendiente' %}
+  <div class="flex flex-wrap gap-3">
+    <form method="post" action="{% url 'devoluciones:aprobar' devolucion.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-check"></i> Aprobar devolución
+      </button>
+    </form>
+    <button type="button" @click="modalRechazar = true" class="btn-danger">
+      <i class="fas fa-times"></i> Rechazar
+    </button>
+  </div>
+
+  <!-- Modal rechazar -->
+  <div x-show="modalRechazar" x-cloak
+       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div @click.outside="modalRechazar = false"
+         class="card-glass w-full max-w-md space-y-4">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white">Rechazar devolución</h3>
+      <form method="post" action="{% url 'devoluciones:rechazar' devolucion.pk %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="label-base" for="id_obs_rechazo">Motivo del rechazo <span class="text-red-500">*</span></label>
+          <textarea id="id_obs_rechazo" name="observaciones" rows="3" required
+                    class="input-base"
+                    placeholder="Explique el motivo del rechazo..."></textarea>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" @click="modalRechazar = false" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-danger">
+            <i class="fas fa-times"></i> Confirmar rechazo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% elif devolucion.estado == 'Aprobada' %}
+  <div class="card-glass">
+    <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-3">Completar devolución</h3>
+    <form method="post" action="{% url 'devoluciones:completar' devolucion.pk %}" class="space-y-4">
+      {% csrf_token %}
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="reingresar_inventario"
+               {% if devolucion.reingresar_inventario %}checked{% endif %}
+               class="w-4 h-4 rounded accent-brand-blue">
+        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+          Reingresar productos al inventario
+        </span>
+      </label>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Al reingresar, se crearán nuevos lotes de inventario para cada ítem con SKU identificado.
+      </p>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-check-double"></i> Completar y emitir nota de crédito
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

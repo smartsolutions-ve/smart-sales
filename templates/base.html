@@ -421,6 +421,12 @@
         <i class="fas fa-file-invoice w-5 text-center text-[15px] flex-shrink-0"></i>
         <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Cotizaciones</span>
       </a>
+      <a href="{% url 'devoluciones:lista' %}"
+         class="sidebar-item {% if request.resolver_match.app_name == 'devoluciones' %}active{% endif %}"
+         title="Devoluciones">
+        <i class="fas fa-rotate-left w-5 text-center text-[15px] flex-shrink-0"></i>
+        <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Devoluciones</span>
+      </a>
       <a href="{% url 'clientes:lista' %}"
          class="sidebar-item {% if request.resolver_match.app_name == 'clientes' %}active{% endif %}"
          title="Clientes">

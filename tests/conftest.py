@@ -153,6 +153,20 @@ class CompetenciaRegistroFactory(DjangoModelFactory):
     precio_nuestro = Decimal('110.00')
 
 
+class VisitaFactory(DjangoModelFactory):
+    """Factory para VisitaComercial con valores por defecto razonables."""
+    class Meta:
+        model = 'visitas.VisitaComercial'
+
+    organization = factory.SubFactory(OrganizationFactory)
+    cliente      = factory.SubFactory(ClienteFactory)
+    vendedor     = factory.SubFactory(UserFactory)
+    fecha        = factory.LazyFunction(lambda: timezone.now().date())
+    tipo         = 'presencial'
+    estado       = 'pendiente'
+    objetivo     = 'Visita de seguimiento'
+
+
 # ── Fixtures de pytest ─────────────────────────────────────────────────────────
 
 @pytest.fixture

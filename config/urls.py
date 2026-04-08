@@ -45,6 +45,9 @@ urlpatterns = [
 
     # Devoluciones y Notas de Crédito
     path('devoluciones/', include('apps.devoluciones.urls', namespace='devoluciones')),
+
+    # Visitas Comerciales
+    path('visitas/', include('apps.visitas.urls', namespace='visitas')),
 ]
 
 # Servir media en desarrollo

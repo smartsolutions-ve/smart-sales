@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if modo == 'editar' %}Editar Visita{% else %}Nueva Visita{% endif %} — SmartSales
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+  {# ── Encabezado ─────────────────────────────────────────────────────────── #}
+  <div class="flex items-center gap-3">
+    <a href="{% url 'visitas:lista' %}" class="w-9 h-9 rounded-xl surface-base flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors flex-shrink-0">
+      <i class="fas fa-arrow-left text-slate-500 dark:text-slate-400 text-sm"></i>
+    </a>
+    <div>
+      <h1 class="text-title">
+        {% if modo == 'editar' %}Editar Visita{% else %}Nueva Visita Comercial{% endif %}
+      </h1>
+      <p class="text-subtitle mt-0.5">
+        {% if modo == 'editar' %}Actualiza los datos de la visita{% else %}Registra una nueva visita comercial{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {# ── Formulario ─────────────────────────────────────────────────────────── #}
+  <form
+    method="post"
+    action="{% if modo == 'editar' %}{% url 'visitas:editar' visita.pk %}{% else %}{% url 'visitas:crear' %}{% endif %}"
+    x-data="{
+      estado: '{{ visita.estado|default:'pendiente' }}',
+      showResultado: {% if modo == 'editar' %}true{% else %}false{% endif %}
+    }"
+    @change="showResultado = (estado !== 'pendiente')"
+  >
+    {% csrf_token %}
+
+    <div class="card-glass space-y-5">
+
+      {# Cliente #}
+      <div>
+        <label class="label-base" for="cliente_id">Cliente <span class="text-red-500">*</span></label>
+        <select
+          id="cliente_id"
+          name="cliente_id"
+          required
+          class="input-base"
+        >
+          <option value="">Selecciona un cliente...</option>
+          {% for c in clientes %}
+            <option value="{{ c.pk }}"
+              {% if visita.cliente_id == c.pk %}selected{% endif %}
+            >{{ c.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Vendedor — visible solo para gerente #}
+      {% if not request.user.is_vendedor %}
+        <div>
+          <label class="label-base" for="vendedor_id">Vendedor</label>
+          <select id="vendedor_id" name="vendedor_id" class="input-base">
+            <option value="">Asignar a mí mismo ({{ request.user.get_full_name|default:request.user.username }})</option>
+            {% for v in vendedores %}
+              <option value="{{ v.pk }}"
+                {% if visita.vendedor_id == v.pk %}selected{% endif %}
+              >{{ v.get_full_name|default:v.username }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Deja en blanco para asignarte la visita a ti mismo.</p>
+        </div>
+      {% endif %}
+
+      {# Fecha + Tipo en fila #}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label-base" for="fecha">Fecha <span class="text-red-500">*</span></label>
+          <input
+            id="fecha"
+            type="date"
+            name="fecha"
+            required
+            value="{{ visita.fecha|date:'Y-m-d'|default:today|date:'Y-m-d' }}"
+            class="input-base"
+          >
+        </div>
+        <div>
+          <label class="label-base" for="tipo">Tipo de visita</label>
+          <select id="tipo" name="tipo" class="input-base">
+            {% for val, label in tipos %}
+              <option value="{{ val }}"
+                {% if visita.tipo == val or not visita and val == 'presencial' %}selected{% endif %}
+              >{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {# Estado #}
+      <div>
+        <label class="label-base" for="estado">Estado</label>
+        <select id="estado" name="estado" x-model="estado" class="input-base">
+          {% for val, label in estados %}
+            <option value="{{ val }}"
+              {% if visita.estado == val %}selected{% endif %}
+            >{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Objetivo #}
+      <div>
+        <label class="label-base" for="objetivo">Objetivo de la visita</label>
+        <textarea
+          id="objetivo"
+          name="objetivo"
+          rows="3"
+          placeholder="¿Qué se espera lograr en esta visita?"
+          class="input-base resize-none"
+        >{{ visita.objetivo|default:'' }}</textarea>
+      </div>
+
+      {# Resultado — siempre visible en edición, se muestra si estado != pendiente #}
+      <div x-show="showResultado" x-transition>
+        <label class="label-base" for="resultado">Resultado / Notas de la visita</label>
+        <textarea
+          id="resultado"
+          name="resultado"
+          rows="3"
+          placeholder="¿Cómo resultó la visita? Acuerdos, compromisos, observaciones..."
+          class="input-base resize-none"
+        >{{ visita.resultado|default:'' }}</textarea>
+      </div>
+
+      {# Próxima visita #}
+      <div>
+        <label class="label-base" for="proxima_visita">Próxima visita (opcional)</label>
+        <input
+          id="proxima_visita"
+          type="date"
+          name="proxima_visita"
+          value="{{ visita.proxima_visita|date:'Y-m-d'|default:'' }}"
+          class="input-base"
+        >
+      </div>
+
+      {# Botones #}
+      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
+        <a href="{% url 'visitas:lista' %}" class="btn-secondary">
+          <i class="fas fa-times"></i>
+          <span>Cancelar</span>
+        </a>
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-save"></i>
+          <span>{% if modo == 'editar' %}Actualizar{% else %}Guardar{% endif %}</span>
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}

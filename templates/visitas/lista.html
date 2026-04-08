@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Visitas Comerciales — SmartSales{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# ── Encabezado ─────────────────────────────────────────────────────────── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-title">Visitas Comerciales</h1>
+      <p class="text-subtitle mt-0.5">
+        {% if request.user.is_vendedor %}
+          Tus visitas registradas
+        {% else %}
+          Seguimiento de visitas del equipo comercial
+        {% endif %}
+      </p>
+    </div>
+    <a href="{% url 'visitas:crear' %}" class="btn-primary w-full sm:w-auto">
+      <i class="fas fa-plus"></i>
+      <span>Nueva Visita</span>
+    </a>
+  </div>
+
+  {# ── KPI Cards ──────────────────────────────────────────────────────────── #}
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="card-glass flex items-center gap-4">
+      <div class="w-11 h-11 rounded-xl bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-map-marker-alt text-brand-blue text-lg"></i>
+      </div>
+      <div>
+        <p class="text-subtitle text-xs uppercase tracking-wide">Total Visitas</p>
+        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ total }}</p>
+      </div>
+    </div>
+    <div class="card-glass flex items-center gap-4">
+      <div class="w-11 h-11 rounded-xl bg-brand-green/10 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-check-circle text-brand-green text-lg"></i>
+      </div>
+      <div>
+        <p class="text-subtitle text-xs uppercase tracking-wide">Realizadas</p>
+        <p class="text-2xl font-bold text-brand-green">{{ realizadas }}</p>
+      </div>
+    </div>
+    <div class="card-glass flex items-center gap-4">
+      <div class="w-11 h-11 rounded-xl bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-clock text-amber-500 text-lg"></i>
+      </div>
+      <div>
+        <p class="text-subtitle text-xs uppercase tracking-wide">Pendientes</p>
+        <p class="text-2xl font-bold text-amber-500">{{ pendientes }}</p>
+      </div>
+    </div>
+  </div>
+
+  {# ── Filtros ────────────────────────────────────────────────────────────── #}
+  <div class="card-glass">
+    <form method="get" class="flex flex-wrap gap-3 items-end">
+      <div class="flex-1 min-w-[180px]">
+        <label class="label-base" for="q">Buscar cliente</label>
+        <input
+          id="q"
+          type="text"
+          name="q"
+          value="{{ q }}"
+          placeholder="Nombre del cliente..."
+          class="input-base"
+        >
+      </div>
+
+      {% if not request.user.is_vendedor %}
+      <div class="flex-1 min-w-[150px]">
+        <label class="label-base" for="vendedor">Vendedor</label>
+        <select id="vendedor" name="vendedor" class="input-base">
+          <option value="">Todos</option>
+          {% for v in vendedores %}
+            <option value="{{ v.pk }}" {% if vendedor_id == v.pk|stringformat:"s" %}selected{% endif %}>
+              {{ v.get_full_name|default:v.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="flex-1 min-w-[130px]">
+        <label class="label-base" for="estado">Estado</label>
+        <select id="estado" name="estado" class="input-base">
+          <option value="">Todos</option>
+          {% for val, label in estados %}
+            <option value="{{ val }}" {% if estado == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="flex-1 min-w-[130px]">
+        <label class="label-base" for="desde">Desde</label>
+        <input id="desde" type="date" name="desde" value="{{ fecha_desde }}" class="input-base">
+      </div>
+
+      <div class="flex-1 min-w-[130px]">
+        <label class="label-base" for="hasta">Hasta</label>
+        <input id="hasta" type="date" name="hasta" value="{{ fecha_hasta }}" class="input-base">
+      </div>
+
+      <div class="flex gap-2 flex-shrink-0">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-search"></i>
+          <span>Filtrar</span>
+        </button>
+        {% if q or vendedor_id or estado or fecha_desde or fecha_hasta %}
+          <a href="{% url 'visitas:lista' %}" class="btn-secondary">
+            <i class="fas fa-times"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {# ── Tabla de Visitas ───────────────────────────────────────────────────── #}
+  <div class="card-glass p-0 overflow-hidden">
+    {% if visitas %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-white/[0.06]">
+              <th class="th-base">Cliente</th>
+              {% if not request.user.is_vendedor %}
+                <th class="th-base">Vendedor</th>
+              {% endif %}
+              <th class="th-base">Fecha</th>
+              <th class="th-base">Tipo</th>
+              <th class="th-base">Estado</th>
+              <th class="th-base">Objetivo</th>
+              <th class="th-base">Próxima</th>
+              <th class="th-base text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            {% for visita in visitas %}
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+
+                <td class="td-base font-medium text-slate-900 dark:text-white">
+                  {{ visita.cliente.nombre }}
+                </td>
+
+                {% if not request.user.is_vendedor %}
+                  <td class="td-base text-slate-600 dark:text-slate-400">
+                    {{ visita.vendedor.get_full_name|default:visita.vendedor.username }}
+                  </td>
+                {% endif %}
+
+                <td class="td-base text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                  {{ visita.fecha|date:"d/m/Y" }}
+                </td>
+
+                <td class="td-base">
+                  {% if visita.tipo == 'presencial' %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium">
+                      <i class="fas fa-handshake text-[10px]"></i> Presencial
+                    </span>
+                  {% elif visita.tipo == 'telefonica' %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-medium">
+                      <i class="fas fa-phone text-[10px]"></i> Telefónica
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-medium">
+                      <i class="fas fa-video text-[10px]"></i> Virtual
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td class="td-base">
+                  {% if visita.estado == 'realizada' %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 font-medium">
+                      <i class="fas fa-check text-[10px]"></i> Realizada
+                    </span>
+                  {% elif visita.estado == 'pendiente' %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 font-medium">
+                      <i class="fas fa-clock text-[10px]"></i> Pendiente
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 font-medium">
+                      <i class="fas fa-ban text-[10px]"></i> Cancelada
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td class="td-base text-slate-600 dark:text-slate-400 max-w-[200px] truncate">
+                  {{ visita.objetivo|truncatechars:60|default:"—" }}
+                </td>
+
+                <td class="td-base text-slate-500 dark:text-slate-500 whitespace-nowrap text-xs">
+                  {% if visita.proxima_visita %}
+                    {{ visita.proxima_visita|date:"d/m/Y" }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+
+                <td class="td-base text-right">
+                  <div x-data="{ open: false }" class="relative inline-block">
+                    <button
+                      @click="open = !open"
+                      @click.outside="open = false"
+                      class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    >
+                      <i class="fas fa-ellipsis-v text-xs"></i>
+                    </button>
+                    <div
+                      x-show="open"
+                      x-transition
+                      class="absolute right-0 z-20 mt-1 w-44 rounded-xl surface-base shadow-lg border border-slate-200 dark:border-white/[0.08] py-1 text-sm"
+                    >
+                      <a href="{% url 'visitas:editar' visita.pk %}"
+                         class="flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                        <i class="fas fa-edit w-4 text-center text-brand-blue"></i> Editar
+                      </a>
+
+                      {% if visita.estado == 'pendiente' %}
+                        <form method="post" action="{% url 'visitas:marcar_realizada' visita.pk %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="w-full flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors text-left">
+                            <i class="fas fa-check-circle w-4 text-center text-brand-green"></i> Marcar realizada
+                          </button>
+                        </form>
+                      {% endif %}
+
+                      <div class="border-t border-slate-100 dark:border-white/[0.06] my-1"></div>
+                      <form method="post" action="{% url 'visitas:eliminar' visita.pk %}"
+                            x-data
+                            @submit.prevent="if(confirm('¿Eliminar esta visita?')) $el.submit()">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full flex items-center gap-2 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left">
+                          <i class="fas fa-trash w-4 text-center"></i> Eliminar
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </td>
+
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-4">
+          <i class="fas fa-map-marker-alt text-2xl text-slate-300 dark:text-slate-600"></i>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 font-medium">No hay visitas registradas</p>
+        <p class="text-slate-400 dark:text-slate-600 text-sm mt-1">
+          {% if q or estado or fecha_desde %}
+            Prueba ajustando los filtros de búsqueda
+          {% else %}
+            Registra la primera visita comercial
+          {% endif %}
+        </p>
+        <a href="{% url 'visitas:crear' %}" class="btn-primary mt-4">
+          <i class="fas fa-plus"></i> Nueva Visita
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -53,6 +53,7 @@ LOCAL_APPS = [
     'apps.chat_ia',
     'apps.configuracion',
     'apps.cotizaciones',
+    'apps.cxc',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

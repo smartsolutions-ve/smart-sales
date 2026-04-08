@@ -452,6 +452,14 @@
         <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Competencia</span>
       </a>
 
+      <p x-show="sidebarOpen" x-transition.opacity class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-wider mt-5 mb-2">Finanzas</p>
+      <a href="{% url 'cxc:dashboard' %}"
+         class="sidebar-item {% if request.resolver_match.app_name == 'cxc' %}active{% endif %}"
+         title="Cuentas por Cobrar">
+        <i class="fas fa-file-invoice-dollar w-5 text-center text-[15px] flex-shrink-0"></i>
+        <span x-show="sidebarOpen" x-transition.opacity.duration.200ms>Cuentas x Cobrar</span>
+      </a>
+
       <p x-show="sidebarOpen" x-transition.opacity class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-wider mt-5 mb-2">Analisis</p>
       <a href="{% url 'reportes:vendedores' %}"
          class="sidebar-item {% if request.resolver_match.app_name == 'reportes' %}active{% endif %}"

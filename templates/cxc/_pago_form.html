@@ -1,0 +1,84 @@
+{% load bs_tags %}
+<!-- Partial: formulario de pago en modal (cargado via HTMX) -->
+<div>
+  <h2 class="font-bold text-lg mb-1 text-slate-900 dark:text-white">
+    <i class="fas fa-plus-circle mr-2 text-brand-green"></i>Registrar Pago
+  </h2>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">
+    Cliente: <span class="font-semibold text-slate-700 dark:text-slate-300">{{ cliente.nombre }}</span>
+  </p>
+
+  <form hx-post="{% url 'cxc:registrar_pago' cliente.pk %}"
+        hx-target="#pagos-lista"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <!-- Fecha -->
+    <div>
+      <label class="label-base" for="id_fecha">{{ form.fecha.label }}</label>
+      {{ form.fecha }}
+      {% if form.fecha.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.fecha.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Monto -->
+    <div>
+      <label class="label-base" for="id_monto">{{ form.monto.label }}</label>
+      {{ form.monto }}
+      {% if form.monto.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.monto.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Método -->
+    <div>
+      <label class="label-base" for="id_metodo">{{ form.metodo.label }}</label>
+      {{ form.metodo }}
+      {% if form.metodo.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.metodo.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Referencia -->
+    <div>
+      <label class="label-base" for="id_referencia">{{ form.referencia.label }}</label>
+      {{ form.referencia }}
+      {% if form.referencia.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.referencia.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Observaciones -->
+    <div>
+      <label class="label-base" for="id_observaciones">{{ form.observaciones.label }}</label>
+      {{ form.observaciones }}
+      {% if form.observaciones.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.observaciones.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Errores no relacionados a campos -->
+    {% if form.non_field_errors %}
+    <div class="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+      {% for error in form.non_field_errors %}
+      <p class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Acciones -->
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="btn-primary flex-1">
+        <i class="fas fa-save"></i>
+        Guardar Pago
+      </button>
+      <button type="button"
+              @click="$dispatch('close-modal')"
+              class="btn-secondary">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</div>

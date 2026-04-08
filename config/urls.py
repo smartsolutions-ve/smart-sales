@@ -39,6 +39,9 @@ urlpatterns = [
 
     # Cotizaciones
     path('cotizaciones/', include('apps.cotizaciones.urls', namespace='cotizaciones')),
+
+    # Cuentas por Cobrar
+    path('cxc/', include('apps.cxc.urls', namespace='cxc')),
 ]
 
 # Servir media en desarrollo

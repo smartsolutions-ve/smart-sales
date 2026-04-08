@@ -70,6 +70,13 @@
         </div>
 
         <div>
+          <label class="label-base">Stock Mínimo</label>
+          <input type="number" name="stock_minimo" value="{{ producto.stock_minimo|default:'0' }}"
+                 step="0.01" min="0" class="input-base" placeholder="0">
+          <p class="text-xs text-subtitle mt-1">Recibirás una alerta cuando el stock caiga bajo este valor. 0 = sin alerta.</p>
+        </div>
+
+        <div>
           <label class="label-base">Categoría</label>
           <select name="categoria_id" class="input-base">
             <option value="">Sin categoría</option>

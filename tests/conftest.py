@@ -262,6 +262,7 @@ class ProductoFactory(DjangoModelFactory):
     peso_kg        = Decimal('1.50')
     exento_iva     = True
     is_active      = True
+    stock_minimo   = Decimal('0')
 
 
 class LoteFactory(DjangoModelFactory):

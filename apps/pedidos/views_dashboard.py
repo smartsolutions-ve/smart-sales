@@ -6,10 +6,11 @@ from decimal import Decimal
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Sum, Count, Value
+from django.db.models import F, Q, Sum, Count, Value
 from django.db.models.functions import Coalesce
 
 from apps.accounts.decorators import role_required
+from apps.productos.models import Producto
 from .models import Pedido
 
 MESES_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
@@ -319,11 +320,26 @@ def index(request):
             'color': COLORES_CHART[idx % len(COLORES_CHART)],
         })
 
+    # Conteo de productos bajo stock mínimo para widget de alerta
+    productos_alerta = (
+        Producto.objects
+        .filter(organization=org, is_active=True, stock_minimo__gt=0)
+        .annotate(
+            stock_actual=Coalesce(
+                Sum('lotes__cantidad_disponible', filter=Q(lotes__is_active=True)),
+                Value(Decimal('0')),
+            )
+        )
+        .filter(stock_actual__lt=F('stock_minimo'))
+        .count()
+    )
+
     context = {
         'ventas_totales':       ventas_totales,
         'pedidos_activos':      pedidos_activos,
         'pendientes_despacho':  pendientes_despacho,
         'tasa_cumplimiento':    tasa_cumplimiento,
+        'productos_alerta':     productos_alerta,
         'pedidos_urgentes':     pedidos_urgentes,
         'periodo':              periodo,
         'desde':                desde_param,

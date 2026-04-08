@@ -1,7 +1,11 @@
 """Vistas del catálogo de productos."""
+from decimal import Decimal
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import F, Q, Sum
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -131,6 +135,45 @@ def buscar_json(request):
     return JsonResponse({'results': results})
 
 
+@login_required
+@role_required('gerente', 'superadmin')
+def alertas_stock(request):
+    """Lista de productos con stock por debajo del mínimo configurado."""
+    productos = (
+        Producto.objects
+        .filter(organization=request.org, is_active=True, stock_minimo__gt=0)
+        .annotate(
+            stock_actual=Coalesce(
+                Sum('lotes__cantidad_disponible', filter=Q(lotes__is_active=True)),
+                Decimal('0'),
+            )
+        )
+        .filter(stock_actual__lt=F('stock_minimo'))
+        .annotate(deficit=F('stock_minimo') - F('stock_actual'))
+        .select_related('categoria')
+        .order_by('nombre')
+    )
+    return render(request, 'productos/alertas_stock.html', {'productos': productos})
+
+
+@login_required
+@role_required('gerente', 'superadmin')
+def configurar_stock_minimo(request, pk):
+    """Actualiza el stock_minimo de un producto."""
+    producto = get_object_or_404(Producto, pk=pk, organization=request.org)
+    if request.method == 'POST':
+        try:
+            valor = Decimal(request.POST.get('stock_minimo', '0').replace(',', '.'))
+            if valor < 0:
+                raise ValueError('El valor no puede ser negativo.')
+            producto.stock_minimo = valor
+            producto.save(update_fields=['stock_minimo'])
+            messages.success(request, f'Stock mínimo de "{producto.nombre}" actualizado a {valor}.')
+        except (ValueError, Exception):
+            messages.error(request, 'Valor inválido. Ingrese un número positivo.')
+    return redirect('productos:alertas_stock')
+
+
 def _guardar_producto(request, producto):
     data = request.POST
     nombre = data.get('nombre', '').strip()
@@ -178,6 +221,13 @@ def _guardar_producto(request, producto):
     producto.categoria = categoria
     producto.is_active = is_active
     producto.exento_iva = exento_iva
+
+    stock_minimo_val = data.get('stock_minimo', '0').strip() or '0'
+    try:
+        producto.stock_minimo = Decimal(stock_minimo_val)
+    except Exception:
+        producto.stock_minimo = Decimal('0')
+
     producto.save()
 
     messages.success(request, f'Producto "{producto.nombre}" guardado.')

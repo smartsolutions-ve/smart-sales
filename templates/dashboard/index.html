@@ -91,6 +91,16 @@
     </div>
   </div>
 
+  <!-- Widget: Alerta de stock mínimo -->
+  {% if productos_alerta %}
+  <a href="{% url 'productos:alertas_stock' %}"
+     class="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+    <span><strong>{{ productos_alerta }}</strong> producto{{ productos_alerta|pluralize }} bajo stock mínimo</span>
+    <i class="fas fa-arrow-right ml-auto text-xs"></i>
+  </a>
+  {% endif %}
+
   <!-- Fila 1: Ventas por mes + Dona estados -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="card-glass lg:col-span-2 flex flex-col">

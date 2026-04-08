@@ -49,6 +49,10 @@ class Producto(TenantModel, SoftDeleteModel):
         'peso por unidad (kg)', max_digits=8, decimal_places=3,
         null=True, blank=True,
     )
+    stock_minimo = models.DecimalField(
+        'Stock mínimo', max_digits=10, decimal_places=2, default=0,
+        help_text='Alerta cuando el stock total cae bajo este valor. 0 = sin alerta.',
+    )
     exento_iva  = models.BooleanField(
         'exento de IVA', default=True,
         help_text='Si es falso, se le cobrará el 16% de IVA en la facturación y pedidos.',
@@ -70,8 +74,15 @@ class Producto(TenantModel, SoftDeleteModel):
 
     @property
     def stock_disponible(self):
+        """Stock total sumando todos los lotes activos."""
         from django.db.models import Sum
-        return self.lotes.aggregate(total=Sum('cantidad_disponible'))['total'] or 0
+        result = self.lotes.filter(is_active=True).aggregate(total=Sum('cantidad_disponible'))
+        return result['total'] or 0
+
+    @property
+    def en_alerta_stock(self):
+        """True si el stock está por debajo del mínimo configurado."""
+        return self.stock_minimo > 0 and self.stock_disponible < self.stock_minimo
 
 
 class Lote(TenantModel):

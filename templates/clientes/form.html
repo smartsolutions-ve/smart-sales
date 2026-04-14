@@ -7,64 +7,94 @@
 <div class="p-4 md:p-6 max-w-2xl">
 
   <div class="flex items-center gap-3 mb-5">
-    <a href="{% url 'clientes:lista' %}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all">
+    <a href="{% url 'clientes:lista' %}"
+       class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all"
+       aria-label="Volver a clientes">
       <i class="fas fa-arrow-left text-sm"></i>
     </a>
-    <h1 class="text-title">{% if cliente %}Editar {{ cliente.nombre }}{% else %}Nuevo Cliente{% endif %}</h1>
+    <h1 class="text-title">
+      {% if cliente %}Editar {{ cliente.nombre }}{% else %}Nuevo Cliente{% endif %}
+    </h1>
   </div>
 
   <form method="post"
         action="{% if cliente %}{% url 'clientes:editar' cliente.pk %}{% else %}{% url 'clientes:crear' %}{% endif %}"
+        x-data="{ submitting: false }"
         data-warn-unsaved>
     {% csrf_token %}
 
+    {# ── Datos de contacto ──────────────────────────────────────────────────── #}
     <div class="card-glass space-y-4">
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
+        Datos de Contacto
+      </h2>
 
+      {# Nombre #}
       <div>
-        <label class="label-base">Nombre <span class="text-red-500">*</span></label>
-        <input type="text" name="nombre" required
+        <label for="id_nombre" class="label-base">
+          Nombre / Razón Social <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <input type="text" id="id_nombre" name="nombre" required aria-required="true"
                value="{{ cliente.nombre|default:'' }}"
                class="input-base"
-               placeholder="Nombre del cliente">
+               placeholder="Ej: Distribuidora El Llano C.A.">
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {# Contacto #}
         <div>
-          <label class="label-base">Persona de Contacto</label>
-          <input type="text" name="contacto"
+          <label for="id_contacto" class="label-base">Persona de Contacto</label>
+          <input type="text" id="id_contacto" name="contacto"
                  value="{{ cliente.contacto|default:'' }}"
                  class="input-base"
-                 placeholder="Nombre del contacto">
+                 placeholder="Ej: Juan Pérez">
         </div>
+
+        {# Teléfono #}
         <div>
-          <label class="label-base">Telefono</label>
-          <input type="text" name="telefono"
+          <label for="id_telefono" class="label-base">Teléfono</label>
+          <input type="tel" id="id_telefono" name="telefono"
                  value="{{ cliente.telefono|default:'' }}"
                  class="input-base"
-                 placeholder="0412-1234567">
+                 placeholder="Ej: 0412-1234567"
+                 autocomplete="tel">
         </div>
       </div>
 
+      {# Email #}
       <div>
-        <label class="label-base">Email</label>
-        <input type="email" name="email"
+        <label for="id_email" class="label-base">Email</label>
+        <input type="email" id="id_email" name="email"
                value="{{ cliente.email|default:'' }}"
                class="input-base"
-               placeholder="correo@ejemplo.com">
+               placeholder="correo@empresa.com"
+               autocomplete="email">
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+          Se usa para enviar notificaciones de pedidos y cotizaciones.
+        </p>
       </div>
 
+      {# Dirección #}
       <div>
-        <label class="label-base">Direccion</label>
-        <textarea name="direccion" rows="2"
-                  class="input-base"
-                  placeholder="Direccion del cliente">{{ cliente.direccion|default:'' }}</textarea>
+        <label for="id_direccion" class="label-base">Dirección</label>
+        <textarea id="id_direccion" name="direccion" rows="2"
+                  class="input-base resize-none"
+                  placeholder="Calle, sector, municipio...">{{ cliente.direccion|default:'' }}</textarea>
       </div>
+    </div>
 
-      {% if listas_precio %}
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-white/[0.04]">
+    {# ── Configuración comercial ────────────────────────────────────────────── #}
+    {% if listas_precio %}
+    <div class="card-glass space-y-4 mt-4">
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
+        Configuración Comercial
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {# Lista de precios #}
         <div>
-          <label class="label-base">Lista de Precios</label>
-          <select name="lista_precio_id" class="input-base">
+          <label for="id_lista_precio" class="label-base">Lista de Precios</label>
+          <select id="id_lista_precio" name="lista_precio_id" class="input-base">
             <option value="">— Sin asignar —</option>
             {% for lp in listas_precio %}
             <option value="{{ lp.pk }}" {% if cliente.lista_precio_id == lp.pk %}selected{% endif %}>
@@ -72,33 +102,66 @@
             </option>
             {% endfor %}
           </select>
+          <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            Define los precios que verá este cliente al cotizar.
+          </p>
         </div>
+
+        {# Límite de crédito #}
         <div>
-          <label class="label-base">Límite de Crédito</label>
-          <input type="number" name="limite_credito" min="0" step="0.01"
-                 value="{{ cliente.limite_credito|default:'0' }}"
-                 class="input-base"
-                 placeholder="0 = sin límite">
+          <label for="id_limite_credito" class="label-base">Límite de Crédito</label>
+          <div class="relative">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">$</span>
+            <input type="number" id="id_limite_credito" name="limite_credito"
+                   min="0" step="0.01"
+                   value="{{ cliente.limite_credito|default:'0' }}"
+                   class="input-base !pl-6">
+          </div>
+          <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            0 = sin límite de crédito
+          </p>
         </div>
+
+        {# Días de crédito #}
         <div>
-          <label class="label-base">Días de Crédito</label>
-          <input type="number" name="dias_credito" min="0"
-                 value="{{ cliente.dias_credito|default:'0' }}"
-                 class="input-base"
-                 placeholder="0 = contado">
+          <label for="id_dias_credito" class="label-base">Días de Crédito</label>
+          <div class="relative">
+            <input type="number" id="id_dias_credito" name="dias_credito"
+                   min="0" max="365"
+                   value="{{ cliente.dias_credito|default:'0' }}"
+                   class="input-base !pr-14">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">días</span>
+          </div>
+          <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            0 = pago de contado
+          </p>
         </div>
       </div>
-      {% endif %}
     </div>
+    {% endif %}
 
-    <div class="flex flex-col sm:flex-row gap-3 mt-5">
-      <button type="submit" class="btn-primary">
-        <i class="fas fa-save"></i> Guardar Cliente
-      </button>
+    {# ── Acciones ───────────────────────────────────────────────────────────── #}
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-5">
       <a href="{% if cliente %}{% url 'clientes:detalle' cliente.pk %}{% else %}{% url 'clientes:lista' %}{% endif %}"
          class="btn-secondary">
-        Cancelar
+        <i class="fas fa-times"></i>
+        <span>Cancelar</span>
       </a>
+      <button type="submit" class="btn-primary"
+              @click="submitting = true" :disabled="submitting">
+        <template x-if="!submitting">
+          <span><i class="fas fa-save mr-1"></i> Guardar Cliente</span>
+        </template>
+        <template x-if="submitting">
+          <span class="flex items-center gap-2">
+            <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity=".25"/>
+              <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+            </svg>
+            Guardando...
+          </span>
+        </template>
+      </button>
     </div>
 
   </form>

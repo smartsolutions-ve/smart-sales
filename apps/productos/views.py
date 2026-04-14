@@ -111,11 +111,26 @@ def buscar_json(request):
         except ListaPrecio.DoesNotExist:
             pass
 
+    from django.db.models import OuterRef, Subquery, DecimalField
+    from .models import Lote
+
+    stock_subq = (
+        Lote.objects
+        .filter(producto=OuterRef('pk'), is_active=True)
+        .values('producto')
+        .annotate(total=Sum('cantidad_disponible'))
+        .values('total')
+    )
+
     productos = (
         Producto.objects
         .filter(organization=request.org, is_active=True)
         .filter(Q(nombre__icontains=q) | Q(sku__icontains=q))
-        .values('id', 'nombre', 'sku', 'precio_base', 'unidad')[:10]
+        .annotate(stock_disponible=Coalesce(
+            Subquery(stock_subq, output_field=DecimalField()),
+            Decimal('0')
+        ))
+        .values('id', 'nombre', 'sku', 'precio_base', 'unidad', 'stock_disponible')[:10]
     )
 
     results = []
@@ -130,6 +145,7 @@ def buscar_json(request):
             'sku': p['sku'] or '',
             'precio_base': str(precio) if precio else '',
             'unidad': p['unidad'] or '',
+            'stock': float(p['stock_disponible'] or 0),
         })
 
     return JsonResponse({'results': results})

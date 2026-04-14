@@ -7,7 +7,9 @@
 <div class="p-4 md:p-6 max-w-4xl">
 
   <div class="flex items-center gap-3 mb-5">
-    <a href="{% url 'pedidos:lista' %}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all" aria-label="Volver">
+    <a href="{% url 'pedidos:lista' %}"
+       class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-all"
+       aria-label="Volver a pedidos">
       <i class="fas fa-arrow-left text-sm"></i>
     </a>
     <h1 class="text-title">
@@ -15,41 +17,58 @@
     </h1>
   </div>
 
-  <form method="post"
+  <form id="pedido-form"
+        method="post"
         action="{% if pedido %}{% url 'pedidos:editar' pedido.pk %}{% else %}{% url 'pedidos:crear' %}{% endif %}"
-        x-data="pedidoForm({{ pedido.items.all|length|default:0 }})"
+        x-data="pedidoForm()"
         data-warn-unsaved>
     {% csrf_token %}
 
+    {# ── Datos del pedido ───────────────────────────────────────────────────── #}
     <div class="card-glass space-y-4">
-      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Datos del pedido</h2>
+      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
+        Datos del pedido
+      </h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Cliente -->
+
+        {# Cliente #}
         <div class="sm:col-span-2">
-          <label class="label-base">Cliente</label>
-          <select name="cliente_id" class="input-base"
+          <label for="id_cliente" class="label-base">
+            Cliente <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <select id="id_cliente" name="cliente_id" required aria-required="true"
+                  class="input-base"
                   @change="onClienteChange($event.target.value)">
             <option value="">-- Seleccionar cliente existente --</option>
             {% for c in clientes %}
-            <option value="{{ c.pk }}" {% if pedido and pedido.cliente_id == c.pk %}selected{% endif %}>{{ c.nombre }}</option>
+            <option value="{{ c.pk }}" {% if pedido and pedido.cliente_id == c.pk %}selected{% endif %}>
+              {{ c.nombre }}
+            </option>
             {% endfor %}
           </select>
-          <p class="text-xs text-slate-500 mt-1.5">O escribe el nombre de un cliente nuevo:</p>
-          <input type="text" name="cliente_nuevo_nombre" placeholder="Nombre del cliente nuevo"
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            O escribe el nombre de un cliente nuevo:
+          </p>
+          <input type="text" id="id_cliente_nuevo" name="cliente_nuevo_nombre"
+                 placeholder="Nombre del cliente nuevo"
                  class="mt-1 input-base">
-          <!-- Alerta crédito inline -->
+          {# Alerta crédito #}
           <div x-show="alertaCredito" x-transition
-               class="mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1">
+               class="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2"
+               role="alert" aria-live="polite">
             <i class="fas fa-exclamation-triangle mt-0.5 flex-shrink-0"></i>
             <span x-text="alertaCredito"></span>
           </div>
         </div>
 
-        <!-- Vendedor -->
+        {# Vendedor #}
         <div>
-          <label class="label-base">Vendedor</label>
-          <select name="vendedor_id" required class="input-base">
+          <label for="id_vendedor" class="label-base">
+            Vendedor <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <select id="id_vendedor" name="vendedor_id" required aria-required="true"
+                  class="input-base">
             <option value="">-- Seleccionar --</option>
             {% for v in vendedores %}
             <option value="{{ v.pk }}" {% if pedido and pedido.vendedor_id == v.pk %}selected{% endif %}>
@@ -59,45 +78,43 @@
           </select>
         </div>
 
-        <!-- Estado (solo en edicion) -->
+        {# Estado (solo en edición) #}
         {% if pedido %}
         <div>
-          <label class="label-base">Estado</label>
-          <select name="estado" class="input-base">
+          <label for="id_estado" class="label-base">Estado</label>
+          <select id="id_estado" name="estado" class="input-base">
             {% for valor, label in estados %}
-            <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
         {% endif %}
 
-        <!-- Fecha pedido -->
+        {# Fecha pedido #}
         <div>
-          <label class="label-base">Fecha del Pedido</label>
-          <input type="date" name="fecha_pedido" required
+          <label for="id_fecha_pedido" class="label-base">
+            Fecha del Pedido <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <input type="date" id="id_fecha_pedido" name="fecha_pedido" required
                  value="{{ pedido.fecha_pedido|default:'' }}"
                  class="input-base">
         </div>
 
-        <!-- Fecha entrega -->
+        {# Fecha entrega #}
         <div>
-          <label class="label-base">Fecha de Entrega</label>
-          <input type="date" name="fecha_entrega"
+          <label for="id_fecha_entrega" class="label-base">Fecha de Entrega</label>
+          <input type="date" id="id_fecha_entrega" name="fecha_entrega"
                  value="{{ pedido.fecha_entrega|default:'' }}"
                  class="input-base">
         </div>
 
-        <!-- Observaciones -->
-        <div class="sm:col-span-2">
-          <label class="label-base">Observaciones</label>
-          <textarea name="observaciones" rows="2"
-                    class="input-base">{{ pedido.observaciones|default:'' }}</textarea>
-        </div>
-
+        {# Método de pago #}
         {% if metodos_pago %}
         <div>
-          <label class="label-base">Método de Pago</label>
-          <select name="metodo_pago_id" class="input-base">
+          <label for="id_metodo_pago" class="label-base">Método de Pago</label>
+          <select id="id_metodo_pago" name="metodo_pago_id" class="input-base">
             <option value="">— Sin especificar —</option>
             {% for mp in metodos_pago %}
             <option value="{{ mp.pk }}" {% if pedido.metodo_pago_id == mp.pk %}selected{% endif %}>
@@ -108,10 +125,11 @@
         </div>
         {% endif %}
 
+        {# Zona de despacho #}
         {% if zonas_despacho %}
         <div>
-          <label class="label-base">Zona de Despacho</label>
-          <select name="zona_despacho_id" class="input-base">
+          <label for="id_zona_despacho" class="label-base">Zona de Despacho</label>
+          <select id="id_zona_despacho" name="zona_despacho_id" class="input-base">
             <option value="">— Sin especificar —</option>
             {% for zd in zonas_despacho %}
             <option value="{{ zd.pk }}" {% if pedido.zona_despacho_id == zd.pk %}selected{% endif %}>
@@ -121,145 +139,338 @@
           </select>
         </div>
         {% endif %}
+
+        {# Observaciones #}
+        <div class="sm:col-span-2">
+          <label for="id_observaciones" class="label-base">Observaciones</label>
+          <textarea id="id_observaciones" name="observaciones" rows="2"
+                    class="input-base resize-none"
+                    placeholder="Notas adicionales sobre el pedido...">{{ pedido.observaciones|default:'' }}</textarea>
+        </div>
+
       </div>
     </div>
 
-    <!-- Items -->
-    <div class="card-glass mt-4 space-y-4">
-      <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Items</h2>
+    {# ── Items ──────────────────────────────────────────────────────────────── #}
+    <div class="card-glass mt-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
+          Items del Pedido
+        </h2>
+        <span class="text-xs text-slate-400" x-text="items.length + ' producto' + (items.length === 1 ? '' : 's')">
+          0 productos
+        </span>
+      </div>
 
-      <div class="space-y-3">
-        <template x-for="(item, index) in items" :key="index">
-          <div class="grid grid-cols-12 gap-2 items-end">
-            <div class="col-span-12 sm:col-span-5 relative">
-              <label class="text-[11px] text-slate-500 font-medium">Producto</label>
-              <input type="text" x-model="item.producto" :name="'items[][producto]'"
-                     @input.debounce.300ms="buscarProducto(index, $event.target.value)"
-                     @focus="buscarProducto(index, item.producto)"
-                     @keydown.escape="item._sugerencias = []"
-                     autocomplete="off"
-                     class="input-base !py-2"
-                     placeholder="Buscar producto...">
-              <!-- Dropdown de sugerencias -->
-              <div x-show="item._sugerencias && item._sugerencias.length > 0"
-                   @click.outside="item._sugerencias = []"
-                   class="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                <template x-for="(sug, si) in item._sugerencias" :key="si">
-                  <button type="button"
-                          @click="seleccionarProducto(index, sug)"
-                          class="w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.04] last:border-0 transition-colors">
-                    <span class="font-medium" x-text="sug.nombre"></span>
-                    <span class="text-xs text-slate-400 ml-1" x-show="sug.sku" x-text="'[' + sug.sku + ']'"></span>
-                    <span class="text-xs text-emerald-600 float-right" x-show="sug.precio_base" x-text="'$' + sug.precio_base"></span>
-                  </button>
-                </template>
+      {# Lista de items #}
+      <div class="space-y-2">
+        <template x-for="(item, index) in items" :key="item._id">
+          <div class="border border-slate-200/70 dark:border-white/[0.07] rounded-xl p-3 space-y-2.5"
+               :class="stockStatus(item) === 'sin_stock' ? 'border-red-300 dark:border-red-500/30 bg-red-50/30 dark:bg-red-900/10' :
+                       stockStatus(item) === 'insuficiente' ? 'border-amber-300 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-900/10' :
+                       'bg-white/40 dark:bg-white/[0.02]'">
+
+            {# Fila 1: Producto + botón eliminar #}
+            <div class="flex gap-2 items-start">
+              <div class="flex-1 relative">
+                <input type="text" x-model="item.producto" :name="'items[][producto]'"
+                       :id="'producto_' + index"
+                       @input.debounce.300ms="buscarProducto(index, $event.target.value)"
+                       @focus="if(item.producto.length >= 2) buscarProducto(index, item.producto)"
+                       @keydown.escape="item._sugerencias = []"
+                       @keydown.arrow-down.prevent="focusSugerencia(index, 0)"
+                       autocomplete="off"
+                       class="input-base !py-2 text-sm w-full"
+                       placeholder="Buscar producto por nombre o SKU...">
+
+                {# Indicador de stock bajo el input #}
+                <div class="flex items-center gap-1 mt-1 min-h-[18px]">
+                  <template x-if="item.sku && item.stock === null">
+                    <span class="text-[10px] text-slate-400">
+                      <i class="fas fa-box mr-0.5"></i>
+                      <span x-text="item.unidad || 'unidades'"></span>
+                    </span>
+                  </template>
+                  <template x-if="item.stock !== null && item.stock > 0 && (parseFloat(item.cantidad)||0) <= item.stock">
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      <i class="fas fa-check-circle mr-0.5"></i>
+                      <span x-text="item.stock + ' ' + (item.unidad || 'u') + ' disponibles'"></span>
+                    </span>
+                  </template>
+                  <template x-if="item.stock !== null && item.stock > 0 && (parseFloat(item.cantidad)||0) > item.stock">
+                    <span class="text-[10px] text-amber-500 font-medium">
+                      <i class="fas fa-exclamation-triangle mr-0.5"></i>
+                      Cantidad supera stock (<span x-text="item.stock"></span> disponibles)
+                    </span>
+                  </template>
+                  <template x-if="item.stock !== null && item.stock <= 0">
+                    <span class="text-[10px] text-red-500 font-medium">
+                      <i class="fas fa-times-circle mr-0.5"></i>
+                      Sin stock disponible
+                    </span>
+                  </template>
+                </div>
+
+                {# Dropdown de sugerencias #}
+                <div x-show="item._sugerencias && item._sugerencias.length > 0"
+                     @click.outside="item._sugerencias = []"
+                     class="absolute z-40 left-0 right-0 mt-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl max-h-52 overflow-y-auto">
+                  <template x-for="(sug, si) in item._sugerencias" :key="si">
+                    <button type="button"
+                            :id="'sug_' + index + '_' + si"
+                            @click="seleccionarProducto(index, sug)"
+                            @keydown.arrow-down.prevent="focusSugerencia(index, si + 1)"
+                            @keydown.arrow-up.prevent="si === 0 ? $refs['prod_' + index]?.focus() : focusSugerencia(index, si - 1)"
+                            @keydown.enter="seleccionarProducto(index, sug)"
+                            class="w-full text-left px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-white/[0.05] border-b border-slate-100 dark:border-white/[0.04] last:border-0 transition-colors">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-slate-800 dark:text-white truncate" x-text="sug.nombre"></p>
+                          <p class="text-[10px] text-slate-400" x-show="sug.sku" x-text="'SKU: ' + sug.sku"></p>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                          <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                             x-show="sug.precio_base" x-text="'$' + sug.precio_base"></p>
+                          <template x-if="sug.stock !== undefined">
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                                  :class="sug.stock > 0 ?
+                                    'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                                    'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'"
+                                  x-text="sug.stock > 0 ? sug.stock + ' en stock' : 'Sin stock'">
+                            </span>
+                          </template>
+                        </div>
+                      </div>
+                    </button>
+                  </template>
+                </div>
               </div>
-            </div>
-            <div class="col-span-4 sm:col-span-2">
-              <label class="text-[11px] text-slate-500 font-medium">SKU</label>
-              <input type="text" x-model="item.sku" :name="'items[][sku]'"
-                     class="input-base !py-2 bg-slate-50 dark:bg-slate-800/30"
-                     placeholder="Auto" readonly>
-            </div>
-            <div class="col-span-3 sm:col-span-2">
-              <label class="text-[11px] text-slate-500 font-medium">Cantidad</label>
-              <input type="number" x-model.number="item.cantidad" :name="'items[][cantidad]'"
-                     min="0.01" step="0.01"
-                     class="input-base !py-2">
-            </div>
-            <div class="col-span-4 sm:col-span-2">
-              <label class="text-[11px] text-slate-500 font-medium">Precio</label>
-              <input type="number" x-model.number="item.precio" :name="'items[][precio]'"
-                     min="0" step="0.01"
-                     class="input-base !py-2">
-            </div>
-            <div class="col-span-1 flex justify-center items-end pb-1">
+
+              {# Botón eliminar item #}
               <button @click="quitarItem(index)" x-show="items.length > 1"
-                      type="button" class="w-8 h-8 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all">
+                      type="button"
+                      :aria-label="'Eliminar item ' + (index + 1)"
+                      class="w-8 h-8 flex-shrink-0 mt-0.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center transition-all">
                 <i class="fas fa-times text-sm"></i>
               </button>
             </div>
+
+            {# Fila 2: SKU | Cantidad | Precio | Subtotal #}
+            <div class="grid grid-cols-12 gap-2">
+              <div class="col-span-3 sm:col-span-3">
+                <label class="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide block mb-0.5">
+                  SKU
+                </label>
+                <input type="text" x-model="item.sku" :name="'items[][sku]'"
+                       class="input-base !py-1.5 !text-xs bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400"
+                       placeholder="Auto" readonly tabindex="-1">
+              </div>
+              <div class="col-span-3 sm:col-span-2">
+                <label :for="'qty_' + index"
+                       class="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide block mb-0.5">
+                  Cantidad
+                </label>
+                <input type="number" x-model.number="item.cantidad" :name="'items[][cantidad]'"
+                       :id="'qty_' + index"
+                       min="0.01" step="0.01" required
+                       @input="checkCredito()"
+                       class="input-base !py-1.5 !text-xs text-center">
+              </div>
+              <div class="col-span-3 sm:col-span-3">
+                <label :for="'price_' + index"
+                       class="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide block mb-0.5">
+                  Precio Unit.
+                </label>
+                <div class="relative">
+                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">$</span>
+                  <input type="number" x-model.number="item.precio" :name="'items[][precio]'"
+                         :id="'price_' + index"
+                         min="0" step="0.01"
+                         @input="checkCredito()"
+                         class="input-base !py-1.5 !text-xs !pl-5">
+                </div>
+              </div>
+              <div class="col-span-3 sm:col-span-4">
+                <label class="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide block mb-0.5">
+                  Subtotal
+                </label>
+                <div class="flex items-center justify-end h-[34px] px-2.5 rounded-lg bg-slate-100/60 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06]">
+                  <span class="text-xs font-bold text-slate-800 dark:text-white"
+                        x-text="'$' + itemSubtotal(item).toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})">
+                    $0.00
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </template>
       </div>
 
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-3">
-        <button @click="agregarItem()" type="button"
-                class="text-sm text-brand-blue hover:text-blue-700 font-semibold transition-colors">
-          <i class="fas fa-plus mr-1"></i> Agregar item
-        </button>
-        <div class="text-right">
-          <span class="text-slate-500 text-sm">Total estimado:</span>
-          <span class="text-xl font-bold text-slate-900 dark:text-white ml-2"
-                x-text="'$' + total().toFixed(2)">$0.00</span>
+      {# Agregar item #}
+      <button @click="agregarItem()" type="button"
+              class="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/[0.08] text-sm text-slate-400 dark:text-slate-500 hover:border-brand-blue dark:hover:border-brand-blue hover:text-brand-blue transition-all">
+        <i class="fas fa-plus mr-1.5"></i> Agregar producto
+      </button>
+
+      {# ── Totales ── #}
+      <div class="bg-slate-50 dark:bg-white/[0.03] rounded-xl p-4 space-y-2 border border-slate-200/60 dark:border-white/[0.06]">
+        <div class="flex justify-between items-center text-sm text-slate-500 dark:text-slate-400">
+          <span>Subtotal</span>
+          <span x-text="'$' + subtotalItems.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})">$0.00</span>
+        </div>
+        <div class="flex justify-between items-center text-sm text-slate-500 dark:text-slate-400">
+          <span>IVA (16%)</span>
+          <span x-text="'$' + montoIva.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})">$0.00</span>
+        </div>
+        <div class="flex justify-between items-center text-base font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-white/[0.08] pt-2">
+          <span>Total estimado</span>
+          <span class="text-xl" x-text="'$' + totalConIva.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})">$0.00</span>
         </div>
       </div>
+
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-3 mt-4">
-      <button type="submit" class="btn-primary">
-        <i class="fas fa-save"></i> Guardar Pedido
-      </button>
+    {# ── Acciones ───────────────────────────────────────────────────────────── #}
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-5">
       <a href="{% url 'pedidos:lista' %}" class="btn-secondary">
-        Cancelar
+        <i class="fas fa-times"></i>
+        <span>Cancelar</span>
       </a>
+      <button type="button" @click="submitForm($el.closest('form'))"
+              class="btn-primary" :disabled="submitting">
+        <template x-if="!submitting">
+          <span><i class="fas fa-save mr-1"></i> Guardar Pedido</span>
+        </template>
+        <template x-if="submitting">
+          <span class="flex items-center gap-2">
+            <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity=".25"/>
+              <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+            </svg>
+            Guardando...
+          </span>
+        </template>
+      </button>
     </div>
 
   </form>
 </div>
 
 <script>
-function pedidoForm(itemCount) {
+function pedidoForm() {
+  let _idCounter = 0
+
   const itemsIniciales = []
   {% if pedido %}
   {% for item in pedido.items.all %}
-  itemsIniciales.push({ producto: '{{ item.producto|escapejs }}', sku: '{{ item.sku|escapejs }}', cantidad: {{ item.cantidad }}, precio: {{ item.precio }}, _sugerencias: [] })
+  itemsIniciales.push({
+    _id: _idCounter++,
+    producto: '{{ item.producto|escapejs }}',
+    sku: '{{ item.sku|escapejs }}',
+    cantidad: {{ item.cantidad }},
+    precio: {{ item.precio }},
+    stock: null,
+    unidad: '',
+    _sugerencias: []
+  })
   {% endfor %}
   {% endif %}
 
   return {
-    items: itemsIniciales.length > 0 ? itemsIniciales : [{ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] }],
+    items: itemsIniciales.length > 0
+      ? itemsIniciales
+      : [{ _id: _idCounter++, producto: '', sku: '', cantidad: 1, precio: 0, stock: null, unidad: '', _sugerencias: [] }],
+
     listaPrecioId: '{{ pedido.lista_precio_id|default:"" }}',
     alertaCredito: '',
+    submitting: false,
+    limiteCredito: 0,
+    deudaActual: 0,
+
+    // ── Getters reactivos ──
+
+    get subtotalItems() {
+      return this.items.reduce((s, i) => s + (parseFloat(i.cantidad) || 0) * (parseFloat(i.precio) || 0), 0)
+    },
+
+    get montoIva() {
+      return this.subtotalItems * 0.16
+    },
+
+    get totalConIva() {
+      return this.subtotalItems + this.montoIva
+    },
+
+    // Compatibilidad legacy (cotizaciones reutiliza esta función con nombre total())
+    total() { return this.subtotalItems },
+
+    itemSubtotal(item) {
+      return (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio) || 0)
+    },
+
+    stockStatus(item) {
+      if (item.stock === null || !item.sku) return ''
+      if (item.stock <= 0) return 'sin_stock'
+      if ((parseFloat(item.cantidad) || 0) > item.stock) return 'insuficiente'
+      return 'ok'
+    },
+
+    // ── Crédito ──
+
+    checkCredito() {
+      if (!this.limiteCredito) {
+        this.alertaCredito = ''
+        return
+      }
+      const total = this.subtotalItems
+      if (this.deudaActual + total > this.limiteCredito) {
+        const fmt = n => n.toLocaleString('es-VE', { minimumFractionDigits: 2 })
+        this.alertaCredito = `Deuda actual $${fmt(this.deudaActual)} + este pedido $${fmt(total)} supera el límite de $${fmt(this.limiteCredito)}`
+      } else {
+        this.alertaCredito = ''
+      }
+    },
 
     async onClienteChange(clienteId) {
       this.listaPrecioId = ''
       this.alertaCredito = ''
+      this.limiteCredito = 0
+      this.deudaActual = 0
       if (!clienteId) return
       try {
         const resp = await fetch(`/clientes/${clienteId}/info-json/`)
+        if (!resp.ok) return
         const data = await resp.json()
         this.listaPrecioId = data.lista_precio_id || ''
-        // Alerta crédito: mostrar si tiene límite configurado
-        const limite = parseFloat(data.limite_credito) || 0
-        const deuda = parseFloat(data.deuda_actual) || 0
-        if (limite > 0) {
-          const totalActual = this.total()
-          if (deuda + totalActual > limite) {
-            this.alertaCredito = `Deuda actual $${deuda.toLocaleString('es-VE', {minimumFractionDigits:2})} + este pedido $${totalActual.toLocaleString('es-VE', {minimumFractionDigits:2})} supera límite de $${limite.toLocaleString('es-VE', {minimumFractionDigits:2})}`
-          }
-          if (data.lista_precio_nombre) {
-            this.alertaCredito = this.alertaCredito ? this.alertaCredito : ''
-          }
-        }
+        this.limiteCredito = parseFloat(data.limite_credito) || 0
+        this.deudaActual = parseFloat(data.deuda_actual) || 0
+        this.checkCredito()
       } catch(e) {}
     },
 
+    // ── Gestión de items ──
+
     agregarItem() {
-      this.items.push({ producto: '', sku: '', cantidad: 1, precio: 0, _sugerencias: [] })
+      this.items.push({
+        _id: _idCounter++,
+        producto: '', sku: '', cantidad: 1, precio: 0,
+        stock: null, unidad: '', _sugerencias: []
+      })
+      this.$nextTick(() => {
+        const last = document.getElementById(`producto_${this.items.length - 1}`)
+        if (last) last.focus()
+      })
     },
 
     quitarItem(index) {
       if (this.items.length > 1) {
         this.items.splice(index, 1)
+        this.$nextTick(() => this.checkCredito())
       }
     },
 
-    total() {
-      return this.items.reduce((sum, item) => {
-        return sum + (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio) || 0)
-      }, 0)
-    },
+    // ── Búsqueda de productos ──
 
     async buscarProducto(index, query) {
       if (!query || query.length < 2) {
@@ -270,6 +481,7 @@ function pedidoForm(itemCount) {
         let url = `/productos/buscar/?q=${encodeURIComponent(query)}`
         if (this.listaPrecioId) url += `&lista_precio_id=${encodeURIComponent(this.listaPrecioId)}`
         const resp = await fetch(url)
+        if (!resp.ok) return
         const data = await resp.json()
         this.items[index]._sugerencias = data.results || []
       } catch (e) {
@@ -280,11 +492,37 @@ function pedidoForm(itemCount) {
     seleccionarProducto(index, sug) {
       this.items[index].producto = sug.nombre
       this.items[index].sku = sug.sku || ''
-      if (sug.precio_base && !this.items[index].precio) {
+      this.items[index].unidad = sug.unidad || ''
+      this.items[index].stock = sug.stock !== undefined ? parseFloat(sug.stock) : null
+      if (sug.precio_base && !(parseFloat(this.items[index].precio) > 0)) {
         this.items[index].precio = parseFloat(sug.precio_base)
       }
       this.items[index]._sugerencias = []
+      this.$nextTick(() => {
+        const qtyInput = document.getElementById(`qty_${index}`)
+        if (qtyInput) qtyInput.focus()
+        this.checkCredito()
+      })
     },
+
+    focusSugerencia(index, si) {
+      const el = document.getElementById(`sug_${index}_${si}`)
+      if (el) el.focus()
+    },
+
+    // ── Submit ──
+
+    submitForm(form) {
+      const hasValidItem = this.items.some(i => i.producto.trim() && (parseFloat(i.cantidad) || 0) > 0)
+      if (!hasValidItem) {
+        window.dispatchEvent(new CustomEvent('show-toast', {
+          detail: { message: 'Agrega al menos un producto con cantidad válida.', type: 'error' }
+        }))
+        return
+      }
+      this.submitting = true
+      form.submit()
+    }
   }
 }
 </script>

@@ -346,3 +346,79 @@ class TestTenantIsolation:
 
         assert not Cliente.objects.filter(organization=org_b, pk=cli_a.pk).exists()
         assert not Cliente.objects.filter(organization=org_a, pk=cli_b.pk).exists()
+
+
+# ── PedidoService.procesar_reversion_stock ───────────────────────────────────
+
+@pytest.mark.django_db
+class TestReversionStock:
+    """
+    Verifica que cancelar un pedido confirmado devuelve el stock a los lotes originales.
+    """
+
+    def _setup_pedido_con_stock(self):
+        from apps.pedidos.services import PedidoService
+        from apps.productos.models import MovimientoInventario
+        org = OrganizationFactory()
+        user = UserFactory(organization=org)
+        cat = CategoriaProductoFactory(organization=org)
+        producto = ProductoFactory(organization=org, sku='REV-001', categoria=cat)
+        lote = LoteFactory(
+            producto=producto, codigo_lote='L-REV',
+            cantidad_disponible=Decimal('100'),
+        )
+        pedido = PedidoFactory(
+            organization=org,
+            numero='PED-000001',
+            cliente=ClienteFactory(organization=org),
+            vendedor=user,
+        )
+        PedidoItem.objects.create(
+            pedido=pedido, producto=producto.nombre,
+            sku='REV-001', cantidad=Decimal('40'), precio=Decimal('10'),
+        )
+        PedidoService.procesar_descuento_stock(pedido, user)
+        return org, user, producto, lote, pedido
+
+    def test_reversion_restaura_stock_en_lote(self):
+        """Cancelar un pedido confirmado devuelve la cantidad al lote original."""
+        from apps.pedidos.services import PedidoService
+        org, user, producto, lote, pedido = self._setup_pedido_con_stock()
+
+        lote.refresh_from_db()
+        assert lote.cantidad_disponible == Decimal('60')  # 100 - 40
+
+        PedidoService.procesar_reversion_stock(pedido, user)
+
+        lote.refresh_from_db()
+        assert lote.cantidad_disponible == Decimal('100')  # restaurado
+
+    def test_reversion_crea_movimiento_entrada(self):
+        """La reversión genera MovimientoInventario tipo ENTRADA."""
+        from apps.pedidos.services import PedidoService
+        from apps.productos.models import MovimientoInventario
+        org, user, producto, lote, pedido = self._setup_pedido_con_stock()
+
+        PedidoService.procesar_reversion_stock(pedido, user)
+
+        entrada = MovimientoInventario.objects.filter(
+            lote=lote,
+            tipo='ENTRADA',
+            referencia=f'Cancelación Pedido {pedido.numero}',
+        )
+        assert entrada.exists()
+        assert entrada.first().cantidad == Decimal('40')
+
+    def test_pedido_sin_movimientos_no_falla(self):
+        """Revertir un pedido sin movimientos de salida no lanza excepción."""
+        from apps.pedidos.services import PedidoService
+        org = OrganizationFactory()
+        user = UserFactory(organization=org)
+        pedido = PedidoFactory(
+            organization=org,
+            numero='PED-NOVENTA',
+            cliente=ClienteFactory(organization=org),
+            vendedor=user,
+        )
+        # Sin stock descontado previo: la reversión debe terminar sin error
+        PedidoService.procesar_reversion_stock(pedido, user)  # no lanza

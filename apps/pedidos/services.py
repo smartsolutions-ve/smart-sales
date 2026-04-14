@@ -31,6 +31,7 @@ class PedidoService:
             raise ValidationError('El pedido debe tener al menos un ítem.')
 
         es_nuevo = pedido_existente is None
+        estados_con_stock_descontado = ['Confirmado', 'En Proceso', 'Entregado']
 
         with transaction.atomic():
             if es_nuevo:
@@ -58,6 +59,9 @@ class PedidoService:
 
             if not es_nuevo:
                 estado_anterior = Pedido.objects.get(pk=pedido_existente.pk).estado
+                # Revertir stock ANTES de borrar items si se cancela un pedido confirmado
+                if estado == 'Cancelado' and estado_anterior in estados_con_stock_descontado:
+                    PedidoService.procesar_reversion_stock(pedido, user)
                 pedido.items.all().delete()
             else:
                 estado_anterior = 'Pendiente'
@@ -77,7 +81,7 @@ class PedidoService:
                 if not exento:
                     subtotal_item = Decimal(str(item_data['cantidad'])) * Decimal(str(item_data['precio']))
                     monto_iva = subtotal_item * Decimal('0.16')
-                    
+
                 items_a_crear.append(PedidoItem(
                     pedido=pedido,
                     organization=pedido.organization,
@@ -95,8 +99,7 @@ class PedidoService:
             if alerta_credito:
                 pedido._alerta_credito = alerta_credito
 
-            # Descontar stock si transiciona a Confirmado/En Proceso/Entregado desde Pendiente / Cancelado
-            estados_con_stock_descontado = ['Confirmado', 'En Proceso', 'Entregado']
+            # Descontar stock si transiciona a Confirmado/En Proceso/Entregado
             if estado in estados_con_stock_descontado and estado_anterior not in estados_con_stock_descontado:
                 PedidoService.procesar_descuento_stock(pedido, user)
 
@@ -140,37 +143,81 @@ class PedidoService:
     def procesar_descuento_stock(pedido, user=None):
         """
         Aplica metodología FEFO para descontar el stock cuando el pedido es confirmado.
+        Usa select_for_update() + F() para prevenir race conditions en stock concurrente.
         """
         from apps.productos.models import Producto, MovimientoInventario
+        from django.db.models import F
 
-        for item in pedido.items.all():
-            if not item.sku:
-                continue
-            try:
-                producto = Producto.objects.get(sku=item.sku, organization=pedido.organization)
-            except Producto.DoesNotExist:
-                continue
-            
-            lotes = producto.lotes.filter(cantidad_disponible__gt=0, is_active=True).order_by('fecha_caducidad')
-            
-            cantidad_restante = item.cantidad
-            for lote in lotes:
-                if cantidad_restante <= 0:
-                    break
-                
-                descontar = min(cantidad_restante, lote.cantidad_disponible)
-                lote.cantidad_disponible -= descontar
-                lote.save()
-                cantidad_restante -= descontar
-                
-                MovimientoInventario.objects.create(
-                    lote=lote,
-                    tipo='SALIDA',
-                    cantidad=-descontar,
-                    referencia=f'Pedido {pedido.numero}',
-                    created_by=user
+        with transaction.atomic():
+            for item in pedido.items.all():
+                if not item.sku:
+                    continue
+                try:
+                    producto = Producto.objects.get(sku=item.sku, organization=pedido.organization)
+                except Producto.DoesNotExist:
+                    continue
+
+                # select_for_update() bloquea las filas para evitar race conditions
+                lotes = (
+                    producto.lotes
+                    .select_for_update()
+                    .filter(cantidad_disponible__gt=0, is_active=True)
+                    .order_by('fecha_caducidad')
                 )
-            
-            if cantidad_restante > 0:
-                raise ValidationError(f'No hay suficiente stock para {item.producto}. Faltan {cantidad_restante}.')
+
+                cantidad_restante = item.cantidad
+                for lote in lotes:
+                    if cantidad_restante <= 0:
+                        break
+
+                    descontar = min(cantidad_restante, lote.cantidad_disponible)
+                    # F() expression garantiza update atómico en base de datos
+                    lote.__class__.objects.filter(pk=lote.pk).update(
+                        cantidad_disponible=F('cantidad_disponible') - descontar
+                    )
+                    cantidad_restante -= descontar
+
+                    MovimientoInventario.objects.create(
+                        lote=lote,
+                        tipo='SALIDA',
+                        cantidad=-descontar,
+                        referencia=f'Pedido {pedido.numero}',
+                        created_by=user
+                    )
+
+                if cantidad_restante > 0:
+                    raise ValidationError(
+                        f'No hay suficiente stock para {item.producto}. Faltan {cantidad_restante}.'
+                    )
+
+    @staticmethod
+    def procesar_reversion_stock(pedido, user=None):
+        """
+        Revierte el descuento de stock cuando un pedido confirmado es cancelado.
+        Restaura exactamente los lotes originales usando los MovimientoInventario de SALIDA.
+        """
+        from apps.productos.models import MovimientoInventario
+        from django.db.models import F
+
+        with transaction.atomic():
+            # Buscar todos los movimientos de salida asociados a este pedido
+            movimientos_salida = (
+                MovimientoInventario.objects
+                .filter(tipo='SALIDA', referencia=f'Pedido {pedido.numero}')
+                .select_related('lote')
+                .select_for_update()
+            )
+
+            for mov in movimientos_salida:
+                cantidad_revertir = abs(mov.cantidad)
+                mov.lote.__class__.objects.filter(pk=mov.lote.pk).update(
+                    cantidad_disponible=F('cantidad_disponible') + cantidad_revertir
+                )
+                MovimientoInventario.objects.create(
+                    lote=mov.lote,
+                    tipo='ENTRADA',
+                    cantidad=cantidad_revertir,
+                    referencia=f'Cancelación Pedido {pedido.numero}',
+                    created_by=user,
+                )
 

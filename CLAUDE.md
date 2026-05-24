@@ -1,5 +1,7 @@
 # CLAUDE.md — SmartSales Django
 
+## REGLA: Al iniciar sesión, leer `docs/PENDIENTES.md` para contexto de tareas pendientes.
+
 Instrucciones para Claude Code al trabajar en este proyecto.
 
 ## Stack

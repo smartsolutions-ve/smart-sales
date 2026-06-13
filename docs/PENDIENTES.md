@@ -12,5 +12,5 @@
 - [ ] Evaluar migración a patrón boilerplate (request.org → request.tenant, AutoField → UUID PKs)
 
 ## Última sesión
-2026-05-31: Revisión de estado. Sin sesión de desarrollo activa reciente.
-Proyecto en standby. Decisión pendiente: invertir en conseguir cliente antes de migrar a DO.
+2026-06-13: [snapshot automático — 0
+0 commit(s)]

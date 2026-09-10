@@ -12,5 +12,4 @@
 - [ ] Evaluar migración a patrón boilerplate (request.org → request.tenant, AutoField → UUID PKs)
 
 ## Última sesión
-2026-06-13: [snapshot automático — 0
-0 commit(s)]
+2026-06-13: [snapshot automático]
